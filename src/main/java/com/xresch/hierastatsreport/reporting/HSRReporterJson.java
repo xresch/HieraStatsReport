@@ -1,0 +1,104 @@
+package com.xresch.hierastatsreport.reporting;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.xresch.hierastatsreport.stats.HSRRecordStats;
+
+/**************************************************************************************************************
+ * This reporter writes json data to a file. the file will be written as
+ * one json object per line. Every line is a valid JSON string.
+ * The whole file itself is not a valid JSON string as it is not an array.
+ * 
+ * @author Reto Scheiwiller, (c) Copyright 2025
+ * @license MIT-License
+ **************************************************************************************************************/
+public class HSRReporterJson implements HSRReporter {
+
+	private static final Logger logger = LoggerFactory.getLogger(HSRReporterJson.class);
+	
+	private boolean makeArray = false;
+	private String arrayComma = "";
+	
+	BufferedWriter writer = null;
+	
+	/****************************************************************************
+	 * 
+	 * @param filepath the path of the file to write the data to.
+	 * @param makeArray set to true to make the file content a JSON Array.
+	 *					If false, writes a JSON Object string per line.
+	 ****************************************************************************/
+	public HSRReporterJson(String filepath, boolean makeArray) {
+		
+		this.makeArray = makeArray;
+		if(makeArray) {
+			arrayComma = ",";
+		}
+		
+		try {
+			Path path = Path.of(filepath);
+			Files.deleteIfExists(path);
+			
+			writer = new BufferedWriter(new FileWriter(filepath, true));
+		    
+			if(makeArray) {
+				writer.write("[\n");
+			}
+		} catch (IOException e) {
+			logger.error("Error while deleting JSON file.", e);
+		}
+		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportRecords(ArrayList<HSRRecordStats> records) {
+
+		try {
+
+			for(HSRRecordStats record : records ) {
+				writer.write(record.toJsonString() +  arrayComma + "\r\n");
+			}
+
+		} catch (IOException e) {
+			logger.error("Error while writing JSON data to file.", e);
+		}
+			
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void terminate() {
+		try {
+			
+			if(makeArray) {
+				writer.write("]");
+			}
+
+		} catch (IOException e) {
+			logger.error("Error while writing JSON data to file.", e);
+		}finally {
+			if(writer != null) {
+				try {
+					writer.close();
+				} catch (IOException e) {
+					logger.error("Error while closing JSON file writer.", e);
+				}
+			}
+		}
+	}
+
+	
+	
+}
