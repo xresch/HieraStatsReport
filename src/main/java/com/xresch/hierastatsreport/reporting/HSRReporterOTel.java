@@ -169,7 +169,7 @@ public class HSRReporterOTel implements HSRReporter {
 									   .put(NAME, record.getMetricName())
 									   .put(METRIC, metric.toString())
 									   .put( CODE, record.getCode())
-									   .put(TYPE, record.getType().threeLetters())
+									   .put(TYPE, record.getType().typeName())
 									   .put(STATUS, HSRRecordState.ok.toString())
 									   .build()
 							);
@@ -186,7 +186,7 @@ public class HSRReporterOTel implements HSRReporter {
 								   .put(NAME, record.getMetricName())
 								   .put(METRIC, metric.toString())
 								   .put( CODE, record.getCode())
-								   .put(TYPE, record.getType().threeLetters())
+								   .put(TYPE, record.getType().typeName())
 								   .put(STATUS, HSRRecordState.nok.toString())
 								   .build()
 							);

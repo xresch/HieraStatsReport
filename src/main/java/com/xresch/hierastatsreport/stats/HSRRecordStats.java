@@ -26,7 +26,7 @@ public class HSRRecordStats {
 		
 	private long time;
 	private HSRRecordType type;
-	private String simulation;		// the name of the simulation
+	private String simulation;		// the name of the test
 	private String scenario;		// the name of the scenario
 	private String metricName;		// the name of the metric, one of the items in the lost metricNames
 	private String groupsPath;		// 
@@ -266,7 +266,7 @@ public class HSRRecordStats {
 		this.type = record.getType();
 		this.simulation = record.getSimulation();
 		this.scenario = record.getScenario();
-		this.metricName = record.getMetricName();
+		this.metricName = record.getRecordName();
 		this.groupsPath = record.getGroupsAsString(" / ", "");
 		this.metricPath = record.getMetricPath();
 		this.metricPathFull = record.getMetricPathFull();
@@ -332,7 +332,7 @@ public class HSRRecordStats {
 	public String toCSV(String separator) {
 		
 		String csv = time 
-					+ separator + type.threeLetters()
+					+ separator + type.typeName()
 					+ separator + simulation.replace(separator, "_") 
 					+ separator + scenario.replace(separator, "_")  
 					+ separator + groupsPath.replace(separator, "_")  
@@ -367,7 +367,7 @@ public class HSRRecordStats {
 		JsonObject object = new JsonObject();
 		
 		object.addProperty(RecordField.time.toString(), 		time);
-		object.addProperty(RecordField.type.toString(), 		type.threeLetters());
+		object.addProperty(RecordField.type.toString(), 		type.typeName());
 		object.addProperty(RecordField.simulation.toString(), 	simulation);
 		object.addProperty(RecordField.scenario.toString(), 	scenario);
 		object.addProperty(RecordField.groups.toString(), 		groupsPath);
@@ -498,7 +498,7 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 		ArrayList<Object> valueList = new ArrayList<>();
 		
 		valueList.add(time);
-		valueList.add(type.threeLetters());
+		valueList.add(type.typeName());
 		valueList.add(simulation);
 		valueList.add(scenario);
 		valueList.add(groupsPath);
