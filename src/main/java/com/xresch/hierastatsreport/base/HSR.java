@@ -270,6 +270,48 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * Starts a new group, sets it as the active group and returns it to be able to set 
+	 * further details.
+	 ***********************************************************************************/
+	public static boolean assertEquals(Object expected, Object actual, String title){
+		
+		HSRReportItem item = startAssert(title);
+		 	boolean equals = expected.equals(actual);
+		 	
+		 	if(equals) {
+		 		item.setStatus(ItemStatus.Success);
+		 	}else {
+		 		item.setStatus(ItemStatus.Fail);
+		 	}
+		 HSR.end(title);
+		 
+		 return equals;
+		 
+	}
+	
+	/***********************************************************************************
+	 * Starts a new group, sets it as the active group and returns it to be able to set 
+	 * further details.
+	 ***********************************************************************************/
+	public static boolean assertTrue(boolean expected, String title){
+		
+		HSRReportItem item = startAssert(title);
+		 	boolean isTrue = expected == true;
+		 	
+		 	if(isTrue) {
+		 		item.setStatus(ItemStatus.Success);
+		 	}else {
+		 		item.setStatus(ItemStatus.Fail);
+		 	}
+		 HSR.end(title);
+		 
+		 return isTrue;
+		 
+	}
+	
+
+	
+	/***********************************************************************************
 	 * Starts a new item, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/

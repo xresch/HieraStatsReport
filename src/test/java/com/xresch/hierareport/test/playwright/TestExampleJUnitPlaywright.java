@@ -77,7 +77,9 @@ public class TestExampleJUnitPlaywright {
   void shouldClickButton() {
     page.navigate("data:text/html,<script>var result;</script><button onclick='result=\"Clicked\"'>Go</button>");
     page.locator("button").click();
-    assertEquals("Clicked", page.evaluate("result"));
+    HSR.assertEquals("Clicked", page.evaluate("result"), "Button is clicked");
+    HSR.assertEquals("Not Clicked", page.evaluate("result"), "Test for failing Assert");
+
   }
 
   /************************************************************************
@@ -86,8 +88,10 @@ public class TestExampleJUnitPlaywright {
   @Test
   void shouldCheckTheBox() {
     page.setContent("<input id='checkbox' type='checkbox'></input>");
+   
     page.locator("input").check();
-    assertTrue((Boolean) page.evaluate("() => window['checkbox'].checked"));
+    
+    HSR.assertTrue((Boolean) page.evaluate("() => window['checkbox'].checked"), "Checkbox is checked");
     HSR.addScreenshot(page.screenshot());
   }
 

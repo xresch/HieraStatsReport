@@ -10,7 +10,7 @@ import java.util.List;
  * @author Reto Scheiwiller, (c) Copyright 2025
  * @license MIT-License
  **************************************************************************************************************/
-public class HSRRecordRaw {
+public class HSRRecord {
 	
 	private String simulation = "unknownSimulation";
 	private String scenario = "unnamedScenario";
@@ -49,7 +49,7 @@ public class HSRRecordRaw {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecordRaw(
+	public HSRRecord(
 			  GatlytronRecordType type
 			, String simulation
 			, String scenario

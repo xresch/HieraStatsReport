@@ -9,11 +9,11 @@ import com.google.gson.JsonObject;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.database.DBInterface;
 import com.xresch.hierastatsreport.database.HSRDBInterface;
-import com.xresch.hierastatsreport.stats.HSRRecordRaw.GatlytronRecordType;
+import com.xresch.hierastatsreport.stats.HSRRecord.GatlytronRecordType;
 import com.xresch.hierastatsreport.utils.GatlytronFiles;
 
 /**************************************************************************************************************
- * This record holds one record of statistical data aggregated from HSRRecordRaw.
+ * This record holds one record of statistical data aggregated from HSRRecord.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
  * @license MIT-License
@@ -238,7 +238,7 @@ public class HSRRecordStats {
 	 ***********************************************************************/
 	public HSRRecordStats(
 							  LinkedHashMap<HSRRecordStats, HSRRecordStats> statsRecordList
-							, HSRRecordRaw record
+							, HSRRecord record
 						    , long timeMillis
 							, BigDecimal count 
 							, BigDecimal mean 

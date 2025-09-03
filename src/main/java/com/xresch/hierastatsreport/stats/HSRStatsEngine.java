@@ -29,7 +29,7 @@ public class HSRStatsEngine {
 	private static final Object SYNC_LOCK = new Object();
 
 	// key is a group name, value are all records that are part of the group
-	private static TreeMap<String, ArrayList<HSRRecordRaw> > groupedRecords = new TreeMap<>();
+	private static TreeMap<String, ArrayList<HSRRecord> > groupedRecords = new TreeMap<>();
 
 	private static Thread reporterThread;
 	private static boolean isStopped;
@@ -82,7 +82,7 @@ public class HSRStatsEngine {
 	/***************************************************************************
 	 * 
 	 ***************************************************************************/
-	public static void addRecord(HSRRecordRaw record) {
+	public static void addRecord(HSRRecord record) {
 
 		synchronized (SYNC_LOCK) {
 			String id = record.getStatsIdentifier();
@@ -115,7 +115,7 @@ public class HSRStatsEngine {
 		// new records
 		LinkedHashMap<HSRRecordStats, HSRRecordStats> statsRecords = new LinkedHashMap<>();
 		
-		TreeMap<String, ArrayList<HSRRecordRaw> > groupedRecordsCurrent;
+		TreeMap<String, ArrayList<HSRRecord> > groupedRecordsCurrent;
 		synchronized (SYNC_LOCK) {
 			groupedRecordsCurrent = groupedRecords;
 			groupedRecords = new TreeMap<>();
@@ -124,16 +124,16 @@ public class HSRStatsEngine {
 
 		//----------------------------------------
 		// Iterate Groups
-		for(Entry<String, ArrayList<HSRRecordRaw>> entry : groupedRecordsCurrent.entrySet()) {
+		for(Entry<String, ArrayList<HSRRecord>> entry : groupedRecordsCurrent.entrySet()) {
 			
-			ArrayList<HSRRecordRaw> records = entry.getValue();
+			ArrayList<HSRRecord> records = entry.getValue();
 			
 			//---------------------------
 			// Make list of Sorted Values
 			ArrayList<BigDecimal> values = new ArrayList<>();
 			BigDecimal sum = BigDecimal.ZERO;
 			
-			for(HSRRecordRaw raw : records) {
+			for(HSRRecord raw : records) {
 				BigDecimal value = raw.getMetricValue();
 				if(value != null) {
 					values.add(value);
@@ -162,7 +162,7 @@ public class HSRStatsEngine {
 			
 			//---------------------------
 			// Create StatsRecord
-			HSRRecordRaw firstRecord = records.get(0);
+			HSRRecord firstRecord = records.get(0);
 			
 			new HSRRecordStats(
 				  statsRecords
