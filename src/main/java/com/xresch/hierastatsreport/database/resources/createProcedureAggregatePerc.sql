@@ -25,8 +25,8 @@ BEGIN
                  WHEN p_column_name = 'p25' THEN p25
                  WHEN p_column_name = 'p50' THEN p50
                  WHEN p_column_name = 'p75' THEN p75
+                 WHEN p_column_name = 'p90' THEN p90
                  WHEN p_column_name = 'p95' THEN p95
-                 WHEN p_column_name = 'p99' THEN p99
                  ELSE 0
                END AS val
         FROM CFW_EAV_STATS

@@ -9,6 +9,8 @@ import org.junit.platform.launcher.TestPlan;
 
 import com.xresch.hierastatsreport.base.HSR;
 import com.xresch.hierastatsreport.base.HSRReportItem.ItemStatus;
+import com.xresch.hierastatsreport.stats.HSRRecord;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordStatus;
 
 public class HSRJUnitPlatformListener implements TestExecutionListener {
 
@@ -23,8 +25,6 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 	 */
 	public void testPlanExecutionStarted(TestPlan testplan) {
 		currentTestplan = testplan;
-		HSR.configCloseCheckSuite(false);
-		HSR.configCloseCheckClass(false);
 		HSR.initialize();
 	}
 
@@ -74,8 +74,8 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		//---------------------------------------
 		// Start Test
 		if (resolved.methodName != null) {
-			HSR.startTest(resolved.methodName);
-		    HSR.endCurrentTest(ItemStatus.Skipped);
+			HSR.startGroup(resolved.methodName);
+		    HSR.endCurrentGroup(HSRRecordStatus.Skipped);
 		}
 	}
 
@@ -111,19 +111,22 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		//---------------------------------------
 		// Start Suite
 		if (resolved.suite != null) {
-		    HSR.startSuite(resolved.suite);
+		    HSR.startGroup(resolved.suite);
+		    
 		}
 		 
 		//---------------------------------------
 		// Start Class
 		if (resolved.className != null) {
-		    HSR.startClass(resolved.className);
+		    HSRRecord clazz = HSR.startGroup(resolved.className);
+		    HSR.setSimulationName(resolved.className);
 		}
 		
 		//---------------------------------------
 		// Start Test
 		if (resolved.methodName != null) {
-		    HSR.startTest(resolved.methodName);
+		    HSR.startGroup(resolved.methodName);
+		    HSR.setScenarioName(resolved.methodName);
 		}
 }
 
@@ -169,9 +172,9 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 			//---------------------------------------
 			// End Test
 			switch(testExecutionResult.getStatus()) {
-			case ABORTED: 		HSR.endCurrentTest(ItemStatus.Aborted); break;
-			case FAILED:		HSR.endCurrentTest(ItemStatus.Fail); break;
-			case SUCCESSFUL:	HSR.endCurrentTest(ItemStatus.Success); break;
+			case ABORTED: 		HSR.endCurrentGroup(HSRRecordStatus.Aborted); break;
+			case FAILED:		HSR.endCurrentGroup(HSRRecordStatus.Fail); break;
+			case SUCCESSFUL:	HSR.endCurrentGroup(HSRRecordStatus.Success); break;
 			default:
 				break;
 			
@@ -180,14 +183,14 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		    return;
 		}else if(resolved.className != null) {
 			
-			HSR.endCurrentClass();
+			HSR.endCurrentGroup();
 			return;
 		}
 		
 		//---------------------------------------
 		// End Suite
 		if (resolved.suite != null) {
-		    HSR.endCurrentSuite();
+		    HSR.endCurrentGroup();
 		    return;
 		}
 		 

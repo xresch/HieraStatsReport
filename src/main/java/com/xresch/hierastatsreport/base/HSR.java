@@ -2,18 +2,18 @@ package com.xresch.hierastatsreport.base;
 
 import java.io.File;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.zip.ZipInputStream;
 
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 
-import com.xresch.hierastatsreport.base.HSRReportItem.ItemStatus;
-import com.xresch.hierastatsreport.base.HSRReportItem.ItemType;
+import com.xresch.hierastatsreport.stats.HSRRecord;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordStatus;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordType;
+import com.xresch.hierastatsreport.stats.HSRStatsEngine;
 import com.xresch.hierastatsreport.utils.HSRReportUtils;
 
 /**************************************************************************************
@@ -26,26 +26,24 @@ import com.xresch.hierastatsreport.utils.HSRReportUtils;
 public class HSR {
 	
 	private static String CONFIG_REPORT_BASE_DIR = "./target/hieraReport";
-	private static boolean CONFIG_CLOSE_CHECK_SUITE = true;
-	private static boolean CONFIG_CLOSE_CHECK_CLASS = true;
-	private static boolean CONFIG_CLOSE_CHECK_TEST = true;
 
-	
 	private static int testNumber = 1;
 
 	// For each type until test level one thread local to make it working in multi-threaded mode
-	private static InheritableThreadLocal<HSRReportItem> rootItem = new InheritableThreadLocal<HSRReportItem>();
-	private static InheritableThreadLocal<HSRReportItem> currentSuite = new InheritableThreadLocal<HSRReportItem>();
-	private static InheritableThreadLocal<HSRReportItem> currentClass = new InheritableThreadLocal<HSRReportItem>();
+	private static InheritableThreadLocal<HSRRecord> rootItem = new InheritableThreadLocal<HSRRecord>();
+	private static InheritableThreadLocal<HSRRecord> currentGroup = new InheritableThreadLocal<HSRRecord>();
+	private static InheritableThreadLocal<String> currentSimulation = new InheritableThreadLocal<String>();
+	private static InheritableThreadLocal<String> currentScenario = new InheritableThreadLocal<String>();
 
-	private static ConcurrentHashMap<String,HSRReportItem> startedSuites = new ConcurrentHashMap<String,HSRReportItem>();
-	private static ConcurrentHashMap<String,HSRReportItem> startedClasses = new ConcurrentHashMap<String,HSRReportItem>();
+	// needed to avoid that a suite or class is opened multiple times
+	private static ConcurrentHashMap<String,HSRRecord> startedGroups = new ConcurrentHashMap<String,HSRRecord>();
+	private static ConcurrentHashMap<String,HSRRecord> startedClasses = new ConcurrentHashMap<String,HSRRecord>();
 	
-	private static InheritableThreadLocal<HSRReportItem> activeItem = new InheritableThreadLocal<HSRReportItem>();
 	
 	//everything else goes here.
-	private static ThreadLocal<HSRReportItem> currentTest = new ThreadLocal<HSRReportItem>();
-	private static ThreadLocal<LinkedHashMap<String,HSRReportItem>> openItems = new ThreadLocal<LinkedHashMap<String,HSRReportItem>>();
+	private static ThreadLocal<HSRRecord> currentTest = new ThreadLocal<HSRRecord>();
+	private static ThreadLocal<LinkedHashMap<String,HSRRecord>> openItems = new ThreadLocal<LinkedHashMap<String,HSRRecord>>();
+	private static InheritableThreadLocal<HSRRecord> activeItem = new InheritableThreadLocal<HSRRecord>();
 	
 	private static Logger logger = Logger.getLogger(HSR.class.getName());
 	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
@@ -68,20 +66,6 @@ public class HSR {
 	 ***********************************************************************************/
 	public static void configReportDirectory(String path) {  CONFIG_REPORT_BASE_DIR = path; }
 	
-	/***********************************************************************************
-	 * Set if proper closing of Suites should be checked.
-	 ***********************************************************************************/
-	public static void configCloseCheckSuite(boolean doCheck) {  CONFIG_CLOSE_CHECK_SUITE = doCheck; }
-	
-	/***********************************************************************************
-	 * Set if proper closing of Suites should be checked.
-	 ***********************************************************************************/
-	public static void configCloseCheckClass(boolean doCheck) {  CONFIG_CLOSE_CHECK_CLASS = doCheck; }
-	
-	/***********************************************************************************
-	 * Set if proper closing of Suites should be checked.
-	 ***********************************************************************************/
-	public static void configCloseCheckTest(boolean doCheck) {  CONFIG_CLOSE_CHECK_TEST = doCheck; }
 	
 	/***********************************************************************************
 	 * Set the WebDriver.
@@ -96,7 +80,14 @@ public class HSR {
 	private static void initializeThreadLocals(){
 		
 		if(rootItem.get() == null) {
-			rootItem.set(new HSRReportItem(ItemType.Step,"root"));
+			rootItem.set(
+					new HSRRecord(
+							  HSRRecordType.GROUP
+							, null
+							, "root"
+							, BigDecimal.ZERO
+						)
+				);
 		}
 		
 		if(activeItem.get() == null) {
@@ -104,7 +95,7 @@ public class HSR {
 		}
 		
 		if(openItems.get() == null) {
-			openItems.set(new LinkedHashMap<String,HSRReportItem>());
+			openItems.set(new LinkedHashMap<String,HSRRecord>());
 		}
 		
 	}
@@ -112,7 +103,7 @@ public class HSR {
 	/***********************************************************************************
 	 * 
 	 ***********************************************************************************/
-	protected static LinkedHashMap<String,HSRReportItem> openItems(){
+	protected static LinkedHashMap<String,HSRRecord> openItems(){
 		initializeThreadLocals();
 		return openItems.get();
 	}
@@ -120,7 +111,7 @@ public class HSR {
 	/***********************************************************************************
 	 * 
 	 ***********************************************************************************/
-	public static HSRReportItem getActiveItem(){
+	public static HSRRecord getActiveItem(){
 		initializeThreadLocals();
 		return activeItem.get();
 	}
@@ -128,15 +119,22 @@ public class HSR {
 	/***********************************************************************************
 	 * 
 	 ***********************************************************************************/
-	protected static void setCurrentTest(HSRReportItem testItem){
-		currentTest.set(testItem);
+	public static void setSimulationName(String simulation){
+		currentSimulation.set(simulation);
+	}
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
+	public static void setScenarioName(String scenario){
+		currentScenario.set(scenario);
 	}
 	
 	/***********************************************************************************
 	 * 
 	 ***********************************************************************************/
 	protected static String getTestDirectory(){
-		String testfolderName = currentTest.get().getFixSizeNumber() + "_" + currentTest.get().getTitle();
+		String testfolderName = currentTest.get().getRecordName();
 		return CONFIG_REPORT_BASE_DIR+"/"+testfolderName.replaceAll("[^a-zA-Z0-9]", "_")+"/";
 	}
 	
@@ -144,168 +142,164 @@ public class HSR {
 	 * Starts a new suite, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	public static HSRReportItem startSuite(String title){
+	public static HSRRecord startGroup(String title){
 		
-		if(startedSuites.containsKey(title)){
-			HSRReportItem suiteItem = startedSuites.get(title);
-			activeItem.set(suiteItem);
-			return suiteItem;
+		if(startedGroups.containsKey(title)){
+			HSRRecord groupItem = startedGroups.get(title);
+			activeItem.set(groupItem);
+			return groupItem;
 		}
 		
-		HSRReportItem suiteItem = HSR.startItem(ItemType.Suite, title);
-		currentSuite.set(suiteItem);
-		startedSuites.put(title, suiteItem);
+		HSRRecord groupItem = HSR.startItem(HSRRecordType.GROUP, title);
+		currentGroup.set(groupItem);
+		startedGroups.put(title, groupItem);
 		
-		return currentSuite.get();
+		return currentGroup.get();
 	}
 	
 	/***********************************************************************************
 	 * Ends the current Suite.
 	 ***********************************************************************************/
-	public static HSRReportItem endCurrentSuite(){
+	public static HSRRecord endCurrentGroup(HSRRecordStatus status){
 		
-		HSRReportItem suiteItem = currentSuite.get();
-		HSR.end(suiteItem.getTitle());
+		HSRRecord groupItem = currentGroup.get();
+		groupItem.status(status);
+		HSR.end(groupItem.getRecordName());
 		
-		return currentSuite.get();
+		return currentGroup.get();
+	}
+	/***********************************************************************************
+	 * Ends the current Group.
+	 ***********************************************************************************/
+	public static HSRRecord endCurrentGroup(){
+		
+		HSRRecord suiteItem = currentGroup.get();
+		HSR.end(suiteItem.getRecordName());
+		
+		return currentGroup.get();
 	}
 	
-	/***********************************************************************************
-	 * Starts a new class, sets it as the active group and returns it to be able to set 
-	 * further details.
-	 ***********************************************************************************/
-	public static HSRReportItem startClass(String title){
-		
-		if(startedClasses.containsKey(title)){
-			HSRReportItem classItem = startedClasses.get(title);
-			activeItem.set(classItem);
-			return classItem;
-		}
-		
-		HSRReportItem classItem = HSR.startItem(ItemType.Class, title, currentSuite.get());
-		currentClass.set(classItem);
-		startedClasses.put(title, classItem);
-		
-		return classItem;
-	}
-	
-	/***********************************************************************************
-	 * Ends the current Class.
-	 ***********************************************************************************/
-	public static HSRReportItem endCurrentClass(){
-		
-		HSRReportItem classItem = HSRReportItem.getFirstElementWithType(activeItem.get(), ItemType.Class);
-
-		if(classItem != null){
-			HSR.end(classItem.getTitle());
-		}else{
-			logger.warning("The current class could not be ended.");
-		}
-		
-		return classItem;
-	}
-	
-	/***********************************************************************************
-	 * Starts a new test, sets it as the active group and returns it to be able to set 
-	 * further details.
-	 ***********************************************************************************/
-	public static HSRReportItem startTest(String title){
-		
-		currentTest.set(HSR.startItem(ItemType.Test, title, currentClass.get()).setItemNumber(testNumber));
-		testNumber++;
-		
-		resetItemCounter();
-		
-		return currentTest.get();
-	}
-	
-	/***********************************************************************************
-	 * Ends the currentTest.
-	 ***********************************************************************************/
-	public static HSRReportItem endCurrentTest(ItemStatus status){
-		
-		HSRReportItem testItem = HSRReportItem.getFirstElementWithType(activeItem.get(), ItemType.Test);
-		
-		if(testItem != null){
-			testItem.setStatus(status);
-			
-			HSR.end(testItem.getTitle());
-	    	//Report.setStatusOnCurrentTree(status);
-			HSRReportUtils.writeStringToFile(getTestDirectory(), "result.json", HSRReportUtils.generateJSON(testItem));
-			
-			logger.info("TEST END - "+testItem.getTitle()+" ["+status.name().toUpperCase()+"]");
-		}else{
-			logger.warning("No active test found, test could not be ended.");
-		}
-		
-		return testItem;
-	}
 	
 
 	/***********************************************************************************
 	 * Starts a new step, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	public static HSRReportItem start(String title){
+	public static HSRRecord start(String title){
 		
-		return startItem(ItemType.Step, title);
+		return startItem(HSRRecordType.STEP, title);
 	}
 	
 	/***********************************************************************************
 	 * Starts a new group, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	public static HSRReportItem startWait(String title){
+	public static HSRRecord startWait(String title){
 		
-		return startItem(ItemType.Wait, title);
+		return startItem(HSRRecordType.Wait, title);
 	}
 	
 	/***********************************************************************************
-	 * Starts a new group, sets it as the active group and returns it to be able to set 
-	 * further details.
+	 * Adds a new assertion with the specified 
+	 * @param title name for the assert
+	 * @param result true if success, false if failed
 	 ***********************************************************************************/
-	public static HSRReportItem startAssert(String title){
+	public static HSRRecord addAssert(String title, boolean result){
 		
-		return startItem(ItemType.Assert, title);
+		HSRRecord item = addItem(HSRRecordType.Assert, title);
+		if(result) {
+	 		item.status(HSRRecordStatus.Success);
+	 	}else {
+	 		item.status(HSRRecordStatus.Fail);
+	 	}
+		
+		HSRStatsEngine.addRecord(item);
+		
+		return item;
 	}
 	
 	/***********************************************************************************
-	 * Starts a new group, sets it as the active group and returns it to be able to set 
-	 * further details.
+	 * Evaluates an assertion and adds the result to the statistics.
+	 ***********************************************************************************/
+	public static boolean assertEquals(Integer expected, Integer actual, String title){
+		
+		boolean result = (expected == null && actual == null);
+		
+		if(expected != null && actual != null){
+			result = expected.intValue() == actual.intValue();
+		}
+		
+		addAssert(title, result);
+		return result;
+	}
+	
+	/***********************************************************************************
+	 * Evaluates an assertion and adds the result to the statistics.
+	 ***********************************************************************************/
+	public static boolean assertEquals(Long expected, Long actual, String title){
+		
+		boolean result = (expected == null && actual == null);
+		
+		if(expected != null && actual != null){
+			result = expected.longValue() == actual.longValue();
+		}
+		
+		addAssert(title, result);
+		return result;
+	}
+	
+	
+	/***********************************************************************************
+	 * Evaluates an assertion and adds the result to the statistics.
+	 ***********************************************************************************/
+	public static boolean assertEquals(String expected, String actual, String title){
+		boolean equals = expected.equals(actual);
+		addAssert(title, equals );
+		return equals;
+	}
+	
+	/***********************************************************************************
+	 * Evaluates an assertion and adds the result to the statistics.
+	 * 
 	 ***********************************************************************************/
 	public static boolean assertEquals(Object expected, Object actual, String title){
 		
-		HSRReportItem item = startAssert(title);
-		 	boolean equals = expected.equals(actual);
-		 	
-		 	if(equals) {
-		 		item.setStatus(ItemStatus.Success);
-		 	}else {
-		 		item.setStatus(ItemStatus.Fail);
-		 	}
-		 HSR.end(title);
-		 
-		 return equals;
+		boolean result = (expected == null && actual == null);
+		
+		if(expected != null && actual != null){
+			result = expected.equals(actual);
+		}
+
+		addAssert(title, result );
+		return result;
 		 
 	}
 	
 	/***********************************************************************************
-	 * Starts a new group, sets it as the active group and returns it to be able to set 
-	 * further details.
+	 * Evaluates an assertion and adds the result to the statistics.
+	 * 
 	 ***********************************************************************************/
 	public static boolean assertTrue(boolean expected, String title){
 		
-		HSRReportItem item = startAssert(title);
-		 	boolean isTrue = expected == true;
+		 boolean isTrue = (expected == true);
 		 	
-		 	if(isTrue) {
-		 		item.setStatus(ItemStatus.Success);
-		 	}else {
-		 		item.setStatus(ItemStatus.Fail);
-		 	}
-		 HSR.end(title);
+		 addAssert(title, isTrue );
 		 
 		 return isTrue;
+		 
+	}
+	
+	/***********************************************************************************
+	 * Evaluates an assertion and adds the result to the statistics.
+	 * 
+	 ***********************************************************************************/
+	public static boolean assertFalse(boolean expected, String title){
+		
+		 boolean isFalse = (expected == false);
+		 	
+		 addAssert(title, isFalse );
+		 
+		 return isFalse;
 		 
 	}
 	
@@ -315,7 +309,7 @@ public class HSR {
 	 * Starts a new item, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	private static HSRReportItem startItem(ItemType type, String title){
+	private static HSRRecord startItem(HSRRecordType type, String title){
 		
 		return HSR.startItem(type, title, null);
 	}
@@ -324,11 +318,11 @@ public class HSR {
 	 * Starts a new item, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	private static HSRReportItem startItem(ItemType type, String title, HSRReportItem parent){
+	private static HSRRecord startItem(HSRRecordType type, String title, HSRRecord parent){
 				
-		HSRReportItem item = new HSRReportItem(type, title);
+		HSRRecord item = new HSRRecord(type, title);
 		
-		logger.info("\nSTART "+getLogIndendation()+" "+item.getFixSizeNumber()+" "+title);	
+		logger.info("\nSTART "+getLogIndendation()+" "+title);	
 		
 		if(parent == null){
 			item.setParent(getActiveItem());
@@ -344,69 +338,77 @@ public class HSR {
 	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
 	 ***********************************************************************************/
-	public static HSRReportItem addInfoMessage(String title, String message){
+	public static HSRRecord addInfoMessage(String message){
 				
-		return addItem(ItemType.MessageInfo, title).setDescription(message).setStatus(ItemStatus.Undefined);
+		return addItem(HSRRecordType.MessageInfo, message)
+				.status(HSRRecordStatus.Undefined)
+				;
 	}
 	
 	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
 	 ***********************************************************************************/
-	public static HSRReportItem addWarnMessage(String title, String message){
+	public static HSRRecord addWarnMessage(String message){
 				
-		return addItem(ItemType.MessageWarn, title).setDescription(message).setStatus(ItemStatus.Undefined);
+		return addItem(HSRRecordType.MessageWarn, message)
+				.status(HSRRecordStatus.Undefined);
 	}
 	
 	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
 	 ***********************************************************************************/
-	public static HSRReportItem addErrorMessage(String title, String message){
+	public static HSRRecord addErrorMessage(String message){
 				
-		return addItem(ItemType.MessageError, title).setDescription(message).setStatus(ItemStatus.Undefined);
+		return addItem(HSRRecordType.MessageError, message).status(HSRRecordStatus.Undefined);
 	}
 	
 	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
 	 ***********************************************************************************/
-	public static HSRReportItem addErrorMessage(String title, String message, Throwable e){
-				
-		return addItem(ItemType.MessageError, title)
-				.setDescription(message)
-				.setException(e);
-	}
+//	public static HSRRecord addErrorMessage(String title, String message, Throwable e){
+//				
+//		return addItem(HSRRecordType.MessageError, title)
+//				.addMessage(message)
+//				.setException(e);
+//	}
 	
 	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
 	 ***********************************************************************************/
-	public static HSRReportItem addItem(ItemType type, String title){
+	public static HSRRecord addItem(HSRRecordType type, String title){
 		
 		logger.info("  ADD   "+getLogIndendation()+" "+title);	
 		
-		HSRReportItem item = new HSRReportItem(type, title);
-		item.setParent(getActiveItem());
+		HSRRecord item = new HSRRecord(
+						  type
+						, activeItem.get()
+						, title);
 		
+		HSRStatsEngine.addRecord(item);
 		return item;
 	}
 	
 	/***********************************************************************************
 	 * Close the item and returns it to be able to set further details.
 	 ***********************************************************************************/
-	public static HSRReportItem end(String title){
+	public static HSRRecord end(String title){
 
 		if(!openItems().isEmpty()
 		&& openItems().containsKey(title)){
-			HSRReportItem itemToEnd = openItems().get(title);
-			itemToEnd.endItem();
+			HSRRecord itemToEnd = openItems().get(title);
+			itemToEnd.end();
+			
+			HSRStatsEngine.addRecord(itemToEnd);
 			try{
 				if(driver.get() != null){
-					itemToEnd.setUrl(driver.get().getCurrentUrl());
+					itemToEnd.addProperty("URL", driver.get().getCurrentUrl());
 				}
 			}catch(Exception e){
 				//Ignore exceptions like SessionNotFoundException
 			}
 			
 			if(!itemToEnd.equals(getActiveItem())){
-				logger.severe("Items are not closed in the correct order: '"+itemToEnd.getTitle()+"'");
+				logger.severe("Items are not closed in the correct order: '"+itemToEnd.getRecordName()+"'");
 			}
 			activeItem.set(itemToEnd.getParent());
 			openItems().remove(title);
@@ -414,147 +416,26 @@ public class HSR {
 			return itemToEnd;
 		}else{
 			logger.warning("The item is not started and can not be ended: '"+title+"'");
-			return new HSRReportItem(ItemType.MessageInfo, "Prevent NullPointerException");
+			return new HSRRecord(HSRRecordType.MessageInfo, activeItem.get(), "Prevent NullPointerException");
 		}
 		
 		
 	}
 	
-    /**************************************************************************************
-	 * Save a screenshot of the current page to a file and add a step to the report.
-	 * This will only work if the used Driver will support taking screenshots.
-	 * 
-     **************************************************************************************/ 
-	public static void takeScreenshotHTML(){
-		
-		WebDriver localDriver = driver.get();
-		if(localDriver == null){
-			logger.warning("Cannot take screenshots without a driver, please call Report.setDriver() first."); 
-			return;
-		}
-		
-	    if(localDriver instanceof TakesScreenshot) {
-	    	
-	    	try{
-	    		
-	    		String filename = getActiveItem().getFixSizeNumber()+"_Screenshot_"+getActiveItem().getTitle().replaceAll("[^a-zA-Z0-9]", "_")+".html";
-	    		String directory = getTestDirectory()+"screenshots";
-	    	    
-		    	String screenshot = "";
-		    	
-		        // Get the screenshot as Base64 data
-		        String screenshotContent = ((TakesScreenshot)localDriver).getScreenshotAs(OutputType.BASE64);
-		        
-		        String  currentUrl = driver.get().getCurrentUrl();
-	
-	
-		        screenshot = "<html><head><title>" + localDriver.getTitle() + "</title></head><body>" +
-		                "<p>URL:" + currentUrl + "</p>" +
-		                "<img src=\"data:image/png;base64," + screenshotContent + "\" " +
-		                "alt=\"" + currentUrl + "\" />" +
-		                "</body></html>";
-	
-	        	String filepath = directory+"/"+filename;
-	        	HSRReportUtils.writeStringToFile(directory, filename, screenshot);
-				getActiveItem().setScreenshotPath(filepath.replace(CONFIG_REPORT_BASE_DIR, "./"));
-			
-			}catch(Exception e){
-				logger.severe("An exception occured on taking screenshot");
-			}
-		    
-	    } else {
-	        logger.warning("Driver does not support taking screenshots");
-	    }
-	    	
-	}
-	
-    /**************************************************************************************
-	 * Save a screenshot of the current page to a file and add a step to the report.
-	 * This will only work if the used Driver will support taking screenshots.
-	 * 
-     **************************************************************************************/ 
-	public static void takeScreenshot(){
-		
-		WebDriver localDriver = driver.get();
-		if(localDriver == null){
-			logger.warning("Cannot take screenshots without a driver, please call Report.setDriver() first."); 
-			return;
-		}
-		
-	    if(localDriver instanceof TakesScreenshot) {
-	    	byte[] screenshotBytes = ((TakesScreenshot)localDriver).getScreenshotAs(OutputType.BYTES);
-	    	
-	    	addScreenshot(screenshotBytes);
-		    
-	    } else {
-	        logger.warning("Driver does not support taking screenshots.");
-	    }
-	    	
-	}
-
-    /**************************************************************************************
-	 * Add a screenshot to the current step.
-	 * 
-     **************************************************************************************/ 
-	public static void addScreenshot(byte[] screenshotBytes) {
-		try{
-			
-			String filename = getActiveItem().getFixSizeNumber()+"_Screenshot_"+getActiveItem().getTitle().replaceAll("[^a-zA-Z0-9]", "_")+".png";
-			String directory = getTestDirectory()+"screenshots";
-			String filepath = directory+"/"+filename;
-			
-		    // Get the screenshot as Base64 data
-		    FileUtils.writeByteArrayToFile(new File(filepath), screenshotBytes);;
-		    
-			getActiveItem().setScreenshotPath(filepath.replace(CONFIG_REPORT_BASE_DIR, "./"));
-		
-		}catch(Exception e){
-			logger.warning("An exception occured on taking screenshot:"+e.getMessage());
-		}
-	}
-	
-    /**************************************************************************************
-	 * Save a screenshot of the current page to a file and add a step to the report.
-	 * This will only work if the used Driver will support taking screenshots.
-	 * 
-     **************************************************************************************/ 
-	public static void saveHTMLSource(){
-		WebDriver localDriver = driver.get();
-		
-		if(localDriver == null){
-			logger.warning("Cannot save HTML source without a driver, please call Report.setDriver() first."); 
-			return;
-		}
-		
-		try{
-			String filename = getActiveItem().getFixSizeNumber()+"_HTML_"+getActiveItem().getTitle().replaceAll("[^a-zA-Z0-9]", "_")+".html";
-			String directory = getTestDirectory()+"htmlSources";
-	    	
-	        String source = localDriver.getPageSource();
-	        
-	    	String filepath = directory+"/"+filename;
-	    	HSRReportUtils.writeStringToFile(directory, filename, source);
-			getActiveItem().setSourcePath(filepath.replace(CONFIG_REPORT_BASE_DIR, "./"));
-			
-		}catch(Exception e){
-			logger.severe("An exception occured on saving the HTML source: "+e.getMessage());
-		}
-		
-	}
 
 	/***********************************************************************************
 	 * Return the current active step.
 	 ***********************************************************************************/
-	protected static void setStatusOnCurrentTree(ItemStatus status){
+	protected static void setStatusOnCurrentTree(HSRRecordStatus status){
 			
-		for(HSRReportItem item : openItems().values()){
+		for(HSRRecord item : openItems().values()){
 
-			if(status == ItemStatus.Fail){ 
-				item.setStatus(status);
-			}else if (status == ItemStatus.Skipped && item.getStatus() != ItemStatus.Fail){
-				item.setStatus(status);
-			}else if(status == ItemStatus.Success && item.getStatus() == ItemStatus.Undefined){
-				item.setStatus(status);
+			if(status == HSRRecordStatus.Fail){ 
+				item.status(status);
+			}else if (status == HSRRecordStatus.Skipped && item.getStatus() != HSRRecordStatus.Fail){
+				item.status(status);
+			}else if(status == HSRRecordStatus.Success && item.getStatus() == HSRRecordStatus.Undefined){
+				item.status(status);
 			}
 						
 		}
@@ -573,14 +454,7 @@ public class HSR {
 		}
 		return logIndentation.toString();
 	}
-	
-	/***********************************************************************************
-	 * Reset Item Counter.
-	 ***********************************************************************************/
-	protected static void resetItemCounter(){
-		HSRReportItem.resetItemCounter();
-	}
-	
+		
 	/***********************************************************************************
 	 * Create the report.
 	 ***********************************************************************************/
@@ -594,23 +468,21 @@ public class HSR {
     	
 		//-----------------------------------
 		// End Items
-		for(HSRReportItem item : openItems().values()){
-			if(!CONFIG_CLOSE_CHECK_SUITE && item.getType() == ItemType.Suite) { continue ;}
-			if(!CONFIG_CLOSE_CHECK_CLASS && item.getType() == ItemType.Class) { continue ;}
-			if(!CONFIG_CLOSE_CHECK_TEST && item.getType() == ItemType.Test) { continue ;}
+		for(HSRRecord item : openItems().values()){
 			
-			logger.warning("Item was not ended properly: '"+item.getTitle()+"'");
-			item.endItem().setTitle(item.getTitle()+"(NOT ENDED PROPERLY)");
+			logger.warning("Item was not ended properly: '"+item.getRecordName()+"'");
+			item.end().recordName(item.getRecordName()+"(NOT ENDED PROPERLY)");
 		}
 		
 		//-----------------------------------
 		// Make Json
-		String json = HSRReportUtils.generateJSON(rootItem.get().getChildren());
+		// TODO Get from StatsEngine
+		//String json = HSRReportUtils.generateJSON(rootItem.get().getChildren());
 		
 		//-----------------------------------
 		// Add to data.js
-		String javascript = "DATA = DATA.concat(\n"+json+"\n);";
-		HSRReportUtils.writeStringToFile(CONFIG_REPORT_BASE_DIR, "data.js", javascript);
+//		String javascript = "DATA = DATA.concat(\n"+json+"\n);";
+//		HSRReportUtils.writeStringToFile(CONFIG_REPORT_BASE_DIR, "data.js", javascript);
 	}
 	
 }

@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import com.xresch.hierastatsreport.base.HSRReportItem;
+import com.google.gson.JsonObject;
 
 /**************************************************************************************************************
  * This class holds one single raw record ready to be aggregated.
@@ -25,12 +25,11 @@ public class HSRRecord {
 	private HSRRecordType type = HSRRecordType.UNKNOWN;
 	private String recordName = "unnamedRequest";  // name of this item
 	private String statsIdentifier = null;
-	private long startTimestamp = -1;
+	private long startMillis = -1;
 	private long endTimestamp = -1;
 	private HSRRecordStatus status = HSRRecordStatus.Success;
 	private String responseCode = "000";
 	
-	private HashSet<String> messages = new HashSet<String>();
 	
 	private BigDecimal value = null;
 	
@@ -38,14 +37,25 @@ public class HSRRecord {
 	
 	private boolean identityChanged = true;
 	
+	private JsonObject properties = new JsonObject();
+	
 	
 	/******************************************************************
 	 * 
 	 ******************************************************************/
 	public enum HSRRecordType{
 		  STEP("step")
+		, GROUP("group")
 		, USER("user")
+		, MESSAGE("message")
+		, EXCEPTION("exception")
 		, UNKNOWN("unknown")
+		, Assert("Assert")
+		, Wait("Wait")
+		, MessageInfo("Wait")
+		, MessageWarn("Wait")
+		, MessageError("Wait")
+		
 		;
 		
 		private String typeName;
@@ -87,14 +97,52 @@ public class HSRRecord {
 				return state;
 			}
 		}
+	/********************************************************************
+	 * Creates a new record, take values from parent.
+	 * 
+	 * @param type the type of the record
+	 * @param parent the parent of this item
+	 * @param recordName the name of this record (e.g. Step name)
+	 *******************************************************************/
+	public HSRRecord(
+			  HSRRecordType type
+			, String recordName
+			){
+		
+		type(type);
+		recordName(recordName);
+		startTimestamp(System.currentTimeMillis()); // now
+		value(BigDecimal.ONE); 
+				
+	}
 	
 	/********************************************************************
 	 * Creates a new record, take values from parent.
 	 * 
 	 * @param type the type of the record
-	 * @param simulation the name of the simulation (E.g. Test Suite, Test Set etc...)
-	 * @param scenario the name of the scenario (Use Case etc...)
-	 * @param groups the groups that are defining the hierarchy
+	 * @param parent the parent of this item
+	 * @param recordName the name of this record (e.g. Step name)
+	 *******************************************************************/
+	public HSRRecord(
+			  HSRRecordType type
+			, HSRRecord parent
+			, String recordName
+			){
+		
+		setParent(parent);
+		
+		type(type);
+		recordName(recordName);
+		startTimestamp(System.currentTimeMillis()); // now
+		value(BigDecimal.ONE); 
+			
+	}
+
+	/********************************************************************
+	 * Creates a new record, take values from parent.
+	 * 
+	 * @param type the type of the record
+	 * @param parent the parent of this item
 	 * @param recordName the name of this record (e.g. Step name)
 	 * @param value the value of this record
 	 *******************************************************************/
@@ -105,31 +153,14 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		//--------------------------
-		// Set Record Values
-		this.parent = parent;
+		setParent(parent);
+		recordName(recordName);
 		
 		type(type);
 		startTimestamp(System.currentTimeMillis()); // now
-		value(value); 
-		
-		if(parent != null) {
-			//--------------------------
-			// Set Values from Parent
-			
-			simulation(parent.getSimulation());
-			scenario(parent.getScenario());
-			recordName(recordName);
-					
-			//--------------------------
-			// Set Groups
-			List<String> unmodifyableGroups = parent.getGroups();
-			groups(unmodifyableGroups);
-			this.groups.add(parent.getRecordName());
-		}
-		
-				
+		value(value); 		
 	}
+	
 	/********************************************************************
 	 * Creates a new record.
 	 * 
@@ -201,13 +232,36 @@ public class HSRRecord {
 		
 		status(status);
 		responseCode(responseCode);
-		addMessage(message);
 		
 		startTimestamp(startTimestamp); 
 		endTimestamp(endTimestamp); 
 
 		value(value); 
 				
+	}
+	
+	/******************************************************************
+	 * This will also take over other values from the parent and override
+	 * them, including: simulation, scenario, recordName groups
+	 ******************************************************************/
+	public HSRRecord setParent(HSRRecord parent) {
+		this.parent = parent;
+		
+		if(parent != null) {
+			//--------------------------
+			// Set Values from Parent
+			
+			simulation(parent.getSimulation());
+			scenario(parent.getScenario());
+					
+			//--------------------------
+			// Set Groups
+			List<String> unmodifyableGroups = parent.getGroups();
+			groups(unmodifyableGroups);
+			this.groups.add(parent.getRecordName());
+		}
+		
+		return this;
 	}
 	
 	/******************************************************************
@@ -257,7 +311,7 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public HSRRecord startTimestamp(long startTimestamp) {
-		this.startTimestamp = startTimestamp;
+		this.startMillis = startTimestamp;
 		return this;
 	}
 	
@@ -270,17 +324,13 @@ public class HSRRecord {
 	}
 	
 	
-
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord addMessage(String message) {
-		if(message != null && !message.isBlank() ) {			
-			this.messages.add(message); 
-		}
+	public HSRRecord addProperty(String key, String value) {
+		properties.addProperty(key, value);
 		return this;
 	}
-	
 	
 	/******************************************************************
 	 * 
@@ -335,6 +385,18 @@ public class HSRRecord {
 		return this;
 	}
 	
+	/***********************************************************************************
+	 * Ends a time measurement and set the duration as the value of this record.
+	 ***********************************************************************************/
+	public HSRRecord end(){
+		
+		long endMillis = System.currentTimeMillis();
+		long duration = (endMillis - startMillis);
+		this.value(new BigDecimal(duration));
+		return this;
+		
+	}
+	
 	
 	/******************************************************************
 	 * Returns the string used for grouping the statistics.
@@ -383,7 +445,7 @@ public class HSRRecord {
 			.append( type.typeName() ).append(" ")
 			.append( status ).append(" ")
 			.append( responseCode ).append(" ")
-			.append( startTimestamp ).append(" ")
+			.append( startMillis ).append(" ")
 			.append( endTimestamp ).append(" ")
 			.append( scenario.replaceAll(" ", "_") ).append(" ")
 			.append( getGroupsAsString("/", "noGroup").replaceAll(" ", "_") ).append(" ")
@@ -466,6 +528,19 @@ public class HSRRecord {
 		
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
+	public int getLevel() {
+		
+		if(this.parent != null){
+			return parent.getLevel()+1;
+		}else{
+			return 1;
+		}
+		
+	}
+	
 	/******************************************************************
 	 * Returns the simple name of the metric
 	 ******************************************************************/
@@ -477,7 +552,7 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public long getStartTimestamp() {
-		return startTimestamp;
+		return startMillis;
 	}
 
 	/******************************************************************
@@ -500,12 +575,12 @@ public class HSRRecord {
 	public String getResponseCode() {
 		return responseCode;
 	}
-
+	
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HashSet<String> getMessages() {
-		return messages;
+	public HSRRecord getParent() {
+		return parent;
 	}
 
 	/******************************************************************

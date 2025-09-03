@@ -92,7 +92,7 @@ public class TestExampleJUnitPlaywright {
     page.locator("input").check();
     
     HSR.assertTrue((Boolean) page.evaluate("() => window['checkbox'].checked"), "Checkbox is checked");
-    HSR.addScreenshot(page.screenshot());
+
   }
 
   /*****************************************************************
@@ -107,7 +107,6 @@ public class TestExampleJUnitPlaywright {
 	stepName = "000_Open_Homepage";
 	HSR.start(stepName);
     	page.navigate("https://www.wikipedia.org/");
-    	HSR.addScreenshot(page.screenshot());
     HSR.end(stepName);
     
     //-------------------------------
@@ -116,7 +115,6 @@ public class TestExampleJUnitPlaywright {
   	HSR.start(stepName);
 	    page.locator("input[name=\"search\"]").click();
 	    page.locator("input[name=\"search\"]").fill("playwright");
-	    HSR.addScreenshot(page.screenshot());
 	HSR.end(stepName);
 	
     //-------------------------------
@@ -124,16 +122,12 @@ public class TestExampleJUnitPlaywright {
   	stepName = "020_Execute_Search";
   	HSR.start(stepName);
 	    page.locator("input[name=\"search\"]").press("Enter");
-	    HSR.addScreenshot(page.screenshot());
 	HSR.end(stepName);
 	
     //-------------------------------
   	// 
   	stepName = "030_Assert_IsPlaywrightPage";
-  	HSR.startAssert(stepName);
-	    assertEquals("https://en.wikipedia.org/wiki/Playwright", page.url());
-	    HSR.addScreenshot(page.screenshot());
-	HSR.end(stepName);
-	
+  	HSR.assertEquals("https://en.wikipedia.org/wiki/Playwright", page.url(), stepName);
+		
   }
 }

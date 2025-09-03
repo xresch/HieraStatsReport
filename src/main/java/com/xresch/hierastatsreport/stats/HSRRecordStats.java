@@ -26,6 +26,7 @@ public class HSRRecordStats {
 		
 	private long time;
 	private HSRRecordType type;
+	private HSRRecordState state;
 	private String simulation;		// the name of the test
 	private String scenario;		// the name of the scenario
 	private String metricName;		// the name of the metric, one of the items in the lost metricNames
@@ -48,12 +49,12 @@ public class HSRRecordStats {
 	 ***********************************************************************/
 	public enum RecordField {
 		  time("DECIMAL(19, 0)") // ANSI SQL for Long value
-		, type("VARCHAR(16)")
+		, type("VARCHAR(32)")
 		, simulation("VARCHAR(4096)")
 		, scenario("VARCHAR(4096)")
 		, groups("VARCHAR(4096)")
-		, metric("VARCHAR(4096)")
-		, code("VARCHAR(16)")
+		, name("VARCHAR(4096)")
+		, code("VARCHAR(32)")
 		, granularity("INTEGER")
 		;
 		
@@ -102,8 +103,8 @@ public class HSRRecordStats {
 		, p25("PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY \"{type}_p25\")") // (CALL AGGREGATE_PERC('p50', 0.50, ?, ?, ?, ?))
 		, p50("PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY \"{type}_p50\")")
 		, p75("PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY \"{type}_p75\")")
+		, p90("PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY \"{type}_p90\")")
 		, p95("PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY \"{type}_p95\")") 
-		, p99("PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY \"{type}_p99\")")
 		;
 		
 		private String sqlAggregation = "";
@@ -214,26 +215,6 @@ public class HSRRecordStats {
 		for(String name : valueNames) {
 			csvHeaderTemplate += ","+name;
 		}
-		//csvHeaderTemplate += "\r\n";
-		
-		//-----------------------------------------
-		// SQL Create Table Template
-//		for(String name : valueNames) {
-//			sqlCreateTableTemplate += ", "+name+" DECIMAL(32,3)";
-//		}
-//		sqlCreateTableTemplate += ");";
-
-		//-----------------------------------------
-		// SQL Insert Into Template
-
-//		String sqlInsertValues = "VALUES (?, ?, ?, ?, ?, ?, ?";
-//		for(String name : valueNames) {
-//			//sqlInsertIntoTemplate += ","+name;
-//			sqlInsertValues += ", ?";
-//		}
-//		sqlInsertValues += ")";
-//		sqlInsertIntoTemplate += ") " + sqlInsertValues;
-		
 		
 	}
 	
@@ -256,14 +237,15 @@ public class HSRRecordStats {
 							, BigDecimal p25 		
 							, BigDecimal p50 		
 							, BigDecimal p75 		
+							, BigDecimal p90 	
 							, BigDecimal p95 		
-							, BigDecimal p99 	
 						){	
 		
 		//-----------------------------------
 		// Parse Message
 		this.time = timeMillis;
 		this.type = record.getType();
+		this.state = record.getStatus().state();
 		this.simulation = record.getSimulation();
 		this.scenario = record.getScenario();
 		this.metricName = record.getRecordName();
@@ -285,34 +267,27 @@ public class HSRRecordStats {
 		
 		//-----------------------------------
 		// Add Values
-		String statusLower = record.getStatus().state().toString().toLowerCase();  
+		HSRRecordState state = record.getStatus().state();  
 		
-		targetForData.addValue(statusLower, RecordMetric.count, count.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.min, min.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.max, max.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.avg, avg.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.stdev, stdev.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.p25, p25.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.p50, p50.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.p75, p75.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.p95, p95.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.p99, p99.toPlainString());
+		targetForData.addValue(state, RecordMetric.count, count);
+		targetForData.addValue(state, RecordMetric.min, min);
+		targetForData.addValue(state, RecordMetric.max, max);
+		targetForData.addValue(state, RecordMetric.avg, avg);
+		targetForData.addValue(state, RecordMetric.stdev, stdev);
+		targetForData.addValue(state, RecordMetric.p25, p25);
+		targetForData.addValue(state, RecordMetric.p50, p50);
+		targetForData.addValue(state, RecordMetric.p75, p75);
+		targetForData.addValue(state, RecordMetric.p90, p90);
+		targetForData.addValue(state, RecordMetric.p95, p95);
 		
 	}	
 	
 	/***********************************************************************
 	 * 
-	 * @param type either ok | nok | all | users
 	 ***********************************************************************/
-	private void addValue(String type, RecordMetric metric, String value) {
+	private void addValue(HSRRecordState state, RecordMetric metric, BigDecimal value) {
 		
-		BigDecimal parsedInt = new BigDecimal(value);
-		String finalMetric = metric.toString()
-//								.replace("percentiles", "p")
-//								.replace("stdDev", "stdev")
-								;  // make it shorter to reduce footprint
-
-		values.put(type +"_"+finalMetric, parsedInt);
+		values.put(state +"_"+metric, value);
 
 	}
 	
@@ -371,7 +346,7 @@ public class HSRRecordStats {
 		object.addProperty(RecordField.simulation.toString(), 	simulation);
 		object.addProperty(RecordField.scenario.toString(), 	scenario);
 		object.addProperty(RecordField.groups.toString(), 		groupsPath);
-		object.addProperty(RecordField.metric.toString(), 		metricName);
+		object.addProperty(RecordField.name.toString(), 		metricName);
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
 		
@@ -413,8 +388,8 @@ ok_stdev,
 ok_p25,
 ok_p50,
 ok_p75,
+ok_p90,
 ok_p95,
-ok_p99,
 nok_count,
 nok_min,
 nok_max,
@@ -423,8 +398,8 @@ nok_stdev,
 nok_p25,
 nok_p50,
 nok_p75,
-nok_p95,
-nok_p99)
+nok_p90,
+nok_p95)
 SELECT 
       MIN("time") + ((MAX("time") - MIN("time"))/2) AS "time"
     , "type","simulation","scenario","groups","metric","code"
@@ -438,8 +413,8 @@ SELECT
 , PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "ok_p25") AS "ok_p25"
 , PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY "ok_p50") AS "ok_p50"
 , PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "ok_p75") AS "ok_p75"
+, PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY "ok_p90") AS "ok_p90"
 , PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "ok_p95") AS "ok_p95"
-, PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY "ok_p99") AS "ok_p99"
 , SUM("nok_count") AS "nok_count"
 , MIN("nok_min") AS "nok_min"
 , MAX("nok_max") AS "nok_max"
@@ -448,8 +423,8 @@ SELECT
 , PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "nok_p25") AS "nok_p25"
 , PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY "nok_p50") AS "nok_p50"
 , PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "nok_p75") AS "nok_p75"
+, PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY "nok_p90") AS "nok_p90"
 , PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "nok_p95") AS "nok_p95"
-, PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY "nok_p99") AS "nok_p99"
 FROM gatlytronx_stats
 WHERE 
 	"time" >= ? 
@@ -544,6 +519,13 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	 * Returns the type of this record.
 	 ***********************************************************************/
 	public HSRRecordType getType() {
+		return type;
+	}
+	
+	/***********************************************************************
+	 * Returns the type of this record.
+	 ***********************************************************************/
+	public HSRRecordType getState() {
 		return type;
 	}
 	

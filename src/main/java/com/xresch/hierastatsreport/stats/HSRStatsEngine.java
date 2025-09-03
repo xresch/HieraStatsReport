@@ -12,9 +12,13 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.reporting.HSRReporter;
 import com.xresch.hierastatsreport.reporting.HSRReporterDatabase;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
+import com.xresch.hierastatsreport.stats.HSRRecordStats.RecordMetric;
 
 /**************************************************************************************************************
  * The statistics engine that aggregates stuff.
@@ -29,7 +33,12 @@ public class HSRStatsEngine {
 	private static final Object SYNC_LOCK = new Object();
 
 	// key is a group name, value are all records that are part of the group
-	private static TreeMap<String, ArrayList<HSRRecord> > groupedRecords = new TreeMap<>();
+	// these are aggregated and purged based on the report interval
+	private static TreeMap<String, ArrayList<HSRRecord> > groupedRecordsInterval = new TreeMap<>();
+	
+	// key is based on hashCode() which is the StatsIdentifier, value are all Stats that are part of the group
+	// these are used for making reports over the full test duration
+	private static TreeMap<HSRRecordStats, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
 
 	private static Thread reporterThread;
 	private static boolean isStopped;
@@ -87,11 +96,11 @@ public class HSRStatsEngine {
 		synchronized (SYNC_LOCK) {
 			String id = record.getStatsIdentifier();
 			
-			if( !groupedRecords.containsKey(id) ) {
-				groupedRecords.put(id, new ArrayList<>() );
+			if( !groupedRecordsInterval.containsKey(id) ) {
+				groupedRecordsInterval.put(id, new ArrayList<>() );
 			}
 			
-			groupedRecords.get(id).add(record);
+			groupedRecordsInterval.get(id).add(record);
 		}
 	
 	}
@@ -103,8 +112,7 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	private static void aggregateAndReport() {
 
-		
-		if(groupedRecords.isEmpty()) { return; }
+		if(groupedRecordsInterval.isEmpty()) { return; }
 		
 		//----------------------------------------
 		// Create User Records
@@ -117,8 +125,8 @@ public class HSRStatsEngine {
 		
 		TreeMap<String, ArrayList<HSRRecord> > groupedRecordsCurrent;
 		synchronized (SYNC_LOCK) {
-			groupedRecordsCurrent = groupedRecords;
-			groupedRecords = new TreeMap<>();
+			groupedRecordsCurrent = groupedRecordsInterval;
+			groupedRecordsInterval = new TreeMap<>();
 		}
 		
 
@@ -157,8 +165,8 @@ public class HSRStatsEngine {
 			BigDecimal p25 		= bigPercentile(25, values);
 			BigDecimal p50 		= bigPercentile(50, values);
 			BigDecimal p75 		= bigPercentile(75, values);
+			BigDecimal p90 		= bigPercentile(90, values);
 			BigDecimal p95 		= bigPercentile(95, values);
-			BigDecimal p99 		= bigPercentile(99, values);
 			
 			//---------------------------
 			// Create StatsRecord
@@ -176,17 +184,136 @@ public class HSRStatsEngine {
 				, p25 		
 				, p50 		
 				, p75 		
+				, p90	
 				, p95 		
-				, p99 	
 			);
+			
+		}
+		
+		//-------------------------------
+		// Add To Grouped Stats
+		for(Entry<HSRRecordStats, HSRRecordStats> entry : statsRecords.entrySet()) {
+			HSRRecordStats key = entry.getKey();
+			HSRRecordStats value = entry.getValue();
+			
+			if( !groupedStats.containsKey(key) ) {
+				groupedStats.put(key,  new ArrayList<>());
+			}
+			
+			groupedStats.get(key).add(value);
+			
+		}
+		//-------------------------------
+		// Report Stats
+		sendRecordsToReporter(statsRecords);
+		
 
+		
+		//-------------------------------
+		// Report Test Settings
+		if(isFirstReport) {
+			isFirstReport = false;
+			sendTestSettingsToDBReporter();
+		}
+		
+	}
+	
+	/***************************************************************************
+	 * Aggregates the grouped statistics and makes one final report
+	 * 
+	 ***************************************************************************/
+	private static void finalReportaggregateAndReport() {
+
+		if(groupedRecordsInterval.isEmpty()) { return; }
+		
+		//----------------------------------------
+		// Create User Records
+		//TODO InjectedDataReceiver.createUserRecords(); 
+		
+		//----------------------------------------
+		// Steal Reference to not block writing
+		// new records
+		LinkedHashMap<HSRRecordStats, HSRRecordStats> statsRecords = new LinkedHashMap<>();
+		
+		
+		//----------------------------------------
+		// Iterate Groups
+		for(Entry<HSRRecordStats, ArrayList<HSRRecordStats>> entry : groupedStats.entrySet()) {
+			
+			HSRRecordStats targetStats = entry.getKey();
+			ArrayList<HSRRecordStats> records = entry.getValue();
+			
+			//---------------------------
+			// Make a Matrix of all values by state and type
+			Table<HSRRecordState, RecordMetric, ArrayList<BigDecimal> > valuesTable = HashBasedTable.create();
+			
+			for(HSRRecordStats stats : records) {
+				stats.getState();
+				
+				for(HSRRecordState state : HSRRecordState.values()) {
+					
+					for(RecordMetric metric : RecordMetric.values()) { 
+						
+						if( ! valuesTable.contains(state, metric)) {
+							valuesTable.put(state, metric, new ArrayList<>());
+						}
+						
+						BigDecimal value = stats.getValue(state, metric);
+						
+						if(value != null) {
+							
+							valuesTable.get(state, metric).add(value);
+						}
+						
+					}
+				}
+			}
+			
+			// skip if group is empty
+			if(values.isEmpty()) { continue; }
+			
+			// sort, needed for calculating the stats
+			values.sort(null);
+			
+			//---------------------------
+			// Calculate Stats
+			BigDecimal count 	= new BigDecimal(values.size());
+			BigDecimal min 		= values.get(0);
+			BigDecimal avg 		= sum.divide(count, RoundingMode.HALF_UP);
+			BigDecimal max 		= values.get( values.size()-1 );
+			BigDecimal stdev 	= bigStdev(values, avg, false);
+			BigDecimal p25 		= bigPercentile(25, values);
+			BigDecimal p50 		= bigPercentile(50, values);
+			BigDecimal p75 		= bigPercentile(75, values);
+			BigDecimal p95 		= bigPercentile(95, values);
+			BigDecimal p90 		= bigPercentile(90, values);
+			
+			//---------------------------
+			// Create StatsRecord
+			HSRRecord firstRecord = records.get(0);
+			
+			new HSRRecordStats(
+				  statsRecords
+			    , firstRecord
+			    , System.currentTimeMillis()
+				, count 
+				, avg 
+				, min 		
+				, max 			
+				, stdev 	
+				, p25 		
+				, p50 		
+				, p75 		
+				, p90 	
+				, p95 		
+			);
+			
 		}
 		
 		//-------------------------------
 		// Report Stats
 		sendRecordsToReporter(statsRecords);
-		
-		
+	
 		//-------------------------------
 		// Report Test Settings
 		if(isFirstReport) {

@@ -33,7 +33,7 @@ public class HSRReportItem {
 	private ItemStatus status = ItemStatus.Success;
 	private ArrayList<HSRReportItem> children = new ArrayList<HSRReportItem>();
 	
-	public enum ItemType {Suite, Class, Test, Step, MessageInfo, MessageWarn, MessageError, Wait, Assert }
+	public enum ItemType {Suite, Class, Test, Group, Step, MessageInfo, MessageWarn, MessageError, Wait, Assert }
 	public enum ItemStatus { Undefined, Success, Fail, Skipped, Aborted }
 	
 	private static ThreadLocal<Integer> itemCount = new ThreadLocal<Integer>();
@@ -43,6 +43,9 @@ public class HSRReportItem {
 		itemCount.set(1);
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem(ItemType type, String title){
 		this.type = type;
 		this.title = title;
@@ -52,6 +55,9 @@ public class HSRReportItem {
 	}
 	
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem endItem(){
 		
 		long endNanos = System.nanoTime();
@@ -61,6 +67,9 @@ public class HSRReportItem {
 		
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	private void calculateItemNumber(){
 		synchronized (itemCountLock) {
 			
@@ -72,12 +81,18 @@ public class HSRReportItem {
 		}
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	protected static void resetItemCounter(){
 		synchronized (itemCountLock) {
 			itemCount.set(1);
 		}
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public String getFixSizeNumber() {
 	
 		StringBuffer fixedLenght = new StringBuffer("");
@@ -89,68 +104,113 @@ public class HSRReportItem {
 		return fixedLenght.toString();
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public int getItemNumber() {
 		return itemNumber;
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setItemNumber(int stepNumber) {
 		this.itemNumber = stepNumber;
 		return this;
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public long getDuration() {
 		return duration;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setDuration(long duration) {
 		this.duration = duration;
 		return this;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public String getTitle() {
 		return title;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setTitle(String title) {
 		this.title =  escapeIt(title);
 		return this;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public String getDescription() {
 		return description;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setDescription(String description) {
 		this.description =  escapeIt(description);
 		return this;
 	}
 
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public String getUrl() {
 		return url;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public void setUrl(String url) {
 		this.url =  escapeIt(url);
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public String getExceptionStacktrace() {
 		return exceptionStacktrace;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public void setExceptionStacktrace(String exceptionStacktrace) {
 		this.exceptionStacktrace =  escapeIt(exceptionStacktrace);
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public String getExceptionMessage() {
 		return exceptionMessage;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setExceptionMessage(String exceptionMessage) {
 		this.exceptionMessage =  escapeIt(exceptionMessage);
 		return this;
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setException(Throwable e) {
 		
 		StringBuffer stacktrace = new StringBuffer(); 
@@ -163,16 +223,25 @@ public class HSRReportItem {
 		this.exceptionStacktrace =  escapeIt(stacktrace.toString());
 		return this;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public ItemType getType() {
 		return type;
 	}
 
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setType(ItemType type) {
 		this.type = type;
 		return this;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public ItemStatus getStatus() {
 		return status;
 	}
@@ -201,33 +270,59 @@ public class HSRReportItem {
 		return this;
 	}
 	
-	
+	/***********************************************************************************
+	 * 
+	 * @return
+	 ***********************************************************************************/
 	public String getTimestamp() {
 		return timestamp;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 * @return
+	 ***********************************************************************************/
 	public HSRReportItem setTimestamp(String timestamp) {
 		this.timestamp = timestamp;
 		return this;
 	}
 
-
+	/***********************************************************************************
+	 * 
+	 * @return
+	 ***********************************************************************************/
 	public String getScreenshotPath() {
 		return screenshotPath;
 	}
 
+	/***********************************************************************************
+	 * 
+	 * @return
+	 ***********************************************************************************/
 	public void setScreenshotPath(String screenshotPath) {
 		this.screenshotPath =  escapeIt(screenshotPath);
 	}
 
+	/***********************************************************************************
+	 * 
+	 * @return
+	 ***********************************************************************************/
 	public String getSourcePath() {
 		return sourcePath;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 * @return
+	 ***********************************************************************************/
 	public void setSourcePath(String sourcePath) {
 		this.sourcePath = escapeIt(sourcePath);
 	}
 	
+	/***********************************************************************************
+	 * 
+	 * @return
+	 ***********************************************************************************/
 	public HSRReportItem getParent() {
 		return parent;
 	}
@@ -253,21 +348,33 @@ public class HSRReportItem {
 		}
 
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public void setParent(HSRReportItem parent) {
 		this.parent = parent;
 		parent.appendChild(this);
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public ArrayList<HSRReportItem> getChildren() {
 		return children;
 	}
-
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public HSRReportItem setChildren(ArrayList<HSRReportItem> children) {
 		this.children = children;
 		return this;
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public void appendChild(HSRReportItem child) {
 		if(child.getParent() == null || !child.getParent().equals(this)){
 			child.setParent(this);
@@ -275,6 +382,9 @@ public class HSRReportItem {
 		children.add(child);
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public int getLevel() {
 		
 		if(this.parent != null){
@@ -285,11 +395,17 @@ public class HSRReportItem {
 		
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	public boolean hasChildren(HSRReportItem child) {
 		
 		return !children.isEmpty();
 	}
 	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
 	private static String escapeIt(String string) {
         String escapes[][] = new String[][]{
                 {"\n", "<br>"},
