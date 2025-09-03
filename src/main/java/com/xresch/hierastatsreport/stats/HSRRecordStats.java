@@ -9,7 +9,8 @@ import com.google.gson.JsonObject;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.database.DBInterface;
 import com.xresch.hierastatsreport.database.HSRDBInterface;
-import com.xresch.hierastatsreport.stats.HSRRecord.GatlytronRecordType;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordType;
 import com.xresch.hierastatsreport.utils.GatlytronFiles;
 
 /**************************************************************************************************************
@@ -24,7 +25,7 @@ public class HSRRecordStats {
 	
 		
 	private long time;
-	private GatlytronRecordType type;
+	private HSRRecordType type;
 	private String simulation;		// the name of the simulation
 	private String scenario;		// the name of the scenario
 	private String metricName;		// the name of the metric, one of the items in the lost metricNames
@@ -35,6 +36,12 @@ public class HSRRecordStats {
 	private int granularity;
 	private String statsIdentifier;
 	private HashMap<String, BigDecimal> values = new HashMap<>();
+	
+	private static final String ok = HSRRecordState.ok.toString();
+	private static final String ok_ = ok+"_";
+	
+	private static final String nok = HSRRecordState.nok.toString();
+	private static final String nok_ = nok+"_";
 	
 	/***********************************************************************
 	 * Lists of the names of the metrics 
@@ -89,8 +96,8 @@ public class HSRRecordStats {
 	public enum RecordMetric {
 		  count("SUM(\"{type}_count\")")
 		, min("MIN(\"{type}_min\")")
+		, avg("AVG(\"{type}_avg\")")
 		, max("MAX(\"{type}_max\")")
-		, mean("AVG(\"{type}_mean\")")
 		, stdev("STDDEV(\"{type}_stdev\")")
 		, p25("PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY \"{type}_p25\")") // (CALL AGGREGATE_PERC('p50', 0.50, ?, ?, ?, ?))
 		, p50("PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY \"{type}_p50\")")
@@ -107,18 +114,19 @@ public class HSRRecordStats {
 		private static ArrayList<String> names = new ArrayList<>();
 		private static String sqlAggregationPart = "";
 		static {
-			for(RecordMetric type : RecordMetric.values()) { 
-				names.add(type.name()); 
-				sqlAggregationPart += "\r\n, "
-						+ type.sqlAggregation.replace("{type}", "ok")
-						+ " AS \"ok_"+type.name()+"\""
-						;
+			
+			for(HSRRecordState state : HSRRecordState.values()) {
+				String okNok = state.toString();
+				
+				for(RecordMetric type : RecordMetric.values()) { 
+					names.add(type.name()); 
+					sqlAggregationPart += "\r\n, "
+							+ type.sqlAggregation.replace("{type}", okNok )
+							+ " AS \""+ okNok + "_" + type.name()+"\""
+							;
+				}
 			}
-			for(RecordMetric type : RecordMetric.values()) { 
-				sqlAggregationPart += "\r\n, "
-								+ type.sqlAggregation.replace("{type}", "ko")
-								+ " AS \"ko_"+type.name()+"\"";
-			}
+			
 		}
 
 		public static boolean has(String value) { return names.contains(value); }
@@ -132,8 +140,8 @@ public class HSRRecordStats {
 		public static ArrayList<String> getValueNames() { 
 			ArrayList<String> valueNames =  new ArrayList<>();
 			
-			for(String name : names) { valueNames.add("ok_"+name); }
-			for(String name : names) { valueNames.add("ko_"+name); }
+			for(String name : names) { valueNames.add( ok_ + name); }
+			for(String name : names) { valueNames.add( nok_ + name); }
 			
 			return valueNames;
 		}
@@ -149,11 +157,11 @@ public class HSRRecordStats {
 	public static final ArrayList<String> fieldNames = RecordField.getFieldNames();
 	public static final String fieldNamesJoined = "\""+String.join("\",\"", fieldNames.toArray(new String[0]))+"\"";
 	
-	// list of metric names e.g. min, mean, max ...
+	// list of metric names e.g. min, avg, max ...
 	public static final ArrayList<String> metricNames = RecordMetric.getNames();
 	public static final String metricNamesJoined = "\""+String.join("\",\"", metricNames.toArray(new String[0]))+"\"";
 	
-	// value names consist of type + "_" + metric, e.g. ok_min, ok_mean, ok_max ... ko_min, ko_mean, ko_max ...
+	// value names consist of type + "_" + metric, e.g. ok_min, ok_avg, ok_max ... nok_min, nok_avg, nok_max ...
 	public static final  ArrayList<String> valueNames = RecordMetric.getValueNames();
 	public static final String valueNamesJoined = "\""+String.join("\",\"", valueNames.toArray(new String[0]))+"\"";
 	
@@ -241,7 +249,7 @@ public class HSRRecordStats {
 							, HSRRecord record
 						    , long timeMillis
 							, BigDecimal count 
-							, BigDecimal mean 
+							, BigDecimal avg 
 							, BigDecimal min 		
 							, BigDecimal max 			
 							, BigDecimal stdev 	
@@ -277,12 +285,12 @@ public class HSRRecordStats {
 		
 		//-----------------------------------
 		// Add Values
-		String statusLower = record.getStatus().toLowerCase();  
+		String statusLower = record.getStatus().state().toString().toLowerCase();  
 		
 		targetForData.addValue(statusLower, RecordMetric.count, count.toPlainString());
 		targetForData.addValue(statusLower, RecordMetric.min, min.toPlainString());
 		targetForData.addValue(statusLower, RecordMetric.max, max.toPlainString());
-		targetForData.addValue(statusLower, RecordMetric.mean, mean.toPlainString());
+		targetForData.addValue(statusLower, RecordMetric.avg, avg.toPlainString());
 		targetForData.addValue(statusLower, RecordMetric.stdev, stdev.toPlainString());
 		targetForData.addValue(statusLower, RecordMetric.p25, p25.toPlainString());
 		targetForData.addValue(statusLower, RecordMetric.p50, p50.toPlainString());
@@ -294,7 +302,7 @@ public class HSRRecordStats {
 	
 	/***********************************************************************
 	 * 
-	 * @param type either ok | ko | all | users
+	 * @param type either ok | nok | all | users
 	 ***********************************************************************/
 	private void addValue(String type, RecordMetric metric, String value) {
 		
@@ -367,8 +375,10 @@ public class HSRRecordStats {
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
 		
-		for(String name : valueNames) {
-			object.addProperty(name, this.getValue(name));
+		for(HSRRecordState state : HSRRecordState.values()) {
+			for(RecordMetric metric : RecordMetric.values()) {
+				object.addProperty(state + "_" + metric, this.getValue(state,metric));
+			}
 		}
 		
 		return object;
@@ -398,23 +408,23 @@ granularity,
 ok_count,
 ok_min,
 ok_max,
-ok_mean,
+ok_avg,
 ok_stdev,
 ok_p25,
 ok_p50,
 ok_p75,
 ok_p95,
 ok_p99,
-ko_count,
-ko_min,
-ko_max,
-ko_mean,
-ko_stdev,
-ko_p25,
-ko_p50,
-ko_p75,
-ko_p95,
-ko_p99)
+nok_count,
+nok_min,
+nok_max,
+nok_avg,
+nok_stdev,
+nok_p25,
+nok_p50,
+nok_p75,
+nok_p95,
+nok_p99)
 SELECT 
       MIN("time") + ((MAX("time") - MIN("time"))/2) AS "time"
     , "type","simulation","scenario","groups","metric","code"
@@ -423,23 +433,23 @@ SELECT
 , SUM("ok_count") AS "ok_count"
 , MIN("ok_min") AS "ok_min"
 , MAX("ok_max") AS "ok_max"
-, AVG("ok_mean") AS "ok_mean"
+, AVG("ok_avg") AS "ok_avg"
 , STDDEV("ok_stdev") AS "ok_stdev"
 , PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "ok_p25") AS "ok_p25"
 , PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY "ok_p50") AS "ok_p50"
 , PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "ok_p75") AS "ok_p75"
 , PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "ok_p95") AS "ok_p95"
 , PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY "ok_p99") AS "ok_p99"
-, SUM("ko_count") AS "ko_count"
-, MIN("ko_min") AS "ko_min"
-, MAX("ko_max") AS "ko_max"
-, AVG("ko_mean") AS "ko_mean"
-, STDDEV("ko_stdev") AS "ko_stdev"
-, PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "ko_p25") AS "ko_p25"
-, PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY "ko_p50") AS "ko_p50"
-, PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "ko_p75") AS "ko_p75"
-, PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "ko_p95") AS "ko_p95"
-, PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY "ko_p99") AS "ko_p99"
+, SUM("nok_count") AS "nok_count"
+, MIN("nok_min") AS "nok_min"
+, MAX("nok_max") AS "nok_max"
+, AVG("nok_avg") AS "nok_avg"
+, STDDEV("nok_stdev") AS "nok_stdev"
+, PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY "nok_p25") AS "nok_p25"
+, PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY "nok_p50") AS "nok_p50"
+, PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY "nok_p75") AS "nok_p75"
+, PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY "nok_p95") AS "nok_p95"
+, PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY "nok_p99") AS "nok_p99"
 FROM gatlytronx_stats
 WHERE 
 	"time" >= ? 
@@ -495,9 +505,11 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 		valueList.add(metricName);
 		valueList.add(code);
 		valueList.add(granularity);
-		
-		for(String name : valueNames) {
-			valueList.add(this.getValue(name));
+				
+		for(HSRRecordState state : HSRRecordState.values()) {
+			for(RecordMetric metric : RecordMetric.values()) {
+				valueList.add(this.getValue(state,metric));
+			}
 		}
 		
 		return db.preparedExecute(insertSQL, valueList.toArray());
@@ -531,7 +543,7 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	/***********************************************************************
 	 * Returns the type of this record.
 	 ***********************************************************************/
-	public GatlytronRecordType getType() {
+	public HSRRecordType getType() {
 		return type;
 	}
 	
@@ -590,11 +602,11 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	
 	/***********************************************************************
 	 * 
-	 * @param name of a value, e.g. "ko_count" or "ok_max"
+	 * @param name of a value, e.g. "nok_count" or "ok_max"
 	 * @return the value for the given name
 	 ***********************************************************************/
-	public BigDecimal getValue(String name) {
-		BigDecimal val = values.get(name);
+	public BigDecimal getValue(HSRRecordState state, RecordMetric metric) {
+		BigDecimal val = values.get(state + "_" + metric);
 		//val = (val == null) ? BigDecimal.ZERO : val;
 		return val;
 	}
@@ -612,32 +624,34 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	 * Checks if there is any data in this record.
 	 ***********************************************************************/
 	public boolean hasData() {
-		return this.hasData("ok") || this.hasData("ko") ;
+		return this.hasData(HSRRecordState.ok) 
+			|| this.hasData(HSRRecordState.nok)
+			;
 	}
 	
 	/***********************************************************************
 	 * Checks if there is 'ok' data in this record.
 	 ***********************************************************************/
 	public boolean hasDataOK() {
-		return this.hasData("ok");
+		return this.hasData(HSRRecordState.ok);
 	}
 	
 	/***********************************************************************
 	 * Checks if there is 'ok' data in this record.
 	 ***********************************************************************/
-	public boolean hasDataKO() {
-		return this.hasData("ko");
+	public boolean hasDataNOK() {
+		return this.hasData(HSRRecordState.nok);
 	}
 			
 	/***********************************************************************
 	 * Checks if the data is empty.
-	 * @param status either 'ok', 'ko' or 'all'. If null checks 'all'
+	 * @param HSRRecordState
 	 ***********************************************************************/
-	private boolean hasData(String status) {
+	private boolean hasData(HSRRecordState status) {
 
 		if(status == null) { return false; }
 		
-		BigDecimal value = this.getValue(status+"_count");
+		BigDecimal value = this.getValue(status, RecordMetric.count);
 		
 		return  (value != null && value.compareTo(BigDecimal.ZERO) != 0) ;
 

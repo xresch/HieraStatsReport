@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
+import com.xresch.hierastatsreport.stats.HSRRecordStats.RecordMetric;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -151,13 +153,13 @@ public class HSRReporterOTel implements HSRReporter {
 	     ********************************************************/
 	    public void addValues(HSRRecordStats record) {
 			
-	    	for(String metric : HSRRecordStats.metricNames) {
+	    	for(RecordMetric metric : RecordMetric.values()) {
 				
 	    		
 				DoubleGauge gauge = metricsMap.get(metric);
 				
 				if(record.hasDataOK()) {
-					 BigDecimal value = record.getValue("ok_"+metric); 
+					 BigDecimal value = record.getValue(HSRRecordState.ok, metric);
 					 gauge.set(
 							   value.longValue()
 							 , Attributes.builder()
@@ -165,16 +167,16 @@ public class HSRReporterOTel implements HSRReporter {
 									   .put(SCENARIO, record.getScenario())
 									   .put(GROUPS, record.getGroupsPath())
 									   .put(NAME, record.getMetricName())
-									   .put(METRIC, metric)
+									   .put(METRIC, metric.toString())
 									   .put( CODE, record.getCode())
 									   .put(TYPE, record.getType().threeLetters())
-									   .put(STATUS, "ok")
+									   .put(STATUS, HSRRecordState.ok.toString())
 									   .build()
 							);
 				}
 				
-				if(record.hasDataKO()) {
-					BigDecimal value = record.getValue("ko_"+metric); 
+				if(record.hasDataNOK()) {
+					BigDecimal value = record.getValue(HSRRecordState.nok, metric);
 					gauge.set(
 							   value.longValue()
 							 , Attributes.builder()
@@ -182,10 +184,10 @@ public class HSRReporterOTel implements HSRReporter {
 								   .put(SCENARIO, record.getScenario())
 								   .put(GROUPS, record.getGroupsPath())
 								   .put(NAME, record.getMetricName())
-								   .put(METRIC, metric)
+								   .put(METRIC, metric.toString())
 								   .put( CODE, record.getCode())
 								   .put(TYPE, record.getType().threeLetters())
-								   .put(STATUS, "ko")
+								   .put(STATUS, HSRRecordState.nok.toString())
 								   .build()
 							);
 				}

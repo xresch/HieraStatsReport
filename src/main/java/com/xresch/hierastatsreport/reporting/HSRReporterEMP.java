@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
+import com.xresch.hierastatsreport.stats.HSRRecordStats.RecordMetric;
 
 /**************************************************************************************************************
  * This reporter takes the received records and sends them to an instance of the open source tool Engineered 
@@ -41,9 +43,10 @@ public class HSRReporterEMP implements HSRReporter {
 			CSV_HEADER += SEPARATOR+metric;
 		}
 
-		CSV_HEADER = CSV_HEADER
-						.replace("mean", "avg")  // emp uses name "avg"
-						;
+//		CSV_HEADER = CSV_HEADER
+//						.replace("mean", "avg")  // emp uses name "avg"
+//						;
+		
 	}
 	
 	private static final String ATTRIBUTES = "\"{"
@@ -201,19 +204,19 @@ public class HSRReporterEMP implements HSRReporter {
 		//-------------------------------
 		// Common information
 		
-		for(String metric : HSRRecordStats.metricNames) {
+		for(RecordMetric metric : RecordMetric.values()) {
 			
-			BigDecimal valueOK = record.getValue("ok_"+metric);
-			BigDecimal valueKO = record.getValue("ko_"+metric);
+			BigDecimal valueOK = record.getValue(HSRRecordState.ok, metric);
+			BigDecimal valueNOK = record.getValue(HSRRecordState.nok, metric);
 			
 			recordOK += SEPARATOR + ( (valueOK != null) ? valueOK : "") ;
-			recordKO += SEPARATOR + ( (valueKO != null) ? valueKO : "");
+			recordKO += SEPARATOR + ( (valueNOK != null) ? valueNOK : "");
 		}
 		
 		if( HSRConfig.isKeepEmptyRecords() || record.hasData()) {
 			
 			if(HSRConfig.isKeepEmptyRecords() || record.hasDataOK()) { csv.append("\r\n"+recordOK); }
-			if(HSRConfig.isKeepEmptyRecords() || record.hasDataKO()) { csv.append("\r\n"+recordKO); }
+			if(HSRConfig.isKeepEmptyRecords() || record.hasDataNOK()) { csv.append("\r\n"+recordKO); }
 		}
 		
 	}

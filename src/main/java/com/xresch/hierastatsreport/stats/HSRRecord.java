@@ -16,12 +16,12 @@ public class HSRRecord {
 	private String scenario = "unnamedScenario";
 	
 	private List<String> groups = new ArrayList<>();
-	private GatlytronRecordType type = GatlytronRecordType.UNKNOWN;
-	private String metricName = "unnamedRequest";
+	private HSRRecordType type = HSRRecordType.UNKNOWN;
+	private String name = "unnamedRequest";  // name of this item
 	private String statsIdentifier = "";
 	private long startTimestamp = -1;
 	private long endTimestamp = -1;
-	private String status = "??";
+	private HSRRecordStatus status = HSRRecordStatus.Success;
 	private String responseCode = "000";
 	private String message = "none";
 	
@@ -29,35 +29,58 @@ public class HSRRecord {
 	
 	private String logString = null;
 
-	public enum GatlytronRecordType{
-		  REQUEST("REQ")
-		, USER("USR")
-		, UNKNOWN("???")
+	public enum HSRRecordType{
+		  STEP("step")
+		, USER("user")
+		, UNKNOWN("unknown")
 		;
 		
-		private String threeLetters;
+		private String typeName;
 		
-		private GatlytronRecordType(String threeLetters) {
-			this.threeLetters = threeLetters;
+		private HSRRecordType(String typeName) {
+			this.typeName = typeName;
 		}
 		
 		public String threeLetters() {
-			return threeLetters;
+			return typeName;
 		}
 	}
+	
+	public enum HSRRecordState { 
+		ok, nok
+	}
+	
+	public enum HSRRecordStatus { 
+			  Success(HSRRecordState.ok)
+			, Fail(HSRRecordState.nok)
+			, Skipped(HSRRecordState.ok)
+			, Aborted(HSRRecordState.nok)
+			, Undefined(HSRRecordState.ok)
+			;
+		
+			private HSRRecordState state;
+			
+			private HSRRecordStatus(HSRRecordState state) {
+				this.state = state;
+			}
+			
+			public HSRRecordState state() {
+				return state;
+			}
+		}
 	
 	/******************************************************************
 	 * 
 	 ******************************************************************/
 	public HSRRecord(
-			  GatlytronRecordType type
+			  HSRRecordType type
 			, String simulation
 			, String scenario
 			, List<String> groups
-			, String metricName
+			, String name
 			, long startTimestamp
 			, long endTimestamp
-			, String status
+			, HSRRecordStatus status
 			, String responseCode
 			, String message
 			, BigDecimal metricValue
@@ -70,8 +93,8 @@ public class HSRRecord {
 		
 		if(simulation != null && !simulation.isBlank() ) {			this.simulation = simulation; }
 		if(scenario != null && !scenario.isBlank() ) {			this.scenario = scenario; }
-		if(metricName != null && !metricName.isBlank() ) {	this.metricName = metricName; }
-		if(status != null && !status.isBlank() ) {				this.status = status; }
+		if(name != null && !name.isBlank() ) {	this.name = name; }
+		if(status != null ) {				this.status = status; }
 		if(responseCode != null && !responseCode.isBlank() ) {	this.responseCode = responseCode; }
 		if(message != null && !message.isBlank() ) {			this.message = message; }
 		
@@ -86,7 +109,7 @@ public class HSRRecord {
 			this.statsIdentifier += "/" + getGroupsAsString("/", "");
 		}	
 		
-		this.statsIdentifier += metricName + status + responseCode;
+		this.statsIdentifier += name + status + responseCode;
 		
 	}
 	
@@ -131,7 +154,7 @@ public class HSRRecord {
 			.append( endTimestamp ).append(" ")
 			.append( scenario.replaceAll(" ", "_") ).append(" ")
 			.append( getGroupsAsString("/", "noGroup").replaceAll(" ", "_") ).append(" ")
-			.append( metricName.replaceAll(" ", "_") ).append(" ")
+			.append( name.replaceAll(" ", "_") ).append(" ")
 			.append( metricValue ).append(" ")
 				;
 		
@@ -163,7 +186,7 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public GatlytronRecordType getType() {
+	public HSRRecordType getType() {
 		return type;
 	}
 
@@ -178,7 +201,7 @@ public class HSRRecord {
 					+ "."
 					+ scenario.replaceAll(" ", "_")
 					+ "."
-					+ metricName.replaceAll(" ", "_")
+					+ name.replaceAll(" ", "_")
 					;
 		}
 		
@@ -188,7 +211,7 @@ public class HSRRecord {
 				+ "."
 				+ getGroupsAsString(".", "noGroup").replaceAll(" ", "_")
 				+ "." 
-				+ metricName.replaceAll(" ", "_");
+				+ name.replaceAll(" ", "_");
 		
 	}
 	
@@ -199,12 +222,12 @@ public class HSRRecord {
 	public String getMetricPath() {
 		
 		if(groups.isEmpty()) {
-			return metricName.replaceAll(" ", "_")
+			return name.replaceAll(" ", "_")
 		   ;
 		}
 		
 		return getGroupsAsString(".", "noGroup").replaceAll(" ", "_")
-		 + "." + metricName.replaceAll(" ", "_");
+		 + "." + name.replaceAll(" ", "_");
 		
 	}
 	
@@ -212,7 +235,7 @@ public class HSRRecord {
 	 * Returns the simple name of the metric
 	 ******************************************************************/
 	public String getMetricName() {
-		return metricName;
+		return name;
 	}
 
 	/******************************************************************
@@ -232,7 +255,7 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public String getStatus() {
+	public HSRRecordStatus getStatus() {
 		return status;
 	}
 
