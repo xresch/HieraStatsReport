@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- 
+#######################################################################
+# This html contains the basic structure for the report. The different
+# views will be drawn by the report.js.
+#
+# © Reto Scheiwiller, 2017 - MIT License
+#######################################################################
+-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <title>Test Report</title>
+
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/font-awesome.css" rel="stylesheet">
+    <link href="./css/report.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://github.com/xresch/HieraReport">HieraReport</a>
+        </div>
+        
+        <div id="navbar" class="collapse navbar-collapse">
+        
+          <ul class="nav navbar-nav">
+           
+ 
+ 			<li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                General <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                	 <li><a href="#" onclick="draw({view: 'overview'})">Overview</a></li>
+                	 <li><a href="#" onclick="draw({view: 'status'})">Status Overview</a></li>
+                	 <li><a href="#" onclick="draw({view: 'screenshots'})">Screenshot Browser</a></li>
+                	 <li><a href="#" onclick="draw({view: 'tree'})">Panel Tree</a></li>
+                </ul>
+            </li>
+            
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                Statistics <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                	<li><a href="#" onclick="draw({view: 'statsStatusByType'})">Statistics: Status by Type</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: 'All', fieldName: 'title'})">Group by Title &gt;&gt; All</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Suite, fieldName: 'title'})">Group by Title &gt;&gt; Suite</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Class, fieldName: 'title'})">Group by Title &gt;&gt; Class</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Test, fieldName: 'title'})">Group by Title &gt;&gt; Test</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Step, fieldName: 'title'})">Group by Title &gt;&gt; Step</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Assert, fieldName: 'title'})">Group by Title &gt;&gt; Assert</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Wait, fieldName: 'title'})">Group by Title &gt;&gt; Wait</a></li>
+                	
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: 'All', fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; All</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Suite, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Suite</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Class, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Class</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Test, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Test</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Step, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Step</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Assert, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Assert</a></li>
+                	<li><a href="#" onclick="draw({view: 'statsByField', itemType: ItemType.Wait, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Wait</a></li>
+                </ul>
+            </li>
+            
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                Charts <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                	<li><a href="#" onclick="draw({view: 'typebarchart'})">Bar >> Status by Type</a></li>
+                	<li><a href="#" onclick="draw({view: 'typeCharts', chartType: 'doughnut', type: ItemType.Suite})">Donut &gt;&gt; Suite</a></li>
+                	<li><a href="#" onclick="draw({view: 'typeCharts', chartType: 'doughnut', type: ItemType.Class})">Donut &gt;&gt; Class</a></li>
+                	<li><a href="#" onclick="draw({view: 'typeCharts', chartType: 'doughnut', type: ItemType.Test})">Donut &gt;&gt; Test</a></li>
+                	<li><a href="#" onclick="draw({view: 'typeCharts', chartType: 'bar', type: ItemType.Suite})">Bar &gt;&gt; Suite</a></li>
+                	<li><a href="#" onclick="draw({view: 'typeCharts', chartType: 'bar', type: ItemType.Class})">Bar &gt;&gt; Class</a></li>
+                	<li><a href="#" onclick="draw({view: 'typeCharts', chartType: 'bar', type: ItemType.Test})">Bar &gt;&gt; Test</a></li>
+                </ul>
+            </li>
+            
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                Tests <span class="caret"></span></a>
+                <ul id="testDropdown" class="dropdown-menu">
+                  
+                </ul>
+            </li>
+            
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                	Tables <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                	<li><a href="#" onclick="draw({view: 'tableDetailed'})">All Items(Detailed)</a></li>
+                	<li><a href="#" onclick="draw({view: 'tableSimple'})">All Items(Simple)</a></li>
+            		<li><a href="#" onclick="draw({view: 'exceptions'})">Exceptions</a></li>
+                	<li><a href="#" onclick="draw({view: 'statusTable', itemType: ItemType.Suite})">Status &gt;&gt; Suite </a></li>
+                	<li><a href="#" onclick="draw({view: 'statusTable', itemType: ItemType.Class})">Status &gt;&gt; Class </a></li>
+                	<li><a href="#" onclick="draw({view: 'statusTable', itemType: ItemType.Test})">Status &gt;&gt; Test </a></li>
+                	<li><a href="#" onclick="draw({view: 'statusTable', itemType: ItemType.Step})">Status &gt;&gt; Step </a></li>
+                	<li><a href="#" onclick="draw({view: 'statusTable', itemType: ItemType.Assert})">Status &gt;&gt; Assert </a></li>
+                	<li><a href="#" onclick="draw({view: 'statusTable', itemType: ItemType.Wait})">Status &gt;&gt; Wait </a></li>
+                </ul>
+            </li>
+            
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                	Export <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="#" onclick="draw({view: 'csv'})">CSV</a></li>
+            		<li><a href="#" onclick="draw({view: 'json'})">JSON</a></li>
+                </ul>
+            </li>
+
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+	    <div id="content">
+	
+	
+	    </div>
+    </div>
+    
+    <div id="loading">
+    	<i class="fa fa-cog fa-spin fa-3x fa-fw margin-bottom"></i>
+		<p>Loading...</p>
+    </div>
+¨
+	<div id="detailsModal" class="modal fade" tabindex="-1" role="dialog">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title">Details</h4>
+	      </div>
+	      <div id="detailsModalBody" class="modal-body">
+	        
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>	
+	
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="./js/jquery-2.2.3.js"></script>
+    <script>window.jQuery || document.write('<script src="./js/jquery-2.2.3.js"><\/script>')</script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/chart.js"></script>
+    <script src="./datafiles.js"></script>
+    <script src="./js/report.js"></script>
+
+  </body>
+</html>
