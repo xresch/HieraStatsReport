@@ -12,7 +12,7 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.reporting.HSRReporter;
 import com.xresch.hierastatsreport.reporting.HSRReporterDatabase;
 
@@ -209,7 +209,7 @@ public class HSRStatsEngine {
 		ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
 		for (HSRRecordStats record : statsRecords.values()){
 			
-			if( HSR.isKeepEmptyRecords()
+			if( HSRConfig.isKeepEmptyRecords()
 			 || record.hasData() 
 			 ){
 				finalRecords.add(record);
@@ -218,7 +218,7 @@ public class HSRStatsEngine {
 		
 		//-------------------------
 		// Send Clone of list to each Reporter
-		for (HSRReporter reporter : HSR.getReporterList()){
+		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			ArrayList<HSRRecordStats> clone = new ArrayList<>();
 			clone.addAll(finalRecords);
 
@@ -241,10 +241,10 @@ public class HSRStatsEngine {
 		
 		//-------------------------
 		// Send Clone of list to each Reporter
-		for (HSRReporter reporter : HSR.getReporterList()){
+		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			if(reporter instanceof HSRReporterDatabase) {
 				logger.debug("Send TestSettings Data to: "+reporter.getClass().getName());
-				((HSRReporterDatabase)reporter).reportTestSettings(HSR.getSimulationName());
+				((HSRReporterDatabase)reporter).reportTestSettings(HSRConfig.getSimulationName());
 			}
 		}
 		

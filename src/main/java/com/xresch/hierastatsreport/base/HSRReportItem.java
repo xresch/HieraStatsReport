@@ -1,4 +1,4 @@
-package com.xresch.hierareport.reporter;
+package com.xresch.hierastatsreport.base;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -12,12 +12,12 @@ import java.util.Date;
  * Copyright Reto Scheiwiller, 2017 - MIT License
  **************************************************************************************/
 
-public class HieraReportItem {
+public class HSRReportItem {
 
 	private transient static SimpleDateFormat formatter = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS");
 	
 	private transient long startNanos;
-	private transient HieraReportItem parent = null;
+	private transient HSRReportItem parent = null;
 	
 	private String timestamp;
 	private int itemNumber;
@@ -31,7 +31,7 @@ public class HieraReportItem {
 	private long duration = 0;
 	private ItemType type = null;
 	private ItemStatus status = ItemStatus.Success;
-	private ArrayList<HieraReportItem> children = new ArrayList<HieraReportItem>();
+	private ArrayList<HSRReportItem> children = new ArrayList<HSRReportItem>();
 	
 	public enum ItemType {Suite, Class, Test, Step, MessageInfo, MessageWarn, MessageError, Wait, Assert }
 	public enum ItemStatus { Undefined, Success, Fail, Skipped, Aborted }
@@ -43,7 +43,7 @@ public class HieraReportItem {
 		itemCount.set(1);
 	}
 	
-	public HieraReportItem(ItemType type, String title){
+	public HSRReportItem(ItemType type, String title){
 		this.type = type;
 		this.title = title;
 		this.timestamp = formatter.format(new Date());
@@ -52,7 +52,7 @@ public class HieraReportItem {
 	}
 	
 	
-	public HieraReportItem endItem(){
+	public HSRReportItem endItem(){
 		
 		long endNanos = System.nanoTime();
 		duration = (endNanos - startNanos) / 1000000;
@@ -93,7 +93,7 @@ public class HieraReportItem {
 		return itemNumber;
 	}
 	
-	public HieraReportItem setItemNumber(int stepNumber) {
+	public HSRReportItem setItemNumber(int stepNumber) {
 		this.itemNumber = stepNumber;
 		return this;
 	}
@@ -102,7 +102,7 @@ public class HieraReportItem {
 		return duration;
 	}
 
-	public HieraReportItem setDuration(long duration) {
+	public HSRReportItem setDuration(long duration) {
 		this.duration = duration;
 		return this;
 	}
@@ -111,7 +111,7 @@ public class HieraReportItem {
 		return title;
 	}
 
-	public HieraReportItem setTitle(String title) {
+	public HSRReportItem setTitle(String title) {
 		this.title =  escapeIt(title);
 		return this;
 	}
@@ -120,7 +120,7 @@ public class HieraReportItem {
 		return description;
 	}
 
-	public HieraReportItem setDescription(String description) {
+	public HSRReportItem setDescription(String description) {
 		this.description =  escapeIt(description);
 		return this;
 	}
@@ -146,12 +146,12 @@ public class HieraReportItem {
 		return exceptionMessage;
 	}
 
-	public HieraReportItem setExceptionMessage(String exceptionMessage) {
+	public HSRReportItem setExceptionMessage(String exceptionMessage) {
 		this.exceptionMessage =  escapeIt(exceptionMessage);
 		return this;
 	}
 	
-	public HieraReportItem setException(Throwable e) {
+	public HSRReportItem setException(Throwable e) {
 		
 		StringBuffer stacktrace = new StringBuffer(); 
 		for(StackTraceElement element : e.getStackTrace()){
@@ -168,7 +168,7 @@ public class HieraReportItem {
 		return type;
 	}
 
-	public HieraReportItem setType(ItemType type) {
+	public HSRReportItem setType(ItemType type) {
 		this.type = type;
 		return this;
 	}
@@ -183,7 +183,7 @@ public class HieraReportItem {
 	 *  
 	 * @param status
 	 ***************************************************************************/
-	public HieraReportItem setStatus(ItemStatus status) {
+	public HSRReportItem setStatus(ItemStatus status) {
 		
 		this.status = status;
 		
@@ -206,7 +206,7 @@ public class HieraReportItem {
 		return timestamp;
 	}
 
-	public HieraReportItem setTimestamp(String timestamp) {
+	public HSRReportItem setTimestamp(String timestamp) {
 		this.timestamp = timestamp;
 		return this;
 	}
@@ -228,7 +228,7 @@ public class HieraReportItem {
 		this.sourcePath = escapeIt(sourcePath);
 	}
 	
-	public HieraReportItem getParent() {
+	public HSRReportItem getParent() {
 		return parent;
 	}
 	
@@ -240,7 +240,7 @@ public class HieraReportItem {
 	 * @param type
 	 * @return
 	 ***********************************************************************************/
-	public static HieraReportItem getFirstElementWithType(HieraReportItem item, ItemType type) {
+	public static HSRReportItem getFirstElementWithType(HSRReportItem item, ItemType type) {
 		
 		if(item.getType().equals(type)){
 			return item;
@@ -248,27 +248,27 @@ public class HieraReportItem {
 			if(item.getParent() == null){
 				return null;
 			}else{
-				return HieraReportItem.getFirstElementWithType(item.getParent(), type);
+				return HSRReportItem.getFirstElementWithType(item.getParent(), type);
 			}
 		}
 
 	}
 
-	public void setParent(HieraReportItem parent) {
+	public void setParent(HSRReportItem parent) {
 		this.parent = parent;
 		parent.appendChild(this);
 	}
 
-	public ArrayList<HieraReportItem> getChildren() {
+	public ArrayList<HSRReportItem> getChildren() {
 		return children;
 	}
 
-	public HieraReportItem setChildren(ArrayList<HieraReportItem> children) {
+	public HSRReportItem setChildren(ArrayList<HSRReportItem> children) {
 		this.children = children;
 		return this;
 	}
 	
-	public void appendChild(HieraReportItem child) {
+	public void appendChild(HSRReportItem child) {
 		if(child.getParent() == null || !child.getParent().equals(this)){
 			child.setParent(this);
 		}
@@ -285,7 +285,7 @@ public class HieraReportItem {
 		
 	}
 	
-	public boolean hasChildren(HieraReportItem child) {
+	public boolean hasChildren(HSRReportItem child) {
 		
 		return !children.isEmpty();
 	}

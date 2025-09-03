@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xresch.hierastatsreport.base.HSRScenario;
-import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 import com.xresch.hierastatsreport.utils.GatlytronFiles;
 import com.xresch.hierastatsreport.utils.GatlytronTime;
@@ -128,7 +128,7 @@ public class HSRDBInterface {
 	 ****************************************************************************/
 	public void reportTestSettings(String simulationName) {
 		
-		ArrayList<HSRScenario> scenarioList = HSR.getScenarioList();
+		ArrayList<HSRScenario> scenarioList = HSRConfig.getScenarioList();
 		
 		for(HSRScenario scenario : scenarioList ) {
 			scenario.insertIntoDatabase(db, tablenameTestsettings, simulationName);
@@ -144,7 +144,7 @@ public class HSRDBInterface {
 		
 		String sqlUpdateTime = "UPDATE "+tablenameTestsettings
 				+ " SET endtime = "+endTime
-				+ " WHERE execid = '"+HSR.EXECUTION_ID+"'";
+				+ " WHERE execid = '"+HSRConfig.EXECUTION_ID+"'";
 		
 		db.preparedExecute(sqlUpdateTime);
 		
@@ -349,7 +349,7 @@ public class HSRDBInterface {
 	 ********************************************************************************************/
 	public long  getAgeOutTime(int granularitySeconds) {
 		
-		HSRAgeOutConfig config = HSR.getAgeOutConfig();
+		HSRAgeOutConfig config = HSRConfig.getAgeOutConfig();
 		
 		long ageOutOffset;
 		

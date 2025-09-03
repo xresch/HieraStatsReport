@@ -1,1 +1,1 @@
-com.xresch.hierareport.reporter.HieraReportJUnitPlatformListener
+com.xresch.hierastatsreport.listeners.HSRJUnitPlatformListener

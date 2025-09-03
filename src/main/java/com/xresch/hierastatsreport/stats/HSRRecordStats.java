@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import com.google.gson.JsonObject;
-import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.database.DBInterface;
 import com.xresch.hierastatsreport.database.HSRDBInterface;
 import com.xresch.hierastatsreport.stats.HSRRecordRaw.GatlytronRecordType;
@@ -263,7 +263,7 @@ public class HSRRecordStats {
 		this.metricPath = record.getMetricPath();
 		this.metricPathFull = record.getMetricPathFull();
 		this.code = record.getResponseCode();
-		this.granularity = HSR.getAggregationInterval();
+		this.granularity = HSRConfig.getAggregationInterval();
 		this.statsIdentifier = record.getStatsIdentifier();
 
 		//-----------------------------------

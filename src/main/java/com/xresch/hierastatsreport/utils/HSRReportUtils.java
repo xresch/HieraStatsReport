@@ -1,4 +1,4 @@
-package com.xresch.hierareport.reporter;
+package com.xresch.hierastatsreport.utils;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,9 +31,9 @@ import com.google.gson.GsonBuilder;
  * Copyright Reto Scheiwiller, 2017 - MIT License
  **************************************************************************************/
 
-public class HieraReportUtils {
+public class HSRReportUtils {
 	
-	public static Logger logger = Logger.getLogger(HieraReportUtils.class.getName());
+	public static Logger logger = Logger.getLogger(HSRReportUtils.class.getName());
 	private static final int BUFFER_SIZE = 4096;
 	
 	

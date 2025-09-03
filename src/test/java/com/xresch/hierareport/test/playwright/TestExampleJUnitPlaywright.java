@@ -15,11 +15,11 @@ import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.BrowserType.LaunchOptions;
+import com.xresch.hierastatsreport.base.HSR;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
-import com.xresch.hierareport.reporter.HieraReport;
 
-public class TestExample {
+public class TestExampleJUnitPlaywright {
   // Shared between all tests in this class.
   static Playwright playwright;
   static Browser browser;
@@ -28,6 +28,9 @@ public class TestExample {
   BrowserContext context;
   Page page;
 
+  /************************************************************************
+   * 
+   ************************************************************************/
   @BeforeAll
   static void launchBrowser() {
     playwright = Playwright.create();
@@ -41,23 +44,35 @@ public class TestExample {
     
     browser = playwright.chromium().launch(launchOptions);
   }
-
+  
+  /************************************************************************
+   * 
+   ************************************************************************/
   @AfterAll
   static void closeBrowser() {
     playwright.close();
   }
 
+  /************************************************************************
+   * 
+   ************************************************************************/
   @BeforeEach
   void createContextAndPage() {
     context = browser.newContext();
     page = context.newPage();
   }
 
+  /************************************************************************
+   * 
+   ************************************************************************/
   @AfterEach
   void closeContext() {
     context.close();
   }
 
+  /************************************************************************
+   * 
+   ************************************************************************/
   @Test
   void shouldClickButton() {
     page.navigate("data:text/html,<script>var result;</script><button onclick='result=\"Clicked\"'>Go</button>");
@@ -65,12 +80,15 @@ public class TestExample {
     assertEquals("Clicked", page.evaluate("result"));
   }
 
+  /************************************************************************
+   * 
+   ************************************************************************/
   @Test
   void shouldCheckTheBox() {
     page.setContent("<input id='checkbox' type='checkbox'></input>");
     page.locator("input").check();
     assertTrue((Boolean) page.evaluate("() => window['checkbox'].checked"));
-    HieraReport.addScreenshot(page.screenshot());
+    HSR.addScreenshot(page.screenshot());
   }
 
   /*****************************************************************
@@ -83,35 +101,35 @@ public class TestExample {
 	//-------------------------------
 	// 
 	stepName = "000_Open_Homepage";
-	HieraReport.start(stepName);
+	HSR.start(stepName);
     	page.navigate("https://www.wikipedia.org/");
-    	HieraReport.addScreenshot(page.screenshot());
-    HieraReport.end(stepName);
+    	HSR.addScreenshot(page.screenshot());
+    HSR.end(stepName);
     
     //-------------------------------
   	// 
   	stepName = "010_Enter_Playwright";
-  	HieraReport.start(stepName);
+  	HSR.start(stepName);
 	    page.locator("input[name=\"search\"]").click();
 	    page.locator("input[name=\"search\"]").fill("playwright");
-	    HieraReport.addScreenshot(page.screenshot());
-	HieraReport.end(stepName);
+	    HSR.addScreenshot(page.screenshot());
+	HSR.end(stepName);
 	
     //-------------------------------
   	// 
   	stepName = "020_Execute_Search";
-  	HieraReport.start(stepName);
+  	HSR.start(stepName);
 	    page.locator("input[name=\"search\"]").press("Enter");
-	    HieraReport.addScreenshot(page.screenshot());
-	HieraReport.end(stepName);
+	    HSR.addScreenshot(page.screenshot());
+	HSR.end(stepName);
 	
     //-------------------------------
   	// 
   	stepName = "030_Assert_IsPlaywrightPage";
-  	HieraReport.startAssert(stepName);
+  	HSR.startAssert(stepName);
 	    assertEquals("https://en.wikipedia.org/wiki/Playwright", page.url());
-	    HieraReport.addScreenshot(page.screenshot());
-	HieraReport.end(stepName);
+	    HSR.addScreenshot(page.screenshot());
+	HSR.end(stepName);
 	
   }
 }

@@ -2,7 +2,7 @@ package com.xresch.hierastatsreport.reporting;
 
 import java.util.ArrayList;
 
-import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.database.DBInterface;
 import com.xresch.hierastatsreport.database.HSRDBInterface;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
@@ -42,7 +42,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 		gtronDB = new HSRDBInterface(db, tableNamePrefix);
 		gtronDB.initializeDB();
 		
-		if(HSR.isAgeOut()) {
+		if(HSRConfig.isAgeOut()) {
 			gtronDB.ageOutStatistics();
 		}
 		

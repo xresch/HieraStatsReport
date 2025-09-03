@@ -1,4 +1,4 @@
-package com.xresch.hierareport.reporter;
+package com.xresch.hierastatsreport.listeners;
 
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.TestExecutionResult.Status;
@@ -7,9 +7,10 @@ import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.TestPlan;
 
-import com.xresch.hierareport.reporter.HieraReportItem.ItemStatus;
+import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRReportItem.ItemStatus;
 
-public class HieraReportJUnitPlatformListener implements TestExecutionListener {
+public class HSRJUnitPlatformListener implements TestExecutionListener {
 
 	// Checkout this: https://www.swtestacademy.com/reporting-test-results-tesults-junit5-jupiter/
 	
@@ -22,9 +23,9 @@ public class HieraReportJUnitPlatformListener implements TestExecutionListener {
 	 */
 	public void testPlanExecutionStarted(TestPlan testplan) {
 		currentTestplan = testplan;
-		HieraReport.configCloseCheckSuite(false);
-		HieraReport.configCloseCheckClass(false);
-		HieraReport.initialize();
+		HSR.configCloseCheckSuite(false);
+		HSR.configCloseCheckClass(false);
+		HSR.initialize();
 	}
 
 	/**
@@ -35,7 +36,7 @@ public class HieraReportJUnitPlatformListener implements TestExecutionListener {
 	 */
 	public void testPlanExecutionFinished(TestPlan testplan) {
 		
-		HieraReport.createFinalReport();
+		HSR.createFinalReport();
 	}
 
 	/**
@@ -73,8 +74,8 @@ public class HieraReportJUnitPlatformListener implements TestExecutionListener {
 		//---------------------------------------
 		// Start Test
 		if (resolved.methodName != null) {
-			HieraReport.startTest(resolved.methodName);
-		    HieraReport.endCurrentTest(ItemStatus.Skipped);
+			HSR.startTest(resolved.methodName);
+		    HSR.endCurrentTest(ItemStatus.Skipped);
 		}
 	}
 
@@ -110,19 +111,19 @@ public class HieraReportJUnitPlatformListener implements TestExecutionListener {
 		//---------------------------------------
 		// Start Suite
 		if (resolved.suite != null) {
-		    HieraReport.startSuite(resolved.suite);
+		    HSR.startSuite(resolved.suite);
 		}
 		 
 		//---------------------------------------
 		// Start Class
 		if (resolved.className != null) {
-		    HieraReport.startClass(resolved.className);
+		    HSR.startClass(resolved.className);
 		}
 		
 		//---------------------------------------
 		// Start Test
 		if (resolved.methodName != null) {
-		    HieraReport.startTest(resolved.methodName);
+		    HSR.startTest(resolved.methodName);
 		}
 }
 
@@ -168,9 +169,9 @@ public class HieraReportJUnitPlatformListener implements TestExecutionListener {
 			//---------------------------------------
 			// End Test
 			switch(testExecutionResult.getStatus()) {
-			case ABORTED: 		HieraReport.endCurrentTest(ItemStatus.Aborted); break;
-			case FAILED:		HieraReport.endCurrentTest(ItemStatus.Fail); break;
-			case SUCCESSFUL:	HieraReport.endCurrentTest(ItemStatus.Success); break;
+			case ABORTED: 		HSR.endCurrentTest(ItemStatus.Aborted); break;
+			case FAILED:		HSR.endCurrentTest(ItemStatus.Fail); break;
+			case SUCCESSFUL:	HSR.endCurrentTest(ItemStatus.Success); break;
 			default:
 				break;
 			
@@ -179,14 +180,14 @@ public class HieraReportJUnitPlatformListener implements TestExecutionListener {
 		    return;
 		}else if(resolved.className != null) {
 			
-			HieraReport.endCurrentClass();
+			HSR.endCurrentClass();
 			return;
 		}
 		
 		//---------------------------------------
 		// End Suite
 		if (resolved.suite != null) {
-		    HieraReport.endCurrentSuite();
+		    HSR.endCurrentSuite();
 		    return;
 		}
 		 
@@ -202,9 +203,8 @@ public class HieraReportJUnitPlatformListener implements TestExecutionListener {
 	 * @param entry the published {@code ReportEntry}
 	 *****************************************************************************************/
 	public void reportingEntryPublished(TestIdentifier testIdentifier, ReportEntry entry) {
+		
 	}
-	
-	
 	
 	/*****************************************************************************************
 	 * 

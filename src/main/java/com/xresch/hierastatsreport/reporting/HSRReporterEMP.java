@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -210,10 +210,10 @@ public class HSRReporterEMP implements HSRReporter {
 			recordKO += SEPARATOR + ( (valueKO != null) ? valueKO : "");
 		}
 		
-		if( HSR.isKeepEmptyRecords() || record.hasData()) {
+		if( HSRConfig.isKeepEmptyRecords() || record.hasData()) {
 			
-			if(HSR.isKeepEmptyRecords() || record.hasDataOK()) { csv.append("\r\n"+recordOK); }
-			if(HSR.isKeepEmptyRecords() || record.hasDataKO()) { csv.append("\r\n"+recordKO); }
+			if(HSRConfig.isKeepEmptyRecords() || record.hasDataOK()) { csv.append("\r\n"+recordOK); }
+			if(HSRConfig.isKeepEmptyRecords() || record.hasDataKO()) { csv.append("\r\n"+recordKO); }
 		}
 		
 	}

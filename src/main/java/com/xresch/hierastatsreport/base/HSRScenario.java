@@ -57,7 +57,7 @@ public class HSRScenario {
 	public HSRScenario(String scenarioName) {
 		this.scenarioName = scenarioName;
 		
-		HSR.addScenario(this);
+		HSRConfig.addScenario(this);
 	}
 	
 	/***********************************************************************
@@ -80,9 +80,9 @@ public class HSRScenario {
 	
 		ArrayList<Object> valueList = new ArrayList<>();
 		
-		valueList.add(HSR.STARTTIME_MILLIS);
+		valueList.add(HSRConfig.STARTTIME_MILLIS);
 		valueList.add(null); //report nothing for endtime
-		valueList.add(HSR.EXECUTION_ID);
+		valueList.add(HSRConfig.EXECUTION_ID);
 		valueList.add(simulationName);
 		valueList.add(scenarioName);
 		valueList.add(users);
