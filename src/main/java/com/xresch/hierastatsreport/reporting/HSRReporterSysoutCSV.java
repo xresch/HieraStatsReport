@@ -2,6 +2,7 @@ package com.xresch.hierastatsreport.reporting;
 
 import java.util.ArrayList;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -31,6 +32,17 @@ public class HSRReporterSysoutCSV implements HSRReporter {
 			System.out.println( record.toCSV(separator) );
 		}
 		System.out.println(" ");
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		System.out.println( "==============================================================");
+		System.out.println( "=================== CSV: FULL TEST STATISTICS ================");
+		System.out.println( "==============================================================");
+		 reportRecords(finalRecords);
 	}
 	
 	/****************************************************************************

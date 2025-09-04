@@ -75,7 +75,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		// Start Test
 		if (resolved.methodName != null) {
 			HSR.startGroup(resolved.methodName);
-		    HSR.endCurrentGroup(HSRRecordStatus.Skipped);
+		    HSR.endGroup(HSRRecordStatus.Skipped);
 		}
 	}
 
@@ -111,21 +111,21 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		//---------------------------------------
 		// Start Suite
 		if (resolved.suite != null) {
-		    HSR.startGroup(resolved.suite);
+		    //HSR.startGroup(resolved.suite);
 		    
 		}
 		 
 		//---------------------------------------
 		// Start Class
 		if (resolved.className != null) {
-		    HSRRecord clazz = HSR.startGroup(resolved.className);
+		    //HSRRecord clazz = HSR.startGroup(resolved.className);
 		    HSR.setSimulationName(resolved.className);
 		}
 		
 		//---------------------------------------
 		// Start Test
 		if (resolved.methodName != null) {
-		    HSR.startGroup(resolved.methodName);
+		    //HSR.startGroup(resolved.methodName);
 		    HSR.setScenarioName(resolved.methodName);
 		}
 }
@@ -172,9 +172,9 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 			//---------------------------------------
 			// End Test
 			switch(testExecutionResult.getStatus()) {
-			case ABORTED: 		HSR.endCurrentGroup(HSRRecordStatus.Aborted); break;
-			case FAILED:		HSR.endCurrentGroup(HSRRecordStatus.Fail); break;
-			case SUCCESSFUL:	HSR.endCurrentGroup(HSRRecordStatus.Success); break;
+			case ABORTED: 		HSR.endGroup(HSRRecordStatus.Aborted); break;
+			case FAILED:		HSR.endGroup(HSRRecordStatus.Fail); break;
+			case SUCCESSFUL:	HSR.endGroup(HSRRecordStatus.Success); break;
 			default:
 				break;
 			
@@ -183,14 +183,14 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		    return;
 		}else if(resolved.className != null) {
 			
-			HSR.endCurrentGroup();
+			HSR.endGroup();
 			return;
 		}
 		
 		//---------------------------------------
 		// End Suite
 		if (resolved.suite != null) {
-		    HSR.endCurrentGroup();
+		    HSR.endGroup();
 		    return;
 		}
 		 

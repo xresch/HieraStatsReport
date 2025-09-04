@@ -16,6 +16,10 @@ import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.BrowserType.LaunchOptions;
 import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRConfig;
+import com.xresch.hierastatsreport.reporting.HSRReporterCSV;
+import com.xresch.hierastatsreport.reporting.HSRReporterSysoutCSV;
+import com.xresch.hierastatsreport.stats.HSRRecord;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 
@@ -33,6 +37,14 @@ public class TestExampleJUnitPlaywright {
    ************************************************************************/
   @BeforeAll
   static void launchBrowser() {
+	  
+	//--------------------------
+	// HSR Config
+	HSRConfig.enable(5);
+	HSRConfig.addReporter(new HSRReporterSysoutCSV(";"));
+	
+	//--------------------------
+	// Create Playwright
     playwright = Playwright.create();
     LaunchOptions launchOptions = new BrowserType.LaunchOptions();
     launchOptions.setHeadless(false);
@@ -106,28 +118,33 @@ public class TestExampleJUnitPlaywright {
 	// 
 	stepName = "000_Open_Homepage";
 	HSR.start(stepName);
-    	page.navigate("https://www.wikipedia.org/");
-    HSR.end(stepName);
-    
-    //-------------------------------
-  	// 
-  	stepName = "010_Enter_Playwright";
-  	HSR.start(stepName);
+	page.navigate("https://www.wikipedia.org/");
+	HSR.end(stepName);
+	
+	//-------------------------------
+	// 
+	stepName = "010_Enter_Playwright";
+	HSR.start(stepName);
 	    page.locator("input[name=\"search\"]").click();
 	    page.locator("input[name=\"search\"]").fill("playwright");
 	HSR.end(stepName);
 	
-    //-------------------------------
-  	// 
-  	stepName = "020_Execute_Search";
-  	HSR.start(stepName);
-	    page.locator("input[name=\"search\"]").press("Enter");
-	HSR.end(stepName);
-	
-    //-------------------------------
-  	// 
-  	stepName = "030_Assert_IsPlaywrightPage";
-  	HSR.assertEquals("https://en.wikipedia.org/wiki/Playwright", page.url(), stepName);
-		
+	HSRRecord group = HSR.startGroup("MyGroup");
+	System.out.println("#### >>> RECORD NAME: "+group.getRecordName() );
+		HSR.startGroup("MySubGroup");
+			//-------------------------------
+			// 
+			stepName = "020_Execute_Search";
+			HSR.start(stepName);
+			    page.locator("input[name=\"search\"]").press("Enter");
+			HSR.end(stepName);
+			
+			//-------------------------------
+			// 
+			stepName = "030_Assert_IsPlaywrightPage";
+			HSR.assertEquals("https://en.wikipedia.org/wiki/Playwright", page.url(), stepName);
+		HSR.endGroup();
+	HSR.endGroup();
+
   }
 }

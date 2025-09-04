@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 import com.xresch.hierastatsreport.base.HSRScenario;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
-import com.xresch.hierastatsreport.utils.GatlytronFiles;
-import com.xresch.hierastatsreport.utils.GatlytronTime;
-import com.xresch.hierastatsreport.utils.GatlytronTime.GatlytronTimeUnit;
+import com.xresch.hierastatsreport.utils.HSRFiles;
+import com.xresch.hierastatsreport.utils.HSRTime;
+import com.xresch.hierastatsreport.utils.HSRTime.GatlytronTimeUnit;
 
 /**************************************************************************************************************
  * 
@@ -35,7 +35,7 @@ public class HSRDBInterface {
 	private String sqlAggregateStats;
 	
 	public static final String PACKAGE_RESOURCES = "com.performetriks.gatlytron.database.resources";
-	static { GatlytronFiles.addAllowedPackage(PACKAGE_RESOURCES); }
+	static { HSRFiles.addAllowedPackage(PACKAGE_RESOURCES); }
 	
 
 	private static final String PROCEDURE_AGGREGATE_PERC = "AGGREGATE_PERC";
@@ -281,7 +281,7 @@ public class HSRDBInterface {
 
 		db.transactionEnd(success);
 		
-		logger.debug(">>> AgeOut Success: "+success+" for "+GatlytronTime.formatMillisAsTimestamp(startTime) + " to "+ GatlytronTime.formatMillisAsTimestamp(endTime));
+		logger.debug(">>> AgeOut Success: "+success+" for "+HSRTime.formatMillisAsTimestamp(startTime) + " to "+ HSRTime.formatMillisAsTimestamp(endTime));
 		
 		
 		return success;
@@ -295,7 +295,7 @@ public class HSRDBInterface {
 		
 		//----------------------------
 		// Iterate all granularities
-		for(int granularitySec : GatlytronTime.AGE_OUT_GRANULARITIES) {
+		for(int granularitySec : HSRTime.AGE_OUT_GRANULARITIES) {
 			//--------------------------
 			// Get Age Out Time
 			long ageOutTime = this.getAgeOutTime(granularitySec);
@@ -310,8 +310,8 @@ public class HSRDBInterface {
 			}
 			
 			logger.info("DB: Age Out statistics with granularity smaller than: "+granularitySec+" seconds");
-			logger.info(">>> Age Out earliest time: "+GatlytronTime.formatMillisAsTimestamp(oldest));
-			logger.info(">>> Age Out latest time: "+GatlytronTime.formatMillisAsTimestamp(youngest));
+			logger.info(">>> Age Out earliest time: "+HSRTime.formatMillisAsTimestamp(oldest));
+			logger.info(">>> Age Out latest time: "+HSRTime.formatMillisAsTimestamp(youngest));
 
 
 			//--------------------------
@@ -353,11 +353,11 @@ public class HSRDBInterface {
 		
 		long ageOutOffset;
 		
-		if		(granularitySeconds <= GatlytronTime.SECONDS_OF_1MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep1MinFor().get(ChronoUnit.SECONDS) ); }
-		else if	(granularitySeconds <= GatlytronTime.SECONDS_OF_5MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep5MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= GatlytronTime.SECONDS_OF_10MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep10MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= GatlytronTime.SECONDS_OF_15MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep15MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= GatlytronTime.SECONDS_OF_60MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
+		if		(granularitySeconds <= HSRTime.SECONDS_OF_1MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep1MinFor().get(ChronoUnit.SECONDS) ); }
+		else if	(granularitySeconds <= HSRTime.SECONDS_OF_5MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep5MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= HSRTime.SECONDS_OF_10MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep10MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= HSRTime.SECONDS_OF_15MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep15MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= HSRTime.SECONDS_OF_60MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
 		else  															{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
 
 		return ageOutOffset;

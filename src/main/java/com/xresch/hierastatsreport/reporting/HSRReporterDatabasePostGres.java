@@ -2,6 +2,7 @@ package com.xresch.hierastatsreport.reporting;
 
 import java.util.ArrayList;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.database.DBInterface;
 import com.xresch.hierastatsreport.database.HSRDBInterface;
@@ -63,7 +64,16 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	public void reportTestSettings(String simulationName) {
 		gtronDB.reportTestSettings(simulationName);
 	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		// TODO Auto-generated method stub
 		
+	}
+	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/

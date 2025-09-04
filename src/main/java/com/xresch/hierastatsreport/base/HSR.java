@@ -84,7 +84,7 @@ public class HSR {
 					new HSRRecord(
 							  HSRRecordType.GROUP
 							, null
-							, "root"
+							, null
 							, BigDecimal.ZERO
 						)
 				);
@@ -142,25 +142,26 @@ public class HSR {
 	 * Starts a new suite, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	public static HSRRecord startGroup(String title){
+	public static HSRRecord startGroup(String name){
 		
-		if(startedGroups.containsKey(title)){
-			HSRRecord groupItem = startedGroups.get(title);
+		if(startedGroups.containsKey(name)){
+			HSRRecord groupItem = startedGroups.get(name);
 			activeItem.set(groupItem);
 			return groupItem;
 		}
 		
-		HSRRecord groupItem = HSR.startItem(HSRRecordType.GROUP, title);
+		HSRRecord groupItem = HSR.startItem(HSRRecordType.GROUP, name);
 		currentGroup.set(groupItem);
-		startedGroups.put(title, groupItem);
+		activeItem.set(groupItem);
 		
+		startedGroups.put(name, groupItem);
 		return currentGroup.get();
 	}
 	
 	/***********************************************************************************
 	 * Ends the current Suite.
 	 ***********************************************************************************/
-	public static HSRRecord endCurrentGroup(HSRRecordStatus status){
+	public static HSRRecord endGroup(HSRRecordStatus status){
 		
 		HSRRecord groupItem = currentGroup.get();
 		groupItem.status(status);
@@ -171,7 +172,7 @@ public class HSR {
 	/***********************************************************************************
 	 * Ends the current Group.
 	 ***********************************************************************************/
-	public static HSRRecord endCurrentGroup(){
+	public static HSRRecord endGroup(){
 		
 		HSRRecord suiteItem = currentGroup.get();
 		HSR.end(suiteItem.getRecordName());
@@ -309,20 +310,22 @@ public class HSR {
 	 * Starts a new item, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	private static HSRRecord startItem(HSRRecordType type, String title){
+	private static HSRRecord startItem(HSRRecordType type, String name){
 		
-		return HSR.startItem(type, title, null);
+		return HSR.startItem(type, name, null);
 	}
 	
 	/***********************************************************************************
 	 * Starts a new item, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
-	private static HSRRecord startItem(HSRRecordType type, String title, HSRRecord parent){
+	private static HSRRecord startItem(HSRRecordType type, String name, HSRRecord parent){
 				
-		HSRRecord item = new HSRRecord(type, title);
+		HSRRecord item = new HSRRecord(type, name);
+		item.simulation(currentSimulation.get());
+		item.scenario(currentScenario.get());
 		
-		logger.info("\nSTART "+getLogIndendation()+" "+title);	
+		logger.info("\nSTART "+getLogIndendation()+" "+name);	
 		
 		if(parent == null){
 			item.setParent(getActiveItem());
@@ -331,7 +334,7 @@ public class HSR {
 		}
 		activeItem.set(item);
 		
-		openItems().put(title, item);
+		openItems().put(name, item);
 		return item;
 	}
 	
@@ -381,8 +384,13 @@ public class HSR {
 		
 		HSRRecord item = new HSRRecord(
 						  type
-						, activeItem.get()
+						, getActiveItem()
 						, title);
+				
+		item.simulation(currentSimulation.get());
+		item.scenario(currentScenario.get());
+		
+		
 		
 		HSRStatsEngine.addRecord(item);
 		return item;
@@ -459,6 +467,8 @@ public class HSR {
 	 * Create the report.
 	 ***********************************************************************************/
 	public static void createFinalReport(){
+		
+		HSRConfig.terminate();
 		
 		//-----------------------------------
 		// Extract Base Report Files

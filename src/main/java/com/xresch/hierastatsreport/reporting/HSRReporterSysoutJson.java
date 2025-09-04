@@ -2,6 +2,7 @@ package com.xresch.hierastatsreport.reporting;
 
 import java.util.ArrayList;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 
 
@@ -24,6 +25,15 @@ public class HSRReporterSysoutJson implements HSRReporter {
 			System.out.println( record.toJsonString() );
 		}
 
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		// do nothing
+		
 	}
 	
 	/****************************************************************************

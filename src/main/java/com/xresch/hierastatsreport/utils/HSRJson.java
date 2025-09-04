@@ -39,9 +39,9 @@ import com.google.gson.stream.JsonReader;
  * @author Reto Scheiwiller
  * 
  **************************************************************************************************************/
-public class GatlytronJson {
+public class HSRJson {
 	
-	private static final Logger logger = LoggerFactory.getLogger(GatlytronJson.class);
+	private static final Logger logger = LoggerFactory.getLogger(HSRJson.class);
 	
 	private static Gson gsonInstance;
 	private static Gson gsonInstancePretty;

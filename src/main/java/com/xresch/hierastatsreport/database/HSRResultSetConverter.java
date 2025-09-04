@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.xresch.hierastatsreport.utils.GatlytronJson;
+import com.xresch.hierastatsreport.utils.HSRJson;
 
 /**************************************************************************************************************
  * 
@@ -403,7 +403,7 @@ public class HSRResultSetConverter {
 					
 					String value = result.getString(i);
 					csv.append("\"")
-					   .append(GatlytronJson.escapeString(value))
+					   .append(HSRJson.escapeString(value))
 					   .append("\"")
 					   .append(delimiter);
 				}
@@ -512,15 +512,15 @@ public class HSRResultSetConverter {
 						String name = metadata.getColumnLabel(i);
 						
 						if(name.toUpperCase().startsWith("JSON")) {
-							JsonElement asElement = GatlytronJson.stringToJsonElement(resultSet.getString(i));
+							JsonElement asElement = HSRJson.stringToJsonElement(resultSet.getString(i));
 							record.add(name, asElement);
 						}else {
 							
 							Object value = resultSet.getObject(i);
-							if(value instanceof Clob) {				GatlytronJson.addObject(record, name, resultSet.getString(i)); }
-							else if(value instanceof JdbcArray) {	GatlytronJson.addObject(record, name, ((JdbcArray)value).getArray()); } 
+							if(value instanceof Clob) {				HSRJson.addObject(record, name, resultSet.getString(i)); }
+							else if(value instanceof JdbcArray) {	HSRJson.addObject(record, name, ((JdbcArray)value).getArray()); } 
 							else {									
-								GatlytronJson.addObject(record, name, value);
+								HSRJson.addObject(record, name, value);
 							}
 						}
 					}

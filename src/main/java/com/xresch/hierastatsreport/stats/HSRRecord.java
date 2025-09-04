@@ -18,12 +18,12 @@ public class HSRRecord {
 	
 	private transient HSRRecord parent = null;
 	
-	private String simulation = "unknownSimulation";
-	private String scenario = "unnamedScenario";
+	private String simulation = null;
+	private String scenario = null;
 	
 	private List<String> groups = new ArrayList<>();
 	private HSRRecordType type = HSRRecordType.UNKNOWN;
-	private String recordName = "unnamedRequest";  // name of this item
+	private String recordName = null;  // name of this item
 	private String statsIdentifier = null;
 	private long startMillis = -1;
 	private long endTimestamp = -1;
@@ -251,14 +251,23 @@ public class HSRRecord {
 			//--------------------------
 			// Set Values from Parent
 			
-			simulation(parent.getSimulation());
-			scenario(parent.getScenario());
+			if(parent.getSimulation() != null) {
+				simulation(parent.getSimulation());
+			}
+			
+			if(parent.getScenario() != null) {
+				scenario(parent.getScenario());
+			}
 					
 			//--------------------------
 			// Set Groups
 			List<String> unmodifyableGroups = parent.getGroups();
 			groups(unmodifyableGroups);
-			this.groups.add(parent.getRecordName());
+			
+			String parentName = parent.getRecordName();
+			if(parentName != null && !parentName.isBlank()) {
+				this.groups.add(parentName);
+			}
 		}
 		
 		return this;
@@ -360,7 +369,7 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * 
+	 * Overrides the groups of this record
 	 ******************************************************************/
 	public HSRRecord groups(List<String> groups) {
 		

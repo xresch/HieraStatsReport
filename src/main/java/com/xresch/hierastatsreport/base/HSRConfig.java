@@ -45,10 +45,11 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	public static final String EXECUTION_ID = UUID.randomUUID().toString();
 	public static final long STARTTIME_MILLIS = System.currentTimeMillis();
 	
+	private static boolean isEnabled = false; 
 	private static int aggregationIntervalSec = 15; 
 	
 	/******************************************************************
-	 * Starts Gatlytron and the reporting engine.
+	 * Starts HSR and the reporting engine.
 	 * 
 	 * @param reportingInterval number of seconds for the reporting
 	 * used to aggregate statistics and reporting them to the various
@@ -56,8 +57,11 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 * 
 	 ******************************************************************/
 	public static void enable(int reportingInterval) {
-		aggregationIntervalSec = reportingInterval;
-		HSRStatsEngine.start(reportingInterval);
+		if(!isEnabled) {
+			isEnabled = true;
+			aggregationIntervalSec = reportingInterval;
+			HSRStatsEngine.start(reportingInterval);
+		}
 	}
 	
 	/******************************************************************
@@ -273,14 +277,19 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 * 
 	 ******************************************************************/
 	public static void terminate() {
-		logger.info("Terminating Gatlytron");
+		
+		if(!isEnabled) {
+			return;
+		}
+		
+		logger.info("Terminating HieraStatsReport");
 
 		//--------------------------------
 		// Stop Stats Engine
 		try {
-			HSRStatsEngine.stop();
+			
 		} catch (Exception e) {
-			logger.error("Error while stopping GatlytronStatsEngine.", e);
+			logger.error("Error while stopping HSRStatsEngine.", e);
 		}
 		
 		//--------------------------------

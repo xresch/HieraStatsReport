@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
 import com.xresch.hierastatsreport.stats.HSRRecordStats.RecordMetric;
@@ -101,6 +102,15 @@ public class HSRReporterOTel implements HSRReporter {
         reader.forceFlush();
 
     }
+    
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		// do nothing
+		
+	}
 
     
 	/****************************************************************************

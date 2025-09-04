@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -73,6 +74,15 @@ public class HSRReporterJson implements HSRReporter {
 			logger.error("Error while writing JSON data to file.", e);
 		}
 			
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	/****************************************************************************

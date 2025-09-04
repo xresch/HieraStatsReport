@@ -2,6 +2,7 @@ package com.xresch.hierastatsreport.reporting;
 
 import java.util.ArrayList;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 
 
@@ -15,7 +16,20 @@ import com.xresch.hierastatsreport.stats.HSRRecordStats;
  **************************************************************************************************************/
 public interface HSRReporter {
 
+	/***********************************************************************
+	 * This method will be called periodically based on the report interval.
+	 * 
+	 * @param records aggregated record statistics
+	 ***********************************************************************/
 	public void reportRecords(ArrayList<HSRRecordStats> records);
+	
+	/***********************************************************************
+	 * This method will be called once at the end of the test.
+	 * 
+	 * @param finalRecords the final statistics over the whole test
+	 * @param finalRecordsArray the final statistics as a JsonArray
+	 ***********************************************************************/
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray);
 	
 	public void terminate();
 	

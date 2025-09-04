@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -14,11 +15,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.reporting.HSRReporter;
 import com.xresch.hierastatsreport.reporting.HSRReporterDatabase;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
 import com.xresch.hierastatsreport.stats.HSRRecordStats.RecordMetric;
+import com.xresch.hierastatsreport.utils.HSRJson;
 
 /**************************************************************************************************************
  * The statistics engine that aggregates stuff.
@@ -38,7 +41,7 @@ public class HSRStatsEngine {
 	
 	// key is based on hashCode() which is the StatsIdentifier, value are all Stats that are part of the group
 	// these are used for making reports over the full test duration
-	private static TreeMap<HSRRecordStats, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
+	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
 
 	private static Thread reporterThread;
 	private static boolean isStopped;
@@ -86,6 +89,8 @@ public class HSRStatsEngine {
 		reporterThread.interrupt();
 		
 		aggregateAndReport();
+		generateFinalReport();
+		
 	}
 	
 	/***************************************************************************
@@ -193,14 +198,14 @@ public class HSRStatsEngine {
 		//-------------------------------
 		// Add To Grouped Stats
 		for(Entry<HSRRecordStats, HSRRecordStats> entry : statsRecords.entrySet()) {
-			HSRRecordStats key = entry.getKey();
+			String statsId = entry.getKey().getStatsIdentifier();
 			HSRRecordStats value = entry.getValue();
 			
-			if( !groupedStats.containsKey(key) ) {
-				groupedStats.put(key,  new ArrayList<>());
+			if( !groupedStats.containsKey(statsId) ) {
+				groupedStats.put(statsId,  new ArrayList<>());
 			}
 			
-			groupedStats.get(key).add(value);
+			groupedStats.get(statsId).add(value);
 			
 		}
 		//-------------------------------
@@ -222,7 +227,7 @@ public class HSRStatsEngine {
 	 * Aggregates the grouped statistics and makes one final report
 	 * 
 	 ***************************************************************************/
-	private static void finalReportaggregateAndReport() {
+	public static void generateFinalReport() {
 
 		if(groupedRecordsInterval.isEmpty()) { return; }
 		
@@ -235,27 +240,38 @@ public class HSRStatsEngine {
 		// new records
 		LinkedHashMap<HSRRecordStats, HSRRecordStats> statsRecords = new LinkedHashMap<>();
 		
-		
+
 		//----------------------------------------
 		// Iterate Groups
-		for(Entry<HSRRecordStats, ArrayList<HSRRecordStats>> entry : groupedStats.entrySet()) {
+		for(Entry<String, ArrayList<HSRRecordStats>> entry : groupedStats.entrySet()) {
 			
-			HSRRecordStats targetStats = entry.getKey();
+			System.out.println("A");
+			String statsID = entry.getKey();
 			ArrayList<HSRRecordStats> records = entry.getValue();
 			
 			//---------------------------
-			// Make a Matrix of all values by state and type
-			Table<HSRRecordState, RecordMetric, ArrayList<BigDecimal> > valuesTable = HashBasedTable.create();
+			// Make a Matrix of all values by state and metric
+			Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTable = HashBasedTable.create();
 			
 			for(HSRRecordStats stats : records) {
-				stats.getState();
+				System.out.println("B");
 				
 				for(HSRRecordState state : HSRRecordState.values()) {
 					
+					//--------------------------------
+					// Add Time Array
+					if( ! valuesTable.contains(state, "time")) {
+						valuesTable.put(state, "time", new ArrayList<>());
+					}
+					valuesTable.get(state, "time")
+							   .add( new BigDecimal(stats.getTime()) );
+					
+					//--------------------------------
+					// Add Array for Each Metric
 					for(RecordMetric metric : RecordMetric.values()) { 
 						
-						if( ! valuesTable.contains(state, metric)) {
-							valuesTable.put(state, metric, new ArrayList<>());
+						if( ! valuesTable.contains(state, metric.toString())) {
+							valuesTable.put(state, metric.toString(), new ArrayList<>());
 						}
 						
 						BigDecimal value = stats.getValue(state, metric);
@@ -267,60 +283,62 @@ public class HSRStatsEngine {
 						
 					}
 				}
+				
+				System.out.println(HSRJson.toJSON(valuesTable));
 			}
 			
-			// skip if group is empty
-			if(values.isEmpty()) { continue; }
+
 			
-			// sort, needed for calculating the stats
-			values.sort(null);
 			
-			//---------------------------
-			// Calculate Stats
-			BigDecimal count 	= new BigDecimal(values.size());
-			BigDecimal min 		= values.get(0);
-			BigDecimal avg 		= sum.divide(count, RoundingMode.HALF_UP);
-			BigDecimal max 		= values.get( values.size()-1 );
-			BigDecimal stdev 	= bigStdev(values, avg, false);
-			BigDecimal p25 		= bigPercentile(25, values);
-			BigDecimal p50 		= bigPercentile(50, values);
-			BigDecimal p75 		= bigPercentile(75, values);
-			BigDecimal p95 		= bigPercentile(95, values);
-			BigDecimal p90 		= bigPercentile(90, values);
 			
-			//---------------------------
-			// Create StatsRecord
-			HSRRecord firstRecord = records.get(0);
-			
-			new HSRRecordStats(
-				  statsRecords
-			    , firstRecord
-			    , System.currentTimeMillis()
-				, count 
-				, avg 
-				, min 		
-				, max 			
-				, stdev 	
-				, p25 		
-				, p50 		
-				, p75 		
-				, p90 	
-				, p95 		
-			);
-			
+//			// skip if group is empty
+//			if(values.isEmpty()) { continue; }
+//			
+//			// sort, needed for calculating the stats
+//			values.sort(null);
+//			
+//			//---------------------------
+//			// Calculate Stats
+//			BigDecimal count 	= new BigDecimal(values.size());
+//			BigDecimal min 		= values.get(0);
+//			BigDecimal avg 		= sum.divide(count, RoundingMode.HALF_UP);
+//			BigDecimal max 		= values.get( values.size()-1 );
+//			BigDecimal stdev 	= bigStdev(values, avg, false);
+//			BigDecimal p25 		= bigPercentile(25, values);
+//			BigDecimal p50 		= bigPercentile(50, values);
+//			BigDecimal p75 		= bigPercentile(75, values);
+//			BigDecimal p95 		= bigPercentile(95, values);
+//			BigDecimal p90 		= bigPercentile(90, values);
+//			
+//			//---------------------------
+//			// Create StatsRecord
+//			HSRRecord firstRecord = records.get(0);
+//			
+//			new HSRRecordStats(
+//				  statsRecords
+//			    , firstRecord
+//			    , System.currentTimeMillis()
+//				, count 
+//				, avg 
+//				, min 		
+//				, max 			
+//				, stdev 	
+//				, p25 		
+//				, p50 		
+//				, p75 		
+//				, p90 	
+//				, p95 		
+//			);
+//			
 		}
 		
 		//-------------------------------
 		// Report Stats
-		sendRecordsToReporter(statsRecords);
+		sendFinalReportToReporter(
+				  statsRecords
+				, new JsonArray()
+			);
 	
-		//-------------------------------
-		// Report Test Settings
-		if(isFirstReport) {
-			isFirstReport = false;
-			sendTestSettingsToDBReporter();
-		}
-		
 	}
 	
 	/***************************************************************************
@@ -353,6 +371,47 @@ public class HSRStatsEngine {
 			try {
 				logger.debug("Report data to: "+reporter.getClass().getName());
 				reporter.reportRecords(clone);
+			}catch(Exception e) {
+				logger.error("Exception while reporting data.", e);
+			}
+		}
+
+	}
+	
+	/***************************************************************************
+     * Send the records to the Reporters, resets the existingRecords.
+     * 
+     ***************************************************************************/
+	private static void sendFinalReportToReporter(
+			LinkedHashMap<HSRRecordStats, HSRRecordStats> finalStatsRecords
+			, JsonArray finalStatsJson
+		){
+		
+		//-------------------------
+		// Filter Records
+		ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
+		for (HSRRecordStats record : finalStatsRecords.values()){
+			
+			if( HSRConfig.isKeepEmptyRecords()
+			 || record.hasData() 
+			 ){
+				finalRecords.add(record);
+			}
+		}
+		
+		//-------------------------
+		// Send Clone of list to each Reporter
+		for (HSRReporter reporter : HSRConfig.getReporterList()){
+			ArrayList<HSRRecordStats> clone = new ArrayList<>();
+			clone.addAll(finalRecords);
+
+			// wrap with try catch to not stop reporting to all reporters
+			try {
+				logger.debug("Report Final data to: "+reporter.getClass().getName());
+				reporter.reportFinal(
+						  clone
+						, finalStatsJson.deepCopy()
+					);
 			}catch(Exception e) {
 				logger.error("Exception while reporting data.", e);
 			}

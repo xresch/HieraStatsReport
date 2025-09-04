@@ -11,7 +11,7 @@ import com.xresch.hierastatsreport.database.DBInterface;
 import com.xresch.hierastatsreport.database.HSRDBInterface;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordType;
-import com.xresch.hierastatsreport.utils.GatlytronFiles;
+import com.xresch.hierastatsreport.utils.HSRFiles;
 
 /**************************************************************************************************************
  * This record holds one record of statistical data aggregated from HSRRecord.
@@ -435,7 +435,7 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	 ***********************************************************************/
 	public static String createAggregationSQL(String tablenameStats, String tablenameTempAggregation) {
 
-		String sqlAggregateTempStats =  GatlytronFiles.readPackageResource(HSRDBInterface.PACKAGE_RESOURCES, "sql_createTempAggregatedStatistics.sql");
+		String sqlAggregateTempStats =  HSRFiles.readPackageResource(HSRDBInterface.PACKAGE_RESOURCES, "sql_createTempAggregatedStatistics.sql");
 		
 		String fieldsNoTimeGranularity = fieldNamesJoined
 			.replaceAll("\"time\",", "")
@@ -579,6 +579,12 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	 ******************************************************************/
 	public String getMetricPathFull() {
 		return metricPathFull;
+	}
+	/******************************************************************
+	 * Returns the stats identifier
+	 ******************************************************************/
+	public String getStatsIdentifier() {
+		return statsIdentifier;
 	}
 	
 	

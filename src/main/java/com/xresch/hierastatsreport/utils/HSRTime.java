@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * @author Reto Scheiwiller
  * 
  **************************************************************************************************************/
-public class GatlytronTime {
+public class HSRTime {
 	
 	public static final String FORMAT_TIMESTAMP = "yyyy-MM-dd'T'HH:mm:ss.SSS"; // IMPORTANT: DO NOT CHANGE THIS
 	public static final String FORMAT_TIMESTAMP_READABLE = "yyyy-MM-dd HH:mm"; // IMPORTANT: DO NOT CHANGE THIS
@@ -32,8 +32,8 @@ public class GatlytronTime {
 	
 	private static TimeZone machineTimezone = TimeZone.getDefault();
 			
-	private static DateTimeFormatter formatterTimestamp = DateTimeFormatter.ofPattern(GatlytronTime.FORMAT_TIMESTAMP).withZone(machineTimezone.toZoneId());
-	private static DateTimeFormatter formatterISODate = DateTimeFormatter.ofPattern(GatlytronTime.FORMAT_ISO8601_DATE).withZone(machineTimezone.toZoneId());
+	private static DateTimeFormatter formatterTimestamp = DateTimeFormatter.ofPattern(HSRTime.FORMAT_TIMESTAMP).withZone(machineTimezone.toZoneId());
+	private static DateTimeFormatter formatterISODate = DateTimeFormatter.ofPattern(HSRTime.FORMAT_ISO8601_DATE).withZone(machineTimezone.toZoneId());
 	
 	public static final int SECONDS_OF_1MIN = 60;
 	public static final int SECONDS_OF_5MIN = 60 * 5;
@@ -516,7 +516,7 @@ public class GatlytronTime {
 	 * @return offset in minutes for the machine
 	 ********************************************************************************************/
 	public static int getMachineTimeZoneOffSetMinutes(){
-		int offsetMillis = GatlytronTime.getMachineTimeZone().getOffset(System.currentTimeMillis());
+		int offsetMillis = HSRTime.getMachineTimeZone().getOffset(System.currentTimeMillis());
 
 		return (int) ( -1 * GatlytronTimeUnit.m.convert(offsetMillis) );
 		
@@ -548,7 +548,7 @@ public class GatlytronTime {
 	 ********************************************************************************************/
 	public static String currentTimestamp(){
 		
-		return GatlytronTime.formatDateAsTimestamp(ZonedDateTime.now());
+		return HSRTime.formatDateAsTimestamp(ZonedDateTime.now());
 	}
 	
 	/********************************************************************************************
@@ -756,13 +756,13 @@ public class GatlytronTime {
 	public static Timestamp getDefaultAgeOutTime(int granularityMinutes) {
 		Timestamp ageOutOffset = null;
 		
-		if		(granularityMinutes <= 3) 		{ ageOutOffset = GatlytronTime.getCurrentTimestampWithOffset(0, 0, 0, 0, -30); }
-		else if (granularityMinutes <= 15) 		{ ageOutOffset = GatlytronTime.getCurrentTimestampWithOffset(0, 0, 0, -1, 0); }
-		else if (granularityMinutes <= 60) 		{ ageOutOffset = GatlytronTime.getCurrentTimestampWithOffset(0, 0, -1, 0, 0); }
-		else if (granularityMinutes <= 240) 	{ ageOutOffset = GatlytronTime.getCurrentTimestampWithOffset(0, 0, -7, 0, 0); }
-		else if (granularityMinutes <= 720) 	{ ageOutOffset = GatlytronTime.getCurrentTimestampWithOffset(0, 0, -14, 0, 0); }
-		else if (granularityMinutes <= 1440) 	{ ageOutOffset = GatlytronTime.getCurrentTimestampWithOffset(0, 0, -30, 0, 0); }
-		else  									{ ageOutOffset = GatlytronTime.getCurrentTimestampWithOffset(0, 0, -90, 0, 0); }
+		if		(granularityMinutes <= 3) 		{ ageOutOffset = HSRTime.getCurrentTimestampWithOffset(0, 0, 0, 0, -30); }
+		else if (granularityMinutes <= 15) 		{ ageOutOffset = HSRTime.getCurrentTimestampWithOffset(0, 0, 0, -1, 0); }
+		else if (granularityMinutes <= 60) 		{ ageOutOffset = HSRTime.getCurrentTimestampWithOffset(0, 0, -1, 0, 0); }
+		else if (granularityMinutes <= 240) 	{ ageOutOffset = HSRTime.getCurrentTimestampWithOffset(0, 0, -7, 0, 0); }
+		else if (granularityMinutes <= 720) 	{ ageOutOffset = HSRTime.getCurrentTimestampWithOffset(0, 0, -14, 0, 0); }
+		else if (granularityMinutes <= 1440) 	{ ageOutOffset = HSRTime.getCurrentTimestampWithOffset(0, 0, -30, 0, 0); }
+		else  									{ ageOutOffset = HSRTime.getCurrentTimestampWithOffset(0, 0, -90, 0, 0); }
 
 		return ageOutOffset;
 	}

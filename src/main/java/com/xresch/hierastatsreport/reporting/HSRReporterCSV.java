@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -88,6 +89,15 @@ public class HSRReporterCSV implements HSRReporter {
 	@Override
 	public void terminate() {
 		// nothing to do
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	

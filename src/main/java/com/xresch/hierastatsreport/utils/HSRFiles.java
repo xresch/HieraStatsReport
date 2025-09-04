@@ -33,9 +33,9 @@ import com.google.common.cache.CacheBuilder;
  * @author Reto Scheiwiller, (c) Copyright 2019 
  * @license MIT-License
  **************************************************************************************************************/
-public class GatlytronFiles {
+public class HSRFiles {
 	
-	private static final Logger logger = LoggerFactory.getLogger(GatlytronFiles.class);
+	private static final Logger logger = LoggerFactory.getLogger(HSRFiles.class);
 	
 	private static Cache<String, String> stringFileCache = 
 						CacheBuilder.newBuilder()
@@ -121,9 +121,9 @@ public class GatlytronFiles {
 	 ***********************************************************************/
 	public static String getFileContent( String path){
 		
-		if( GatlytronFiles.stringFileCache.asMap().containsKey(path) && cacheFiles){
+		if( HSRFiles.stringFileCache.asMap().containsKey(path) && cacheFiles){
 			logger.trace("Read file content from cache");
-			return GatlytronFiles.stringFileCache.getIfPresent(path);
+			return HSRFiles.stringFileCache.getIfPresent(path);
 		}else{
 			logger.trace("Read from disk into cache");
 			
@@ -138,7 +138,7 @@ public class GatlytronFiles {
 				}
 
 				String content = contentBuffer.toString();
-				GatlytronFiles.stringFileCache.put(path, content);
+				HSRFiles.stringFileCache.put(path, content);
 				
 				// remove UTF-8 byte order mark if present
 				content = content.replace("\uFEFF", "");
@@ -238,7 +238,7 @@ public class GatlytronFiles {
 
 						@Override
 						public String call() throws Exception {
-							InputStream in = GatlytronFiles.class.getClassLoader().getResourceAsStream(resourcePath);
+							InputStream in = HSRFiles.class.getClassLoader().getResourceAsStream(resourcePath);
 							String contents = readContentsFromInputStream(in);
 							
 							if(contents == null) {
@@ -254,7 +254,7 @@ public class GatlytronFiles {
 				}
 			}else{
 				
-				InputStream in = GatlytronFiles.class.getClassLoader().getResourceAsStream(resourcePath);
+				InputStream in = HSRFiles.class.getClassLoader().getResourceAsStream(resourcePath);
 				fileContent = readContentsFromInputStream(in);
 			}
 		}else {
@@ -284,7 +284,7 @@ public class GatlytronFiles {
 
 						@Override
 						public byte[] call() throws Exception {
-							InputStream in = GatlytronFiles.class.getClassLoader().getResourceAsStream(resourcePath);
+							InputStream in = HSRFiles.class.getClassLoader().getResourceAsStream(resourcePath);
 							return readBytesFromInputStream(in);
 						}
 						
@@ -294,7 +294,7 @@ public class GatlytronFiles {
 				}
 
 			}else{
-				InputStream in = GatlytronFiles.class.getClassLoader().getResourceAsStream(resourcePath);
+				InputStream in = HSRFiles.class.getClassLoader().getResourceAsStream(resourcePath);
 				fileContent = readBytesFromInputStream(in);
 			}
 		}else {
@@ -384,7 +384,7 @@ public class GatlytronFiles {
 	 * @return nothing
 	 ***********************************************************************/
 	public static void cacheFileContent(String filename, String fileContent) {
-		GatlytronFiles.stringFileCache.put(filename, fileContent);
+		HSRFiles.stringFileCache.put(filename, fileContent);
 	}
 	
 	/***********************************************************************
@@ -393,7 +393,7 @@ public class GatlytronFiles {
 	 * @return true or false
 	 ***********************************************************************/
 	public static boolean isFileCached(String filename) {
-		return GatlytronFiles.stringFileCache.asMap().containsKey(filename);
+		return HSRFiles.stringFileCache.asMap().containsKey(filename);
 	}
 	
 	/***********************************************************************
@@ -401,7 +401,7 @@ public class GatlytronFiles {
 	 * @param index the index of the file to be retrieved
 	 ***********************************************************************/
 	public static String getCachedFile(String filename) {
-		return GatlytronFiles.stringFileCache.asMap().get(filename);
+		return HSRFiles.stringFileCache.asMap().get(filename);
 	}
 	
 	/***********************************************************************

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordState;
@@ -146,6 +147,15 @@ public class HSRReporterEMP implements HSRReporter {
 		// Send CSV Records Request
 		callEMPAPI(apiEndpoint, postBodyRequest);
 		callEMPAPI(apiEndpoint, postBodyUser);
+		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		// do nothing
 		
 	}
 
