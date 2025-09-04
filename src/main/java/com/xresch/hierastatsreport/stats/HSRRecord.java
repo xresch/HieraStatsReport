@@ -44,28 +44,29 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public enum HSRRecordType{
-		  Step("step")
-		, Group("group")
-		, User("user")
-		, Exception("exception")
-		, Unknown("unknown")
-		, Assert("Assert")
-		, Wait("Wait")
-		, MessageInfo("Wait")
-		, MessageWarn("Wait")
-		, MessageError("Wait")
-		
+		  Step(false)
+		, Group(false)
+		, User(true)
+		, Exception(true)
+		, Unknown(true)
+		, Assert(true)
+		, Wait(false)
+		, MessageInfo(true)
+		, MessageWarn(true)
+		, MessageError(true)
 		;
 		
-		private String typeName;
+		// Defines that the value is a count and not a duration 
+		private boolean isCount = false;
 		
-		private HSRRecordType(String typeName) {
-			this.typeName = typeName;
+		private HSRRecordType(boolean isCount) {
+			this.isCount = isCount;
 		}
 		
-		public String typeName() {
-			return typeName;
+		public boolean isCount(){
+			return isCount;
 		}
+		
 	}
 	
 	/******************************************************************
@@ -80,10 +81,10 @@ public class HSRRecord {
 	 ******************************************************************/
 	public enum HSRRecordStatus { 
 			  Success(HSRRecordState.ok)
-			, Fail(HSRRecordState.nok)
+			, Failed(HSRRecordState.nok)
 			, Skipped(HSRRecordState.ok)
 			, Aborted(HSRRecordState.nok)
-			, Undefined(HSRRecordState.ok)
+			, None(HSRRecordState.ok) // used for assert, messages ...
 			;
 		
 			private HSRRecordState state;
@@ -413,13 +414,14 @@ public class HSRRecord {
 	public String getStatsIdentifier() {
 		
 		if(identityChanged || this.statsIdentifier == null) {
-			this.statsIdentifier += type.typeName() + simulation + scenario;
+			this.statsIdentifier = type.toString() + simulation + scenario;
 			
 			if( !this.groups.isEmpty() ) {
 				this.statsIdentifier += "/" + getGroupsAsString("/", "");
 			}	
 			
-			this.statsIdentifier += recordName + status + responseCode;
+			//this.statsIdentifier += recordName + status.state() + responseCode;
+			this.statsIdentifier += recordName + responseCode;
 		}
 		
 		return statsIdentifier;
@@ -450,7 +452,7 @@ public class HSRRecord {
 		StringBuilder builder = new StringBuilder();
 		
 		builder
-			.append( type.typeName() ).append(" ")
+			.append( type.toString() ).append(" ")
 			.append( status ).append(" ")
 			.append( responseCode ).append(" ")
 			.append( startMillis ).append(" ")

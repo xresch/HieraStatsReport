@@ -174,7 +174,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 			// End Test
 			switch(testExecutionResult.getStatus()) {
 			case ABORTED: 		HSR.end(HSRRecordStatus.Aborted); break;
-			case FAILED:		HSR.end(HSRRecordStatus.Fail); break;
+			case FAILED:		HSR.end(HSRRecordStatus.Failed); break;
 			case SUCCESSFUL:	HSR.end(HSRRecordStatus.Success); break;
 			default:
 				break;

@@ -203,7 +203,7 @@ public class HSRReporterEMP implements HSRReporter {
 		
 		String attrPrepared = ATTRIBUTES
 							.replace("$codePlaceholder$",  record.getCode() )
-							.replace("$typePlaceholder$",  record.getType().typeName() )
+							.replace("$typePlaceholder$",  record.getType().toString() )
 							.replace("$groupsPlaceholder$",  record.getGroupsPath() )
 							.replace("$scenarioPlaceholder$",  record.getScenario().replace("\"", "\\\"") )
 							;

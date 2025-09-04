@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import com.xresch.hierastatsreport.base.HSR;
 import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.reporting.HSRReporterSysoutCSV;
+import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordStatus;
 
 public class TestExampleLoadTestEmulation {
 
@@ -19,12 +20,13 @@ public class TestExampleLoadTestEmulation {
 	 * 
 	 ************************************************************************/
 	@BeforeAll
-	static void launchBrowser() {
+	static void config() {
 		  
 		//--------------------------
 		// HSR Config
+		HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
+		
 		HSRConfig.enable(5);
-		HSRConfig.addReporter(new HSRReporterSysoutCSV(";"));
 		
 	}
 	
@@ -52,8 +54,7 @@ public class TestExampleLoadTestEmulation {
 
 	}
 
-	/**
-	 * @throws InterruptedException ***************************************************************
+	/*****************************************************************
 	 * 
 	 *****************************************************************/
 	@Test
@@ -100,9 +101,27 @@ public class TestExampleLoadTestEmulation {
 									
 									//-------------------------------
 									// 
+									HSR.start("040_SometimesFails");
+										Thread.sleep(HSR.Random.integer(50, 100));
+										
+										boolean isSuccess = HSR.Random.bool();
+										if(!isSuccess) {
+											HSR.addErrorMessage("Exception Occured: Figure it out!");
+										}
+									HSR.end(isSuccess);
+									
+									//-------------------------------
+									// 
+									HSR.start("050_RandomStatus");
+										Thread.sleep(HSR.Random.integer(10, 200));
+									HSR.end(HSR.Random.fromArray(HSRRecordStatus.values()));
+									
+									//-------------------------------
+									// 
 									HSR.assertEquals("A"
 											, HSR.Random.fromArray(new String[] {"A", "A", "A", "B"})
-											,  "040_Assert_ContainsA");
+											,  "060_Assert_ContainsA");
+									
 								HSR.end();
 							HSR.end();
 						

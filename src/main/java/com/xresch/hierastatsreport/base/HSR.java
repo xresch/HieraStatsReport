@@ -16,6 +16,7 @@ import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordType;
 import com.xresch.hierastatsreport.stats.HSRStatsEngine;
 import com.xresch.hierastatsreport.utils.HSRFiles;
 import com.xresch.hierastatsreport.utils.HSRJson;
+import com.xresch.hierastatsreport.utils.HSRMath;
 import com.xresch.hierastatsreport.utils.HSRRandom;
 import com.xresch.hierastatsreport.utils.HSRReportUtils;
 import com.xresch.hierastatsreport.utils.HSRTime;
@@ -48,9 +49,12 @@ public class HSR {
 	
 	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
 	
-	
+	/***********************************************************************************
+	 * Utility References
+	 ***********************************************************************************/
 	public static class Files extends HSRFiles {}
 	public static class JSON extends HSRJson {}
+	public static class Math extends HSRMath {}
 	public static class Random extends HSRRandom {}
 	public static class Time extends HSRTime {}
 	
@@ -189,14 +193,29 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Close the item and returns it to be able to set further details.
+	 * Ends the record and returns it to be able to retrieve details.
+	 * Status will be successful.
 	 ***********************************************************************************/
 	public static HSRRecord end(){
 		return end(null); //keep default status
 	}
 
 	/***********************************************************************************
-	 * Close the item and returns it to be able to set further details.
+	 * Ends the record and returns it to be able to retrieve details.
+	 * @param status true if successful, false if failed.
+	 ***********************************************************************************/
+	public static HSRRecord end(boolean status){
+		
+		if(status) {
+			return end(HSRRecordStatus.Success);
+		}else {
+			return end(HSRRecordStatus.Failed);
+		}
+		
+	}
+	/***********************************************************************************
+	 * Ends the record and returns it to be able to retrieve details.
+	 * @param status of the request
 	 ***********************************************************************************/
 	public static HSRRecord end(HSRRecordStatus status){
 	
@@ -256,7 +275,7 @@ public class HSR {
 	public static HSRRecord addInfoMessage(String message){
 				
 		return addItem(HSRRecordType.MessageInfo, message)
-				.status(HSRRecordStatus.Undefined)
+				.status(HSRRecordStatus.None)
 				;
 	}
 	
@@ -266,7 +285,7 @@ public class HSR {
 	public static HSRRecord addWarnMessage(String message){
 				
 		return addItem(HSRRecordType.MessageWarn, message)
-				.status(HSRRecordStatus.Undefined);
+				.status(HSRRecordStatus.None);
 	}
 	
 	/***********************************************************************************
@@ -274,7 +293,7 @@ public class HSR {
 	 ***********************************************************************************/
 	public static HSRRecord addErrorMessage(String message){
 				
-		return addItem(HSRRecordType.MessageError, message).status(HSRRecordStatus.Undefined);
+		return addItem(HSRRecordType.MessageError, message).status(HSRRecordStatus.None);
 	}
 	
 	/***********************************************************************************
@@ -318,10 +337,8 @@ public class HSR {
 		if(result) {
 	 		item.status(HSRRecordStatus.Success);
 	 	}else {
-	 		item.status(HSRRecordStatus.Fail);
+	 		item.status(HSRRecordStatus.Failed);
 	 	}
-		
-		HSRStatsEngine.addRecord(item);
 		
 		return item;
 	}
@@ -414,20 +431,20 @@ public class HSR {
 	/***********************************************************************************
 	 * Return the current active step.
 	 ***********************************************************************************/
-	protected static void setStatusOnCurrentTree(HSRRecordStatus status){
-			
-		for(HSRRecord item : openItems()){
-
-			if(status == HSRRecordStatus.Fail){ 
-				item.status(status);
-			}else if (status == HSRRecordStatus.Skipped && item.getStatus() != HSRRecordStatus.Fail){
-				item.status(status);
-			}else if(status == HSRRecordStatus.Success && item.getStatus() == HSRRecordStatus.Undefined){
-				item.status(status);
-			}
-						
-		}
-	}
+//	protected static void setStatusOnCurrentTree(HSRRecordStatus status){
+//			
+//		for(HSRRecord item : openItems()){
+//
+//			if(status == HSRRecordStatus.Failed){ 
+//				item.status(status);
+//			}else if (status == HSRRecordStatus.Skipped && item.getStatus() != HSRRecordStatus.Failed){
+//				item.status(status);
+//			}else if(status == HSRRecordStatus.Success && item.getStatus() == HSRRecordStatus.None){
+//				item.status(status);
+//			}
+//						
+//		}
+//	}
 	
 	/***********************************************************************************
 	 * Log Indendation for the active item
