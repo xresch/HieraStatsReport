@@ -248,7 +248,7 @@ public class HSRRecordStats {
 		this.state = record.getStatus().state();
 		this.simulation = record.getSimulation();
 		this.scenario = record.getScenario();
-		this.metricName = record.getRecordName();
+		this.metricName = record.getName();
 		this.groupsPath = record.getGroupsAsString(" / ", "");
 		this.metricPath = record.getMetricPath();
 		this.metricPathFull = record.getMetricPathFull();

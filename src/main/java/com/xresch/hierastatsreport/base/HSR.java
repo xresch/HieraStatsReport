@@ -3,17 +3,18 @@ package com.xresch.hierastatsreport.base;
 import java.io.File;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.LinkedHashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
+import java.util.Stack;
 import java.util.zip.ZipInputStream;
 
 import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.xresch.hierastatsreport.stats.HSRRecord;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordType;
 import com.xresch.hierastatsreport.stats.HSRStatsEngine;
+import com.xresch.hierastatsreport.utils.HSRJson;
 import com.xresch.hierastatsreport.utils.HSRReportUtils;
 
 /**************************************************************************************
@@ -23,29 +24,26 @@ import com.xresch.hierastatsreport.utils.HSRReportUtils;
  * Copyright Reto Scheiwiller, 2017 - MIT License
  **************************************************************************************/
 
-public class HSR {
+public class HSR {	
 	
 	private static String CONFIG_REPORT_BASE_DIR = "./target/hieraReport";
 
 	private static int testNumber = 1;
+	
 
 	// For each type until test level one thread local to make it working in multi-threaded mode
 	private static InheritableThreadLocal<HSRRecord> rootItem = new InheritableThreadLocal<HSRRecord>();
-	private static InheritableThreadLocal<HSRRecord> currentGroup = new InheritableThreadLocal<HSRRecord>();
 	private static InheritableThreadLocal<String> currentSimulation = new InheritableThreadLocal<String>();
 	private static InheritableThreadLocal<String> currentScenario = new InheritableThreadLocal<String>();
 
-	// needed to avoid that a suite or class is opened multiple times
-	private static ConcurrentHashMap<String,HSRRecord> startedGroups = new ConcurrentHashMap<String,HSRRecord>();
-	private static ConcurrentHashMap<String,HSRRecord> startedClasses = new ConcurrentHashMap<String,HSRRecord>();
-	
 	
 	//everything else goes here.
-	private static ThreadLocal<HSRRecord> currentTest = new ThreadLocal<HSRRecord>();
-	private static ThreadLocal<LinkedHashMap<String,HSRRecord>> openItems = new ThreadLocal<LinkedHashMap<String,HSRRecord>>();
+	private static ThreadLocal<Boolean> areThreadLocalsInitialized = new ThreadLocal<Boolean>();
+	private static ThreadLocal<Stack<HSRRecord>> openItems = new ThreadLocal<Stack<HSRRecord>>();
 	private static InheritableThreadLocal<HSRRecord> activeItem = new InheritableThreadLocal<HSRRecord>();
 	
-	private static Logger logger = Logger.getLogger(HSR.class.getName());
+	private static Logger logger = LoggerFactory.getLogger(HSR.class.getName());
+	
 	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
 	
 	/***********************************************************************************
@@ -79,23 +77,28 @@ public class HSR {
 	 ***********************************************************************************/
 	private static void initializeThreadLocals(){
 		
-		if(rootItem.get() == null) {
-			rootItem.set(
-					new HSRRecord(
-							  HSRRecordType.GROUP
-							, null
-							, null
-							, BigDecimal.ZERO
-						)
-				);
-		}
-		
-		if(activeItem.get() == null) {
-			activeItem.set(rootItem.get());
-		}
-		
-		if(openItems.get() == null) {
-			openItems.set(new LinkedHashMap<String,HSRRecord>());
+		if(areThreadLocalsInitialized.get() == null) {
+
+			areThreadLocalsInitialized.set(true);
+			
+			if(rootItem.get() == null) {
+				rootItem.set(
+						new HSRRecord(
+								  HSRRecordType.Group
+								, null
+								, null
+								, BigDecimal.ZERO
+							)
+					);
+			}
+			
+			if(activeItem.get() == null) {
+				activeItem.set(rootItem.get());
+			}
+			
+			if(openItems.get() == null) {
+				openItems.set(new Stack<>());
+			}
 		}
 		
 	}
@@ -103,7 +106,7 @@ public class HSR {
 	/***********************************************************************************
 	 * 
 	 ***********************************************************************************/
-	protected static LinkedHashMap<String,HSRRecord> openItems(){
+	protected static Stack<HSRRecord> openItems(){
 		initializeThreadLocals();
 		return openItems.get();
 	}
@@ -130,57 +133,16 @@ public class HSR {
 		currentScenario.set(scenario);
 	}
 	
-	/***********************************************************************************
-	 * 
-	 ***********************************************************************************/
-	protected static String getTestDirectory(){
-		String testfolderName = currentTest.get().getRecordName();
-		return CONFIG_REPORT_BASE_DIR+"/"+testfolderName.replaceAll("[^a-zA-Z0-9]", "_")+"/";
-	}
 	
 	/***********************************************************************************
 	 * Starts a new suite, sets it as the active group and returns it to be able to set 
 	 * further details.
 	 ***********************************************************************************/
 	public static HSRRecord startGroup(String name){
-		
-		if(startedGroups.containsKey(name)){
-			HSRRecord groupItem = startedGroups.get(name);
-			activeItem.set(groupItem);
-			return groupItem;
-		}
-		
-		HSRRecord groupItem = HSR.startItem(HSRRecordType.GROUP, name);
-		currentGroup.set(groupItem);
-		activeItem.set(groupItem);
-		
-		startedGroups.put(name, groupItem);
-		return currentGroup.get();
+				
+		return HSR.startItem(HSRRecordType.Group, name);
+
 	}
-	
-	/***********************************************************************************
-	 * Ends the current Suite.
-	 ***********************************************************************************/
-	public static HSRRecord endGroup(HSRRecordStatus status){
-		
-		HSRRecord groupItem = currentGroup.get();
-		groupItem.status(status);
-		HSR.end(groupItem.getRecordName());
-		
-		return currentGroup.get();
-	}
-	/***********************************************************************************
-	 * Ends the current Group.
-	 ***********************************************************************************/
-	public static HSRRecord endGroup(){
-		
-		HSRRecord suiteItem = currentGroup.get();
-		HSR.end(suiteItem.getRecordName());
-		
-		return currentGroup.get();
-	}
-	
-	
 
 	/***********************************************************************************
 	 * Starts a new step, sets it as the active group and returns it to be able to set 
@@ -188,7 +150,7 @@ public class HSR {
 	 ***********************************************************************************/
 	public static HSRRecord start(String title){
 		
-		return startItem(HSRRecordType.STEP, title);
+		return startItem(HSRRecordType.Step, title);
 	}
 	
 	/***********************************************************************************
@@ -198,6 +160,144 @@ public class HSR {
 	public static HSRRecord startWait(String title){
 		
 		return startItem(HSRRecordType.Wait, title);
+	}	
+	
+	/***********************************************************************************
+	 * Starts a new item, sets it as the active group and returns it to be able to set 
+	 * further details.
+	 ***********************************************************************************/
+	private static HSRRecord startItem(HSRRecordType type, String name){
+				
+		HSRRecord item = new HSRRecord(type, name);
+		item.simulation(currentSimulation.get());
+		item.scenario(currentScenario.get());
+		
+		item.setParent(getActiveItem());
+
+		openItems().add(item);
+		activeItem.set(item);
+		
+		logger.info("START "+getLogIndendation(item)+" "+name);	
+		return item;
+	}
+	
+	/***********************************************************************************
+	 * Close the item and returns it to be able to set further details.
+	 ***********************************************************************************/
+	public static HSRRecord end(){
+		return end(null); //keep default status
+	}
+
+	/***********************************************************************************
+	 * Close the item and returns it to be able to set further details.
+	 ***********************************************************************************/
+	public static HSRRecord end(HSRRecordStatus status){
+	
+		Stack<HSRRecord> items = openItems();
+		
+		
+		if(!openItems().isEmpty()){
+			
+			//----------------------------
+			// End Item
+			
+			HSRRecord itemToEnd = items.pop();
+			itemToEnd.end();
+			itemToEnd.status(status);
+			logger.info("END   "+getLogIndendation(itemToEnd)+" "+itemToEnd.getName());	
+			//----------------------------
+			// Add URL
+			try{
+				if(driver.get() != null){
+					itemToEnd.addProperty("URL", driver.get().getCurrentUrl());
+				}
+			}catch(Exception e){
+				//Ignore exceptions like SessionNotFoundException
+			}
+			
+			//----------------------------
+			// Check Order
+			if(!itemToEnd.equals(getActiveItem())){
+				logger.warn("Items are not closed in the correct order: Ended Item: '"+itemToEnd.getName()+"' / Active Item'"+getActiveItem().getName()+"'");
+			}
+			
+			//----------------------------
+			// Add To Stats
+			HSRStatsEngine.addRecord(itemToEnd);
+			
+			//----------------------------
+			// Set new Active Item
+			if(!items.isEmpty()) {
+				activeItem.set(items.peek());
+			}else{
+				activeItem.set(rootItem.get());
+			}
+			
+			return itemToEnd;
+			
+		}else{
+			logger.warn("HSR.end(): Everything already ended, there is nothing more to end.");
+			return new HSRRecord(HSRRecordType.MessageInfo, activeItem.get(), "Prevent NullPointerException");
+		}
+		
+		
+	}
+
+	/***********************************************************************************
+	 * Add a item to the report without the need of starting and ending it.
+	 ***********************************************************************************/
+	public static HSRRecord addInfoMessage(String message){
+				
+		return addItem(HSRRecordType.MessageInfo, message)
+				.status(HSRRecordStatus.Undefined)
+				;
+	}
+	
+	/***********************************************************************************
+	 * Add a item to the report without the need of starting and ending it.
+	 ***********************************************************************************/
+	public static HSRRecord addWarnMessage(String message){
+				
+		return addItem(HSRRecordType.MessageWarn, message)
+				.status(HSRRecordStatus.Undefined);
+	}
+	
+	/***********************************************************************************
+	 * Add a item to the report without the need of starting and ending it.
+	 ***********************************************************************************/
+	public static HSRRecord addErrorMessage(String message){
+				
+		return addItem(HSRRecordType.MessageError, message).status(HSRRecordStatus.Undefined);
+	}
+	
+	/***********************************************************************************
+	 * Add a item to the report without the need of starting and ending it.
+	 ***********************************************************************************/
+//	public static HSRRecord addErrorMessage(String title, String message, Throwable e){
+//				
+//		return addItem(HSRRecordType.MessageError, title)
+//				.addMessage(message)
+//				.setException(e);
+//	}
+	
+	/***********************************************************************************
+	 * Add a item to the report without the need of starting and ending it.
+	 ***********************************************************************************/
+	public static HSRRecord addItem(HSRRecordType type, String name){
+		
+
+		HSRRecord item = new HSRRecord(
+						  type
+						, getActiveItem()
+						, name);
+				
+		item.simulation(currentSimulation.get());
+		item.scenario(currentScenario.get());
+		
+		HSRStatsEngine.addRecord(item);
+		
+		logger.info("ADD   "+getLogIndendation(item)+" "+name);	
+		return item;
 	}
 	
 	/***********************************************************************************
@@ -304,139 +404,12 @@ public class HSR {
 		 
 	}
 	
-
-	
-	/***********************************************************************************
-	 * Starts a new item, sets it as the active group and returns it to be able to set 
-	 * further details.
-	 ***********************************************************************************/
-	private static HSRRecord startItem(HSRRecordType type, String name){
-		
-		return HSR.startItem(type, name, null);
-	}
-	
-	/***********************************************************************************
-	 * Starts a new item, sets it as the active group and returns it to be able to set 
-	 * further details.
-	 ***********************************************************************************/
-	private static HSRRecord startItem(HSRRecordType type, String name, HSRRecord parent){
-				
-		HSRRecord item = new HSRRecord(type, name);
-		item.simulation(currentSimulation.get());
-		item.scenario(currentScenario.get());
-		
-		logger.info("\nSTART "+getLogIndendation()+" "+name);	
-		
-		if(parent == null){
-			item.setParent(getActiveItem());
-		}else{
-			item.setParent(parent);
-		}
-		activeItem.set(item);
-		
-		openItems().put(name, item);
-		return item;
-	}
-	
-	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
-	 ***********************************************************************************/
-	public static HSRRecord addInfoMessage(String message){
-				
-		return addItem(HSRRecordType.MessageInfo, message)
-				.status(HSRRecordStatus.Undefined)
-				;
-	}
-	
-	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
-	 ***********************************************************************************/
-	public static HSRRecord addWarnMessage(String message){
-				
-		return addItem(HSRRecordType.MessageWarn, message)
-				.status(HSRRecordStatus.Undefined);
-	}
-	
-	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
-	 ***********************************************************************************/
-	public static HSRRecord addErrorMessage(String message){
-				
-		return addItem(HSRRecordType.MessageError, message).status(HSRRecordStatus.Undefined);
-	}
-	
-	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
-	 ***********************************************************************************/
-//	public static HSRRecord addErrorMessage(String title, String message, Throwable e){
-//				
-//		return addItem(HSRRecordType.MessageError, title)
-//				.addMessage(message)
-//				.setException(e);
-//	}
-	
-	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
-	 ***********************************************************************************/
-	public static HSRRecord addItem(HSRRecordType type, String title){
-		
-		logger.info("  ADD   "+getLogIndendation()+" "+title);	
-		
-		HSRRecord item = new HSRRecord(
-						  type
-						, getActiveItem()
-						, title);
-				
-		item.simulation(currentSimulation.get());
-		item.scenario(currentScenario.get());
-		
-		
-		
-		HSRStatsEngine.addRecord(item);
-		return item;
-	}
-	
-	/***********************************************************************************
-	 * Close the item and returns it to be able to set further details.
-	 ***********************************************************************************/
-	public static HSRRecord end(String title){
-
-		if(!openItems().isEmpty()
-		&& openItems().containsKey(title)){
-			HSRRecord itemToEnd = openItems().get(title);
-			itemToEnd.end();
-			
-			HSRStatsEngine.addRecord(itemToEnd);
-			try{
-				if(driver.get() != null){
-					itemToEnd.addProperty("URL", driver.get().getCurrentUrl());
-				}
-			}catch(Exception e){
-				//Ignore exceptions like SessionNotFoundException
-			}
-			
-			if(!itemToEnd.equals(getActiveItem())){
-				logger.severe("Items are not closed in the correct order: '"+itemToEnd.getRecordName()+"'");
-			}
-			activeItem.set(itemToEnd.getParent());
-			openItems().remove(title);
-			
-			return itemToEnd;
-		}else{
-			logger.warning("The item is not started and can not be ended: '"+title+"'");
-			return new HSRRecord(HSRRecordType.MessageInfo, activeItem.get(), "Prevent NullPointerException");
-		}
-		
-		
-	}
-	
-
 	/***********************************************************************************
 	 * Return the current active step.
 	 ***********************************************************************************/
 	protected static void setStatusOnCurrentTree(HSRRecordStatus status){
 			
-		for(HSRRecord item : openItems().values()){
+		for(HSRRecord item : openItems()){
 
 			if(status == HSRRecordStatus.Fail){ 
 				item.status(status);
@@ -450,12 +423,19 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Log Indendation
+	 * Log Indendation for the active item
 	 ***********************************************************************************/
 	private static String getLogIndendation(){
-		StringBuffer logIndentation = new StringBuffer("--");
+		return getLogIndendation(getActiveItem());
+	}
+	
+	/***********************************************************************************
+	 * Log Indendation
+	 ***********************************************************************************/
+	private static String getLogIndendation(HSRRecord record){
+		StringBuffer logIndentation = new StringBuffer("");
 		
-		int level = (activeItem.get() != null) ? activeItem.get().getLevel() : 0;
+		int level = (record != null) ? record.getLevel() : 0;
 		
 		for(int i = 0; i < level ; i++){
 			logIndentation.append("--");
@@ -478,10 +458,10 @@ public class HSR {
     	
 		//-----------------------------------
 		// End Items
-		for(HSRRecord item : openItems().values()){
+		for(HSRRecord item : openItems()){
 			
-			logger.warning("Item was not ended properly: '"+item.getRecordName()+"'");
-			item.end().recordName(item.getRecordName()+"(NOT ENDED PROPERLY)");
+			logger.warn("Item was not ended properly: '"+item.getName()+"'");
+			item.end().recordName(item.getName()+"(NOT ENDED PROPERLY)");
 		}
 		
 		//-----------------------------------

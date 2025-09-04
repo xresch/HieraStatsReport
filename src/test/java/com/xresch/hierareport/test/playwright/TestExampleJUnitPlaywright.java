@@ -113,38 +113,35 @@ public class TestExampleJUnitPlaywright {
   @Test
   void shouldSearchWiki() {
 	
-	String stepName;
 	//-------------------------------
 	// 
-	stepName = "000_Open_Homepage";
-	HSR.start(stepName);
-	page.navigate("https://www.wikipedia.org/");
-	HSR.end(stepName);
+	HSR.start("000_Open_Homepage");
+		page.navigate("https://www.wikipedia.org/");
+	HSR.end();
 	
 	//-------------------------------
 	// 
-	stepName = "010_Enter_Playwright";
-	HSR.start(stepName);
+
+	HSR.start("010_Enter_Playwright");
 	    page.locator("input[name=\"search\"]").click();
 	    page.locator("input[name=\"search\"]").fill("playwright");
-	HSR.end(stepName);
+	HSR.end();
 	
-	HSRRecord group = HSR.startGroup("MyGroup");
-	System.out.println("#### >>> RECORD NAME: "+group.getRecordName() );
+	HSR.startGroup("MyGroup");
 		HSR.startGroup("MySubGroup");
 			//-------------------------------
 			// 
-			stepName = "020_Execute_Search";
-			HSR.start(stepName);
+			HSR.start("020_Execute_Search");
 			    page.locator("input[name=\"search\"]").press("Enter");
-			HSR.end(stepName);
+			HSR.end();
 			
 			//-------------------------------
 			// 
-			stepName = "030_Assert_IsPlaywrightPage";
-			HSR.assertEquals("https://en.wikipedia.org/wiki/Playwright", page.url(), stepName);
-		HSR.endGroup();
-	HSR.endGroup();
+			HSR.assertEquals("https://en.wikipedia.org/wiki/Playwright"
+					, page.url()
+					,  "030_Assert_IsPlaywrightPage");
+		HSR.end();
+	HSR.end();
 
   }
 }

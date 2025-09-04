@@ -75,7 +75,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		// Start Test
 		if (resolved.methodName != null) {
 			HSR.startGroup(resolved.methodName);
-		    HSR.endGroup(HSRRecordStatus.Skipped);
+		    HSR.end(HSRRecordStatus.Skipped);
 		}
 	}
 
@@ -172,9 +172,9 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 			//---------------------------------------
 			// End Test
 			switch(testExecutionResult.getStatus()) {
-			case ABORTED: 		HSR.endGroup(HSRRecordStatus.Aborted); break;
-			case FAILED:		HSR.endGroup(HSRRecordStatus.Fail); break;
-			case SUCCESSFUL:	HSR.endGroup(HSRRecordStatus.Success); break;
+			case ABORTED: 		HSR.end(HSRRecordStatus.Aborted); break;
+			case FAILED:		HSR.end(HSRRecordStatus.Fail); break;
+			case SUCCESSFUL:	HSR.end(HSRRecordStatus.Success); break;
 			default:
 				break;
 			
@@ -183,14 +183,14 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		    return;
 		}else if(resolved.className != null) {
 			
-			HSR.endGroup();
+			HSR.end();
 			return;
 		}
 		
 		//---------------------------------------
 		// End Suite
 		if (resolved.suite != null) {
-		    HSR.endGroup();
+		    HSR.end();
 		    return;
 		}
 		 

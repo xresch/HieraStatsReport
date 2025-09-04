@@ -22,7 +22,7 @@ public class HSRRecord {
 	private String scenario = null;
 	
 	private List<String> groups = new ArrayList<>();
-	private HSRRecordType type = HSRRecordType.UNKNOWN;
+	private HSRRecordType type = HSRRecordType.Unknown;
 	private String recordName = null;  // name of this item
 	private String statsIdentifier = null;
 	private long startMillis = -1;
@@ -44,12 +44,11 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public enum HSRRecordType{
-		  STEP("step")
-		, GROUP("group")
-		, USER("user")
-		, MESSAGE("message")
-		, EXCEPTION("exception")
-		, UNKNOWN("unknown")
+		  Step("step")
+		, Group("group")
+		, User("user")
+		, Exception("exception")
+		, Unknown("unknown")
 		, Assert("Assert")
 		, Wait("Wait")
 		, MessageInfo("Wait")
@@ -264,7 +263,7 @@ public class HSRRecord {
 			List<String> unmodifyableGroups = parent.getGroups();
 			groups(unmodifyableGroups);
 			
-			String parentName = parent.getRecordName();
+			String parentName = parent.getName();
 			if(parentName != null && !parentName.isBlank()) {
 				this.groups.add(parentName);
 			}
@@ -553,7 +552,7 @@ public class HSRRecord {
 	/******************************************************************
 	 * Returns the simple name of the metric
 	 ******************************************************************/
-	public String getRecordName() {
+	public String getName() {
 		return recordName;
 	}
 
