@@ -283,11 +283,11 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		}
 		
 		logger.info("Terminating HieraStatsReport");
-
+		
 		//--------------------------------
 		// Stop Stats Engine
 		try {
-			
+			HSRStatsEngine.stop();
 		} catch (Exception e) {
 			logger.error("Error while stopping HSRStatsEngine.", e);
 		}

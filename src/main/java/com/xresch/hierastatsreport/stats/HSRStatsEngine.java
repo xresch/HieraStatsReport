@@ -229,8 +229,9 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static void generateFinalReport() {
 
-		if(groupedRecordsInterval.isEmpty()) { return; }
-		
+		System.out.println("======== generateFinalReport ======");
+		if(groupedStats.isEmpty()) { return; }
+		System.out.println("0: "+groupedStats.size());
 		//----------------------------------------
 		// Create User Records
 		//TODO InjectedDataReceiver.createUserRecords(); 
@@ -268,13 +269,14 @@ public class HSRStatsEngine {
 					
 					//--------------------------------
 					// Add Array for Each Metric
-					for(RecordMetric metric : RecordMetric.values()) { 
+					for(RecordMetric recordMetric : RecordMetric.values()) { 
 						
-						if( ! valuesTable.contains(state, metric.toString())) {
-							valuesTable.put(state, metric.toString(), new ArrayList<>());
+						String metric = recordMetric.toString();
+						if( ! valuesTable.contains(state, metric) ) {
+							valuesTable.put(state, metric, new ArrayList<>());
 						}
 						
-						BigDecimal value = stats.getValue(state, metric);
+						BigDecimal value = stats.getValue(state, recordMetric);
 						
 						if(value != null) {
 							

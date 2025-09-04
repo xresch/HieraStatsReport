@@ -12,7 +12,7 @@ import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.stats.HSRRecordStats;
 import com.xresch.hierastatsreport.utils.HSRFiles;
 import com.xresch.hierastatsreport.utils.HSRTime;
-import com.xresch.hierastatsreport.utils.HSRTime.GatlytronTimeUnit;
+import com.xresch.hierastatsreport.utils.HSRTime.HSRTimeUnit;
 
 /**************************************************************************************************************
  * 
@@ -318,22 +318,22 @@ public class HSRDBInterface {
 			// Get Start Time
 			// Cannot take oldest as start time, as it might offset deep into 
 			// the timerange that still should be kept
-			Long startTime = GatlytronTimeUnit.s.offset(oldest, +1);
+			Long startTime = HSRTimeUnit.s.offset(oldest, +1);
 			
 			while(startTime > oldest) {
-				startTime = GatlytronTimeUnit.s.offset(startTime, -granularitySec);
+				startTime = HSRTimeUnit.s.offset(startTime, -granularitySec);
 			}
 			
 			//--------------------------
 			// Iterate with offsets
-			Long endTime =  GatlytronTimeUnit.s.offset(startTime, granularitySec);
+			Long endTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
 			
 			// do-while to execute at least once, else would not work if (endTime - startTime) < granularity
 			do {
 
 				aggregateStatistics(startTime, endTime, granularitySec);
-				startTime =  GatlytronTimeUnit.s.offset(startTime, granularitySec);
-				endTime = GatlytronTimeUnit.s.offset(endTime, granularitySec);
+				startTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
+				endTime = HSRTimeUnit.s.offset(endTime, granularitySec);
 
 			} while(endTime < youngest);
 
@@ -353,12 +353,12 @@ public class HSRDBInterface {
 		
 		long ageOutOffset;
 		
-		if		(granularitySeconds <= HSRTime.SECONDS_OF_1MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep1MinFor().get(ChronoUnit.SECONDS) ); }
-		else if	(granularitySeconds <= HSRTime.SECONDS_OF_5MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep5MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= HSRTime.SECONDS_OF_10MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep10MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= HSRTime.SECONDS_OF_15MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep15MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= HSRTime.SECONDS_OF_60MIN) 	{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
-		else  															{ ageOutOffset = GatlytronTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
+		if		(granularitySeconds <= HSRTime.SECONDS_OF_1MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep1MinFor().get(ChronoUnit.SECONDS) ); }
+		else if	(granularitySeconds <= HSRTime.SECONDS_OF_5MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep5MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= HSRTime.SECONDS_OF_10MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep10MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= HSRTime.SECONDS_OF_15MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep15MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= HSRTime.SECONDS_OF_60MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
+		else  															{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
 
 		return ageOutOffset;
 	}

@@ -14,8 +14,11 @@ import com.xresch.hierastatsreport.stats.HSRRecord;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordType;
 import com.xresch.hierastatsreport.stats.HSRStatsEngine;
+import com.xresch.hierastatsreport.utils.HSRFiles;
 import com.xresch.hierastatsreport.utils.HSRJson;
+import com.xresch.hierastatsreport.utils.HSRRandom;
 import com.xresch.hierastatsreport.utils.HSRReportUtils;
+import com.xresch.hierastatsreport.utils.HSRTime;
 
 /**************************************************************************************
  * The Report class provides methods to add items to the reports, create screenshots
@@ -36,7 +39,6 @@ public class HSR {
 	private static InheritableThreadLocal<String> currentSimulation = new InheritableThreadLocal<String>();
 	private static InheritableThreadLocal<String> currentScenario = new InheritableThreadLocal<String>();
 
-	
 	//everything else goes here.
 	private static ThreadLocal<Boolean> areThreadLocalsInitialized = new ThreadLocal<Boolean>();
 	private static ThreadLocal<Stack<HSRRecord>> openItems = new ThreadLocal<Stack<HSRRecord>>();
@@ -45,6 +47,12 @@ public class HSR {
 	private static Logger logger = LoggerFactory.getLogger(HSR.class.getName());
 	
 	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
+	
+	
+	public static class Files extends HSRFiles {}
+	public static class JSON extends HSRJson {}
+	public static class Random extends HSRRandom {}
+	public static class Time extends HSRTime {}
 	
 	/***********************************************************************************
 	 * 
@@ -55,7 +63,6 @@ public class HSR {
 		
 		logger.info("Cleanup report directory: "+CONFIG_REPORT_BASE_DIR);
     	HSRReportUtils.deleteRecursively(new File(CONFIG_REPORT_BASE_DIR));
-    	//Utils.copyRecursively(RESOURCE_BASE_DIR, REPORT_BASE_DIR);
     	    	    	
 	} 
 	

@@ -8,6 +8,7 @@ import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.TestPlan;
 
 import com.xresch.hierastatsreport.base.HSR;
+import com.xresch.hierastatsreport.base.HSRConfig;
 import com.xresch.hierastatsreport.base.HSRReportItem.ItemStatus;
 import com.xresch.hierastatsreport.stats.HSRRecord;
 import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordStatus;
@@ -36,7 +37,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 	 */
 	public void testPlanExecutionFinished(TestPlan testplan) {
 		
-		HSR.createFinalReport();
+		HSRConfig.terminate();
 	}
 
 	/**

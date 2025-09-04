@@ -52,7 +52,7 @@ public class HSRTime {
 	/********************************************************************************************
 	 * The mother of all time enumerations! :-P
 	 ********************************************************************************************/
-	public enum GatlytronTimeUnit {
+	public enum HSRTimeUnit {
 		//  ns("nanosecond", 	TimeUnit.NANOSECONDS, 	ChronoUnit.NANOS, 	null)
 		//, us("microsecond", TimeUnit.MICROSECONDS, 	ChronoUnit.MICROS, 	null)
 		 ms("milliseconds", TimeUnit.MILLISECONDS, 	ChronoUnit.MILLIS, 	Calendar.MILLISECOND)
@@ -77,7 +77,7 @@ public class HSRTime {
 		private ChronoUnit chronoUnit;
 		private Integer calendarUnit;
 		
-		private GatlytronTimeUnit(String longName, TimeUnit timeUnit, ChronoUnit chronoUnit,  Integer calendarUnit) {
+		private HSRTimeUnit(String longName, TimeUnit timeUnit, ChronoUnit chronoUnit,  Integer calendarUnit) {
 			this.longName = longName;
 			this.timeUnit = timeUnit;
 			this.chronoUnit = chronoUnit;
@@ -99,16 +99,16 @@ public class HSRTime {
 		 * @param calendar which time should be truncated
 		 * @return nothing
 		 ********************************************************************************************/
-		public GatlytronTimeUnit calendarUnitLower() { 
+		public HSRTimeUnit calendarUnitLower() { 
 			switch(this) {
-				case y:	 return GatlytronTimeUnit.M;
-				case M:	 return GatlytronTimeUnit.d;
-				case d:	 return GatlytronTimeUnit.h;
-				case h:	 return GatlytronTimeUnit.m;
-				case m:	 return GatlytronTimeUnit.s;
-				case s:	 return GatlytronTimeUnit.ms;
-				case ms: return GatlytronTimeUnit.ms;
-				default: return GatlytronTimeUnit.ms;
+				case y:	 return HSRTimeUnit.M;
+				case M:	 return HSRTimeUnit.d;
+				case d:	 return HSRTimeUnit.h;
+				case h:	 return HSRTimeUnit.m;
+				case m:	 return HSRTimeUnit.s;
+				case s:	 return HSRTimeUnit.ms;
+				case ms: return HSRTimeUnit.ms;
+				default: return HSRTimeUnit.ms;
 						
 			}
 		}
@@ -119,7 +119,7 @@ public class HSRTime {
 			if(enumNames == null) {
 				enumNames = new TreeSet<>();
 				
-				for(GatlytronTimeUnit unit : GatlytronTimeUnit.values()) {
+				for(HSRTimeUnit unit : HSRTimeUnit.values()) {
 					enumNames.add(unit.name());
 				}
 			}
@@ -142,7 +142,7 @@ public class HSRTime {
 		public static String getOptionsHTMLList() {
 			if(optionsHTMLList == null) {
 				optionsHTMLList = "<ul>";
-				for(GatlytronTimeUnit unit : GatlytronTimeUnit.values()) {
+				for(HSRTimeUnit unit : HSRTimeUnit.values()) {
 					optionsHTMLList += "<li><b>"+unit.name()+":&nbsp</b>"+unit.longName()+"</li>";
 				}
 				optionsHTMLList += "</ul>";
@@ -518,7 +518,7 @@ public class HSRTime {
 	public static int getMachineTimeZoneOffSetMinutes(){
 		int offsetMillis = HSRTime.getMachineTimeZone().getOffset(System.currentTimeMillis());
 
-		return (int) ( -1 * GatlytronTimeUnit.m.convert(offsetMillis) );
+		return (int) ( -1 * HSRTimeUnit.m.convert(offsetMillis) );
 		
 	}
 	
