@@ -15,11 +15,11 @@ import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.BrowserType.LaunchOptions;
-import com.xresch.hierastatsreport.base.HSR;
-import com.xresch.hierastatsreport.base.HSRConfig;
-import com.xresch.hierastatsreport.reporting.HSRReporterCSV;
-import com.xresch.hierastatsreport.reporting.HSRReporterSysoutCSV;
-import com.xresch.hierastatsreport.stats.HSRRecord;
+import com.xresch.hsr.base.HSR;
+import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.reporting.HSRReporterCSV;
+import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
+import com.xresch.hsr.stats.HSRRecord;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 

@@ -8,10 +8,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.xresch.hierastatsreport.base.HSR;
-import com.xresch.hierastatsreport.base.HSRConfig;
-import com.xresch.hierastatsreport.reporting.HSRReporterSysoutCSV;
-import com.xresch.hierastatsreport.stats.HSRRecord.HSRRecordStatus;
+import com.xresch.hsr.base.HSR;
+import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
+import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 
 public class TestExampleLoadTestEmulation {
 
