@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
-import com.xresch.hsr.reporting.HSRReporterCSV;
-import com.xresch.hsr.reporting.HSRReporterJson;
+import com.xresch.hsr.reporting.HSRReporterHTML;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 
 public class TestExampleLoadTestEmulation {
@@ -29,8 +28,9 @@ public class TestExampleLoadTestEmulation {
 		// HSR Config
 		//HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 		//HSRConfig.addReporter(new HSRReporterSysoutJson());
-		HSRConfig.addReporter(new HSRReporterJson( DIR_RESULTS + "/hsr-stats.json", true) );
-		HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ",") );
+		//HSRConfig.addReporter(new HSRReporterJson( DIR_RESULTS + "/hsr-stats.json", true) );
+		//HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ",") );
+		HSRConfig.addReporter(new HSRReporterHTML( DIR_RESULTS + "/HTMLReport") );
 		
 		HSRConfig.enable(REPORT_INTERVAL_SECONDS); 
 		

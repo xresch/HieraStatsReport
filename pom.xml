@@ -165,6 +165,8 @@
 
 	<!-- ================= BUILD ================== -->
 	<build>
+		
+		<!-- ================= RESOURCES ================== -->
 		<resources>
 			<resource>
 				<directory>src/main/java</directory>
@@ -176,6 +178,16 @@
 				<directory>src/main/resources</directory>
 			</resource>
 		</resources>
+		
+		<!-- ================= TEST RESOURCES ================== -->
+		<testResources>
+			<testResource>
+				<directory>src/test/java</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+				</excludes>
+			</testResource>
+		</testResources>
 
 		<plugins>
 			<!-- ================= COMPILER ================== -->

@@ -30,8 +30,6 @@ import com.xresch.hsr.utils.HSRTime;
 
 public class HSR {	
 	
-	private static String CONFIG_REPORT_BASE_DIR = "./target/hieraReport";
-
 	private static int testNumber = 1;
 	
 	// For each type until test level one thread local to make it working in multi-threaded mode
@@ -62,18 +60,9 @@ public class HSR {
 	 * Initialize the Report and clean up the report directory.
 	 ***********************************************************************************/
 	public static void initialize(){
-		initializeThreadLocals();
-		
-		logger.info("Cleanup report directory: "+CONFIG_REPORT_BASE_DIR);
-    	HSRReportUtils.deleteRecursively(new File(CONFIG_REPORT_BASE_DIR));
-    	    	    	
+		initializeThreadLocals();    	    	
 	} 
-	
-	/***********************************************************************************
-	 * Set the directory of the report.
-	 ***********************************************************************************/
-	public static void configReportDirectory(String path) {  CONFIG_REPORT_BASE_DIR = path; }
-	
+
 	
 	/***********************************************************************************
 	 * Set the WebDriver.
@@ -499,12 +488,6 @@ public class HSR {
 		HSRConfig.terminate();
 		
 		//-----------------------------------
-		// Extract Base Report Files
-    	InputStream in = HSR.class.getClassLoader().getResourceAsStream("com/xresch/hierastatsreport/files/reportFiles.zip.txt");
-    	ZipInputStream zipStream = new ZipInputStream(in);
-    	HSRReportUtils.extractZipFile(zipStream, CONFIG_REPORT_BASE_DIR);
-    	
-		//-----------------------------------
 		// End Items
 		for(HSRRecord item : openItems()){
 			
@@ -512,15 +495,6 @@ public class HSR {
 			item.end().recordName(item.getName()+"(NOT ENDED PROPERLY)");
 		}
 		
-		//-----------------------------------
-		// Make Json
-		// TODO Get from StatsEngine
-		//String json = HSRReportUtils.generateJSON(rootItem.get().getChildren());
-		
-		//-----------------------------------
-		// Add to data.js
-//		String javascript = "DATA = DATA.concat(\n"+json+"\n);";
-//		HSRReportUtils.writeStringToFile(CONFIG_REPORT_BASE_DIR, "data.js", javascript);
 	}
 	
 }
