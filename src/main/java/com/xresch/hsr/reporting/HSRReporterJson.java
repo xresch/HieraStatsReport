@@ -80,7 +80,7 @@ public class HSRReporterJson implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -456,9 +456,23 @@ public class HSRRecordStats {
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
 		
+		//----------------------------
+		// OK-NOK Values
 		for(HSRRecordState state : HSRRecordState.values()) {
 			for(RecordMetric metric : RecordMetric.values()) {
-				object.addProperty(state + "_" + metric, this.getValue(state,metric));
+				if(metric.isOkNok()) {
+					object.addProperty(state + "_" + metric, this.getValue(state,metric));
+				}
+			}
+		}
+		
+		//----------------------------
+		// Non OK-NOK Values
+		for(HSRRecordState state : HSRRecordState.values()) {
+			for(RecordMetric metric : RecordMetric.values()) {
+				if(!metric.isOkNok()) {
+					object.addProperty(metric.toString(), this.getValue(state,metric));
+				}
 			}
 		}
 		

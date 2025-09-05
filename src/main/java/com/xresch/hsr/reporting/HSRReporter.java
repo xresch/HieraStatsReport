@@ -27,9 +27,9 @@ public interface HSRReporter {
 	 * This method will be called once at the end of the test.
 	 * 
 	 * @param finalRecords the final statistics over the whole test
-	 * @param finalRecordsArray the final statistics as a JsonArray
+	 * @param finalRecordsArrayWithSeries the final statistics as a JsonArray
 	 ***********************************************************************/
-	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray);
+	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries);
 	
 	public void terminate();
 	

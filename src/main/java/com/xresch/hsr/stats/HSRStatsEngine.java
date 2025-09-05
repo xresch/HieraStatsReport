@@ -14,12 +14,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.reporting.HSRReporterDatabase;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecordStats.RecordMetric;
+import com.xresch.hsr.utils.HSRJson;
 
 /**************************************************************************************************************
  * The statistics engine that aggregates stuff.
@@ -278,18 +280,15 @@ public class HSRStatsEngine {
 		if(groupedStats.isEmpty()) { return; }
 
 		//----------------------------------------
-		// Create User Records
-		//TODO InjectedDataReceiver.createUserRecords(); 
-		
-
-		//----------------------------------------
 		// Steal Reference to not block writing
 		// new records
 		ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
+		JsonArray finalRecordsArray = new JsonArray();
 
 		//----------------------------------------
 		// Iterate Grouped Stats
 		long reportTime = System.currentTimeMillis();
+		
 		for(Entry<String, ArrayList<HSRRecordStats>> entry : groupedStats.entrySet()) {
 			
 			//---------------------------
@@ -332,8 +331,6 @@ public class HSRStatsEngine {
 					}
 				}
 			}
-			// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg":
-			// System.out.println(HSRJson.toJSON(valuesTable));
 			
 			//---------------------------
 			// Use first as base, Override
@@ -402,6 +399,17 @@ public class HSRStatsEngine {
 			// Keep Empty
 			if( HSRConfig.isKeepEmptyRecords() || first.hasData() ){
 				finalRecords.add(first);
+				JsonObject recordObject = first.toJson();
+				
+				// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
+				JsonObject series = HSR.JSON.toJSONElement(valuesTable)
+											.getAsJsonObject()
+											.get("backingMap")
+											.getAsJsonObject()
+											;
+				
+				recordObject.add("series", series);
+				finalRecordsArray.add(recordObject);
 			}
 					
 		}
@@ -410,7 +418,7 @@ public class HSRStatsEngine {
 		// Report Stats
 		sendFinalReportToReporter(
 				  finalRecords
-				, new JsonArray()
+				, finalRecordsArray
 			);
 	
 	}
@@ -443,8 +451,8 @@ public class HSRStatsEngine {
      * 
      ***************************************************************************/
 	private static void sendFinalReportToReporter(
-			ArrayList<HSRRecordStats> finalRecords
-			, JsonArray finalStatsJson
+			  ArrayList<HSRRecordStats> finalRecords
+			, JsonArray finalRecordsAarrayWithSeries
 		){
 		
 		//-------------------------
@@ -468,9 +476,9 @@ public class HSRStatsEngine {
 			// wrap with try catch to not stop reporting to all reporters
 			try {
 				logger.debug("Report Final data to: "+reporter.getClass().getName());
-				reporter.reportFinal(
+				reporter.reportSummary(
 						  clone
-						, finalStatsJson.deepCopy()
+						, finalRecordsAarrayWithSeries.deepCopy()
 					);
 			}catch(Exception e) {
 				logger.error("Exception while reporting data.", e);

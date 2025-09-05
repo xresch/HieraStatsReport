@@ -154,7 +154,7 @@ public class HSRReporterEMP implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
 		// do nothing
 		
 	}

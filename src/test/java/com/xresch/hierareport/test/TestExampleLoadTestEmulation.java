@@ -12,11 +12,13 @@ import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.reporting.HSRReporterCSV;
 import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
+import com.xresch.hsr.reporting.HSRReporterSysoutJson;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 
 public class TestExampleLoadTestEmulation {
 
 	public static final String DIR_RESULTS = "./target";
+	public static final int REPORT_INTERVAL_SECONDS = 5;
 
 	/************************************************************************
 	 * 
@@ -26,10 +28,12 @@ public class TestExampleLoadTestEmulation {
 		  
 		//--------------------------
 		// HSR Config
-		HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
-		HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ";") );
+		//HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
+		HSRConfig.addReporter(new HSRReporterSysoutJson());
+		//HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ";") );
+		//HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ";") );
 		
-		HSRConfig.enable(5);
+		HSRConfig.enable(REPORT_INTERVAL_SECONDS); 
 		
 	}
 	

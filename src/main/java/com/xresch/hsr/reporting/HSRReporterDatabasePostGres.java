@@ -69,7 +69,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
 		// TODO Auto-generated method stub
 		
 	}

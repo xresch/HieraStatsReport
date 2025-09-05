@@ -38,10 +38,10 @@ public class HSRReporterSysoutCSV implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
-		System.out.println( "==============================================================");
-		System.out.println( "=================== CSV: FULL TEST STATISTICS ================");
-		System.out.println( "==============================================================");
+	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
+		System.out.println( "============================================================");
+		System.out.println( "=================== CSV: SUMMARY STATISTICS ================");
+		System.out.print(   "============================================================");
 		 reportRecords(finalRecords);
 	}
 	
