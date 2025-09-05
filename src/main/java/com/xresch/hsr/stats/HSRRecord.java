@@ -19,7 +19,7 @@ public class HSRRecord {
 	private transient HSRRecord parent = null;
 	
 	private String test = null;
-	private String scenario = null;
+	private String usecase = null;
 	
 	private List<String> groups = new ArrayList<>();
 	private HSRRecordType type = HSRRecordType.Unknown;
@@ -166,7 +166,7 @@ public class HSRRecord {
 	 * 
 	 * @param type the type of the record
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
-	 * @param scenario the name of the scenario (Use Case etc...)
+	 * @param usecase the name of the usecase (Use Case etc...)
 	 * @param groups the groups that are defining the hierarchy
 	 * @param recordName the name of this record (e.g. Step name)
 	 * @param value the value of this record
@@ -174,7 +174,7 @@ public class HSRRecord {
 	public HSRRecord(
 			  HSRRecordType type
 			, String test
-			, String scenario
+			, String usecase
 			, List<String> groups
 			, String recordName
 			, BigDecimal value
@@ -183,7 +183,7 @@ public class HSRRecord {
 		type(type);
 		
 		test(test);
-		scenario(scenario);
+		usecase(usecase);
 		recordName(recordName);
 		
 		groups(groups);
@@ -198,7 +198,7 @@ public class HSRRecord {
 	 * 
 	 * @param type the type of the record
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
-	 * @param scenario the name of the scenario (Use Case etc...)
+	 * @param usecase the name of the usecase (Use Case etc...)
 	 * @param groups the groups that are defining the hierarchy
 	 * @param recordName the name of this record (e.g. Step name)
 	 * @param startTimestamp the start time of this record in epoch millis
@@ -211,7 +211,7 @@ public class HSRRecord {
 	public HSRRecord(
 			  HSRRecordType type
 			, String test
-			, String scenario
+			, String usecase
 			, List<String> groups
 			, String recordName
 			, long startTimestamp
@@ -225,7 +225,7 @@ public class HSRRecord {
 		type(type);
 		
 		test(test);
-		scenario(scenario);
+		usecase(usecase);
 		recordName(recordName);
 		
 		groups(groups);
@@ -242,7 +242,7 @@ public class HSRRecord {
 	
 	/******************************************************************
 	 * This will also take over other values from the parent and override
-	 * them, including: test, scenario, recordName groups
+	 * them, including: test, usecase, recordName groups
 	 ******************************************************************/
 	public HSRRecord setParent(HSRRecord parent) {
 		this.parent = parent;
@@ -255,8 +255,8 @@ public class HSRRecord {
 				test(parent.getTest());
 			}
 			
-			if(parent.getScenario() != null) {
-				scenario(parent.getScenario());
+			if(parent.getUsecase() != null) {
+				usecase(parent.getUsecase());
 			}
 					
 			//--------------------------
@@ -287,9 +287,9 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord scenario(String scenario) {
-		if(scenario != null && !scenario.isBlank() ) {			
-			this.scenario = scenario; 
+	public HSRRecord usecase(String usecase) {
+		if(usecase != null && !usecase.isBlank() ) {			
+			this.usecase = usecase; 
 			identityChanged = true;
 		}
 		return this;
@@ -414,7 +414,7 @@ public class HSRRecord {
 	public String getStatsIdentifier() {
 		
 		if(identityChanged || this.statsIdentifier == null) {
-			this.statsIdentifier = type.toString() + test + scenario;
+			this.statsIdentifier = type.toString() + test + usecase;
 			
 			if( !this.groups.isEmpty() ) {
 				this.statsIdentifier += "/" + getGroupsAsString("/", "");
@@ -457,7 +457,7 @@ public class HSRRecord {
 			.append( responseCode ).append(" ")
 			.append( startMillis ).append(" ")
 			.append( endTimestamp ).append(" ")
-			.append( scenario.replaceAll(" ", "_") ).append(" ")
+			.append( usecase.replaceAll(" ", "_") ).append(" ")
 			.append( getGroupsAsString("/", "noGroup").replaceAll(" ", "_") ).append(" ")
 			.append( recordName.replaceAll(" ", "_") ).append(" ")
 			.append( value ).append(" ")
@@ -477,8 +477,8 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public String getScenario() {
-		return scenario;
+	public String getUsecase() {
+		return usecase;
 	}
 
 	/******************************************************************
@@ -499,14 +499,14 @@ public class HSRRecord {
 
 	/******************************************************************
 	 * Returns the full path of the metric including groups:
-	 *   {test}.{scenario}.{group}.{metricName}
+	 *   {test}.{usecase}.{group}.{metricName}
 	 ******************************************************************/
 	public String getMetricPathFull() {
 		
 		if(groups.isEmpty()) {
 			return  test.replaceAll(" ", "_")
 					+ "."
-					+ scenario.replaceAll(" ", "_")
+					+ usecase.replaceAll(" ", "_")
 					+ "."
 					+ recordName.replaceAll(" ", "_")
 					;
@@ -514,7 +514,7 @@ public class HSRRecord {
 		
 		return test.replaceAll(" ", "_")
 				+ "."
-				+ scenario.replaceAll(" ", "_")
+				+ usecase.replaceAll(" ", "_")
 				+ "."
 				+ getGroupsAsString(".", "noGroup").replaceAll(" ", "_")
 				+ "." 

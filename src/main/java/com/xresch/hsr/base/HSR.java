@@ -37,7 +37,7 @@ public class HSR {
 	// For each type until test level one thread local to make it working in multi-threaded mode
 	private static InheritableThreadLocal<HSRRecord> rootItem = new InheritableThreadLocal<HSRRecord>();
 	private static InheritableThreadLocal<String> currentTest = new InheritableThreadLocal<String>();
-	private static InheritableThreadLocal<String> currentScenario = new InheritableThreadLocal<String>();
+	private static InheritableThreadLocal<String> currentUsecase = new InheritableThreadLocal<String>();
 
 	//everything else goes here.
 	private static ThreadLocal<Boolean> areThreadLocalsInitialized = new ThreadLocal<Boolean>();
@@ -143,11 +143,12 @@ public class HSR {
 	public static String getTest(){
 		return currentTest.get();
 	}
+	
 	/***********************************************************************************
-	 * 
+	 * Set the name of the usecase
 	 ***********************************************************************************/
-	public static void setScenarioName(String scenario){
-		currentScenario.set(scenario);
+	public static void setUsecase(String usecase){
+		currentUsecase.set(usecase);
 	}
 	
 	
@@ -189,7 +190,7 @@ public class HSR {
 		
 			HSRRecord item = new HSRRecord(type, name);
 			item.test(currentTest.get());
-			item.scenario(currentScenario.get());
+			item.usecase(currentUsecase.get());
 			
 			item.setParent(getActiveItem());
 	
@@ -341,7 +342,7 @@ public class HSR {
 						, name);
 				
 		item.test(currentTest.get());
-		item.scenario(currentScenario.get());
+		item.usecase(currentUsecase.get());
 		
 		HSRStatsEngine.addRecord(item);
 		

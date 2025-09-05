@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xresch.hsr.base.HSRConfig;
-import com.xresch.hsr.base.HSRScenario;
+import com.xresch.hsr.base.HSRUsecase;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.utils.HSRFiles;
 import com.xresch.hsr.utils.HSRTime;
@@ -54,7 +54,7 @@ public class HSRDBInterface {
 		this.tablenameTempAggregation = tablenamePrefix+"_temp_aggregation";
 
 		this.setCreateTableSQLStats( HSRRecordStats.getSQLCreateTableTemplate(tablenameStats) );
-		this.setCreateTableSQLTestSettings( HSRScenario.getSQLCreateTableTemplate(tablenameTestsettings) );
+		this.setCreateTableSQLTestSettings( HSRUsecase.getSQLCreateTableTemplate(tablenameTestsettings) );
 		this.setAggregateSQL( HSRRecordStats.createAggregationSQL(tablenameStats, tablenameTempAggregation) );
 	}
 	
@@ -128,10 +128,10 @@ public class HSRDBInterface {
 	 ****************************************************************************/
 	public void reportTestSettings(String testName) {
 		
-		ArrayList<HSRScenario> scenarioList = HSRConfig.getScenarioList();
+		ArrayList<HSRUsecase> usecaseList = HSRConfig.getUsecaseList();
 		
-		for(HSRScenario scenario : scenarioList ) {
-			scenario.insertIntoDatabase(db, tablenameTestsettings, testName);
+		for(HSRUsecase usecase : usecaseList ) {
+			usecase.insertIntoDatabase(db, tablenameTestsettings, testName);
 		}
 	}
 	

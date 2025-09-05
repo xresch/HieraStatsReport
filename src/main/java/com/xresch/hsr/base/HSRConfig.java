@@ -28,7 +28,7 @@ public class HSRConfig {
 private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	private static ArrayList<HSRReporter> reporterList = new ArrayList<>();
-	private static ArrayList<HSRScenario> scenarioList = new ArrayList<>();
+	private static ArrayList<HSRUsecase> usecaseList = new ArrayList<>();
 	
 	//private static String testname = "UnknownTest";
 	private static boolean debug = false;
@@ -84,10 +84,10 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	/******************************************************************
 	 * For internal use only.
-	 * Adds a scenario to the list of scenarios.
+	 * Adds a usecase to the list of usecases.
 	 ******************************************************************/
-	public static void addScenario(HSRScenario scenario) {
-		scenarioList.add(scenario);
+	public static void addUsecase(HSRUsecase usecase) {
+		usecaseList.add(usecase);
 	}
 	
 	/******************************************************************
@@ -101,12 +101,12 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	
 	/******************************************************************
-	 * Returns the list of scenarios.
+	 * Returns the list of usecases.
 	 * 
 	 ******************************************************************/
 	@SuppressWarnings("unchecked")
-	public static ArrayList<HSRScenario> getScenarioList() {
-		return (ArrayList<HSRScenario>) scenarioList.clone();
+	public static ArrayList<HSRUsecase> getUsecaseList() {
+		return (ArrayList<HSRUsecase>) usecaseList.clone();
 	}
 
 

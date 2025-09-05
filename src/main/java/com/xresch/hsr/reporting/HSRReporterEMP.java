@@ -55,7 +55,7 @@ public class HSRReporterEMP implements HSRReporter {
 									+ ", code: \\\"$codePlaceholder$\\\""
 									+ ", type: \\\"$typePlaceholder$\\\""
 									+ ", groups: \\\"$groupsPlaceholder$\\\""
-									+ ", scenario: \\\"$scenarioPlaceholder$\\\""
+									+ ", usecase: \\\"$usecasePlaceholder$\\\""
 									+ "}\""; 
 
 	private String empURL;
@@ -205,7 +205,7 @@ public class HSRReporterEMP implements HSRReporter {
 							.replace("$codePlaceholder$",  record.getCode() )
 							.replace("$typePlaceholder$",  record.getType().toString() )
 							.replace("$groupsPlaceholder$",  record.getGroupsPath() )
-							.replace("$scenarioPlaceholder$",  record.getScenario().replace("\"", "\\\"") )
+							.replace("$usecasePlaceholder$",  record.getUsecase().replace("\"", "\\\"") )
 							;
 		
 		String recordOK  = commonInfo + attrPrepared.replace("$statusPlaceholder$",  "ok"); 

@@ -30,7 +30,7 @@ public class HSRRecordStats {
 	private HSRRecordStatus status;
 	private HSRRecordState state;
 	private String test;		// the name of the test
-	private String scenario;		// the name of the scenario
+	private String usecase;		// the name of the usecase
 	private String metricName;		// the name of the metric, one of the items in the lost metricNames
 	private String groupsPath;		// 
 	private String metricPath;
@@ -53,7 +53,7 @@ public class HSRRecordStats {
 		  time("DECIMAL(19, 0)") // ANSI SQL for Long value
 		, type("VARCHAR(32)")
 		, test("VARCHAR(4096)")
-		, scenario("VARCHAR(4096)")
+		, usecase("VARCHAR(4096)")
 		, groups("VARCHAR(4096)")
 		, name("VARCHAR(4096)")
 		, code("VARCHAR(32)")
@@ -280,7 +280,7 @@ public class HSRRecordStats {
 		this.status = record.getStatus();
 		this.state = record.getStatus().state();
 		this.test = record.getTest();
-		this.scenario = record.getScenario();
+		this.usecase = record.getUsecase();
 		this.metricName = record.getName();
 		this.groupsPath = record.getGroupsAsString(" / ", "");
 		this.metricPath = record.getMetricPath();
@@ -323,7 +323,7 @@ public class HSRRecordStats {
 		this.status = record.getStatus();
 		this.state = record.getStatus().state();
 		this.test = record.getTest();
-		this.scenario = record.getScenario();
+		this.usecase = record.getUsecase();
 		this.metricName = record.getName();
 		this.groupsPath = record.getGroupsAsString(" / ", "");
 		this.metricPath = record.getMetricPath();
@@ -415,7 +415,7 @@ public class HSRRecordStats {
 		String csv = time 
 					+ separator + type.toString()
 					+ separator + test.replace(separator, "_")
-					+ separator + scenario.replace(separator, "_")  
+					+ separator + usecase.replace(separator, "_")  
 					+ separator + groupsPath.replace(separator, "_").replace("\n", " ")  
 					+ separator + metricName.replace(separator, "_").replace("\n", " ")  
 					+ separator + code.replace(separator, "_")  
@@ -450,7 +450,7 @@ public class HSRRecordStats {
 		object.addProperty(RecordField.time.toString(), 		time);
 		object.addProperty(RecordField.type.toString(), 		type.toString());
 		object.addProperty(RecordField.test.toString(), 	test);
-		object.addProperty(RecordField.scenario.toString(), 	scenario);
+		object.addProperty(RecordField.usecase.toString(), 	usecase);
 		object.addProperty(RecordField.groups.toString(), 		groupsPath);
 		object.addProperty(RecordField.name.toString(), 		metricName);
 		object.addProperty(RecordField.code.toString(), 		code);
@@ -495,7 +495,7 @@ public class HSRRecordStats {
 INSERT INTO TEMP_STATS_AGGREGATION (time,
 type,
 test,
-scenario,
+usecase,
 groups,
 metric,
 code,
@@ -522,7 +522,7 @@ nok_p90,
 nok_p95)
 SELECT 
       MIN("time") + ((MAX("time") - MIN("time"))/2) AS "time"
-    , "type","test","scenario","groups","metric","code"
+    , "type","test","usecase","groups","metric","code"
     , ? AS "granularity"
     
 , SUM("ok_count") AS "ok_count"
@@ -550,7 +550,7 @@ WHERE
 	"time" >= ? 
 AND "time" < ? 
 AND "granularity" < ?
-GROUP BY "type","test","scenario","groups","metric","code","granularity"
+GROUP BY "type","test","usecase","groups","metric","code","granularity"
 	 * </code></pre>
 	 ***********************************************************************/
 	public static String createAggregationSQL(String tablenameStats, String tablenameTempAggregation) {
@@ -595,7 +595,7 @@ GROUP BY "type","test","scenario","groups","metric","code","granularity"
 		valueList.add(time);
 		valueList.add(type.toString());
 		valueList.add(test);
-		valueList.add(scenario);
+		valueList.add(usecase);
 		valueList.add(groupsPath);
 		valueList.add(metricName);
 		valueList.add(code);
@@ -682,8 +682,8 @@ GROUP BY "type","test","scenario","groups","metric","code","granularity"
 	/***********************************************************************
 	 * Returns the name of the gatling test.
 	 ***********************************************************************/
-	public String getScenario() {
-		return scenario;
+	public String getUsecase() {
+		return usecase;
 	}
 	
 	/***********************************************************************
@@ -702,9 +702,9 @@ GROUP BY "type","test","scenario","groups","metric","code","granularity"
 	}
 	
 	/******************************************************************
-	 * Returns the full path of the metric including test, scenario
+	 * Returns the full path of the metric including test, usecase
 	 * and groups:
-	 *   {test}.{scenario}.{group}.{metricName}
+	 *   {test}.{usecase}.{group}.{metricName}
 	 ******************************************************************/
 	public String getMetricPathFull() {
 		return metricPathFull;

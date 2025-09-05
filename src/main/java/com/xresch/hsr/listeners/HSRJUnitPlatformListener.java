@@ -131,7 +131,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		// Start Test
 		if (resolved.methodName != null) {
 		    //HSR.startGroup(resolved.methodName);
-		    HSR.setScenarioName(resolved.methodName);
+		    HSR.setUsecase(resolved.methodName);
 		}
 }
 

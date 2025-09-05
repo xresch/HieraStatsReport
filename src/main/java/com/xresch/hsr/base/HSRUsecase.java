@@ -8,18 +8,18 @@ import org.slf4j.LoggerFactory;
 import com.xresch.hsr.database.DBInterface;
 
 /***************************************************************************
- * Extend this class to make your scenario a HSRScenario.
+ * Extend this class to make your usecase a HSRUsecase.
  * 
  * License: MIT License
  * 
  * @author Reto Scheiwiller
  * 
  ***************************************************************************/
-public class HSRScenario {
+public class HSRUsecase {
 	
-	private static Logger logger = LoggerFactory.getLogger(HSRScenario.class.getName());
+	private static Logger logger = LoggerFactory.getLogger(HSRUsecase.class.getName());
 
-	private String scenarioName;
+	private String name;
 	// set default to not be null
 
 	private int users = -1;
@@ -34,7 +34,7 @@ public class HSRScenario {
 			+ "		  , endtime BIGINT \r\n"
 			+ "		  , execID VARCHAR(4096) \r\n"
 			+ "		  , test VARCHAR(4096) \r\n"
-			+ "		  , scenario VARCHAR(4096) \r\n"
+			+ "		  , usecase VARCHAR(4096) \r\n"
 			+ "		  , users INT \r\n"
 			+ "		  , execsHour INT \r\n"
 			+ "		  , startOffset INT \r\n"
@@ -46,7 +46,7 @@ public class HSRScenario {
 	
 	private static String sqlInsertIntoTemplate = 
 						  "INSERT INTO {tablename} "
-						+ " (time, endtime, execID, test, scenario, users, execsHour, startOffset, rampUp, rampUpInterval, pacingSeconds) "
+						+ " (time, endtime, execID, test, usecase, users, execsHour, startOffset, rampUp, rampUpInterval, pacingSeconds) "
 						+ " VALUES (?,?,?,?,?,?,?,?,?,?,?)"
 						;
 
@@ -54,10 +54,10 @@ public class HSRScenario {
 	/***************************************************************************
 	 *
 	 ***************************************************************************/
-	public HSRScenario(String scenarioName) {
-		this.scenarioName = scenarioName;
+	public HSRUsecase(String name) {
+		this.name = name;
 		
-		HSRConfig.addScenario(this);
+		HSRConfig.addUsecase(this);
 	}
 	
 	/***********************************************************************
@@ -84,7 +84,7 @@ public class HSRScenario {
 		valueList.add(null); //report nothing for endtime
 		valueList.add(HSRConfig.EXECUTION_ID);
 		valueList.add(testName);
-		valueList.add(scenarioName);
+		valueList.add(name);
 		valueList.add(users);
 		valueList.add(execsHour);
 		valueList.add(offset);
@@ -97,20 +97,20 @@ public class HSRScenario {
 	}
 	
 	/***************************************************************************
-	 * Returns the name of the scenario.
+	 * Returns the name of the usecase.
 	 * 
 	 ***************************************************************************/
-	public String scenarioName() {
-		return scenarioName;
+	public String name() {
+		return name;
 	}
 
 	/***************************************************************************
-	 * Set the name of the scenario.
+	 * Set the name of the usecase.
 	 * 
-	 * @return the scenario instance for chaining
+	 * @return the usecase instance for chaining
 	 ***************************************************************************/
-	public HSRScenario scenarioName(String scenarioName) {
-		this.scenarioName = scenarioName;
+	public HSRUsecase name(String name) {
+		this.name = name;
 		return this;
 	}
 

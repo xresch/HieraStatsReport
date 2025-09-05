@@ -33,7 +33,7 @@ public class HSRReporterOTel implements HSRReporter {
     private final MetricExporter metricExporter;
 
     static final AttributeKey<String> TEST = AttributeKey.stringKey("test");
-    static final AttributeKey<String> SCENARIO = AttributeKey.stringKey("scenario");
+    static final AttributeKey<String> USECASE = AttributeKey.stringKey("usecase");
     static final AttributeKey<String> GROUPS = AttributeKey.stringKey("groups");
     static final AttributeKey<String> NAME = AttributeKey.stringKey("name");
     static final AttributeKey<String> METRIC = AttributeKey.stringKey("metric");
@@ -174,7 +174,7 @@ public class HSRReporterOTel implements HSRReporter {
 							   value.longValue()
 							 , Attributes.builder()
 									   .put(TEST, record.getTest())
-									   .put(SCENARIO, record.getScenario())
+									   .put(USECASE, record.getUsecase())
 									   .put(GROUPS, record.getGroupsPath())
 									   .put(NAME, record.getMetricName())
 									   .put(METRIC, metric.toString())
@@ -191,7 +191,7 @@ public class HSRReporterOTel implements HSRReporter {
 							   value.longValue()
 							 , Attributes.builder()
 								   .put(TEST, record.getTest())
-								   .put(SCENARIO, record.getScenario())
+								   .put(USECASE, record.getUsecase())
 								   .put(GROUPS, record.getGroupsPath())
 								   .put(NAME, record.getMetricName())
 								   .put(METRIC, metric.toString())
