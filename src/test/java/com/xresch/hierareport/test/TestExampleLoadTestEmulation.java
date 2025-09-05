@@ -10,11 +10,13 @@ import org.junit.jupiter.api.Test;
 
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.reporting.HSRReporterCSV;
 import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 
 public class TestExampleLoadTestEmulation {
 
+	public static final String DIR_RESULTS = "./target";
 
 	/************************************************************************
 	 * 
@@ -25,6 +27,7 @@ public class TestExampleLoadTestEmulation {
 		//--------------------------
 		// HSR Config
 		HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
+		HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ";") );
 		
 		HSRConfig.enable(5);
 		
@@ -107,6 +110,7 @@ public class TestExampleLoadTestEmulation {
 										boolean isSuccess = HSR.Random.bool();
 										if(!isSuccess) {
 											HSR.addErrorMessage("Exception Occured: Figure it out!");
+											HSR.addException(new Exception("This is an exception."));
 										}
 									HSR.end(isSuccess);
 									

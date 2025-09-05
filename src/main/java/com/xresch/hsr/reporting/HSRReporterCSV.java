@@ -59,6 +59,32 @@ public class HSRReporterCSV implements HSRReporter {
 	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
+		reportToFile(filepath, records);
+			
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
+		String finalReportPath = "";
+		if(filepath.contains(".")) {
+			finalReportPath =  filepath.substring(0, filepath.lastIndexOf("."));
+			finalReportPath += "-final";
+			finalReportPath += filepath.substring(filepath.lastIndexOf("."));
+		}else {
+			finalReportPath = filepath + "-final";
+		}
+
+		reportToFile(finalReportPath, finalRecords);
+		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void reportToFile(String filepath, ArrayList<HSRRecordStats> records) {
 		BufferedWriter writer = null;
 		try {
 			
@@ -79,7 +105,6 @@ public class HSRReporterCSV implements HSRReporter {
 				}
 			}
 		}
-			
 	}
 	
 	
@@ -90,16 +115,5 @@ public class HSRReporterCSV implements HSRReporter {
 	public void terminate() {
 		// nothing to do
 	}
-	
-	/****************************************************************************
-	 * 
-	 ****************************************************************************/
-	@Override
-	public void reportFinal(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArray) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
 	
 }

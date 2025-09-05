@@ -37,6 +37,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static boolean databaseAgeOut = false;
 	private static HSRAgeOutConfig databaseAgeOutConfig = new HSRAgeOutConfig(); // use defaults
 	
+	protected static HSRHooks hooks = new HSRHooks();
 	
 	private static boolean rawDataToSysout = false;
 	private static String rawdataLogPath = null;
@@ -88,6 +89,16 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	public static void addScenario(HSRScenario scenario) {
 		scenarioList.add(scenario);
 	}
+	
+	/******************************************************************
+	 * Set a custom HSRHooks class to hook into the system.
+	 * 
+	 ******************************************************************/
+	public static void setHooks(HSRHooks hooks) {
+		HSRConfig.hooks = hooks;
+	}
+	
+	
 	
 	/******************************************************************
 	 * Returns the list of scenarios.

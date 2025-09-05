@@ -414,10 +414,10 @@ public class HSRRecordStats {
 		
 		String csv = time 
 					+ separator + type.toString()
-					+ separator + simulation.replace(separator, "_") 
+					+ separator + simulation.replace(separator, "_")
 					+ separator + scenario.replace(separator, "_")  
-					+ separator + groupsPath.replace(separator, "_")  
-					+ separator + metricName.replace(separator, "_")  
+					+ separator + groupsPath.replace(separator, "_").replace("\n", " ")  
+					+ separator + metricName.replace(separator, "_").replace("\n", " ")  
 					+ separator + code.replace(separator, "_")  
 					+ separator + granularity
 					;
@@ -620,6 +620,15 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	public long getTime() {
 		return time;
 	}
+	
+	/***********************************************************************
+	 * Set the time of this record.
+	 * @param epochMillis
+	 ***********************************************************************/
+	public void setTime(long epochMillis) {
+		this.time = epochMillis;
+	}
+	
 	
 	/***********************************************************************
 	 * Returns the type of this record.

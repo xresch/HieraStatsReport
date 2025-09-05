@@ -41,7 +41,7 @@ public class HSRStatsEngine {
 	// these are used for making reports over the full test duration
 	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
 
-	private static Thread reporterThread;
+	private static Thread statsengineThread;
 	private static boolean isStopped;
 	
 	private static boolean isFirstReport = true;
@@ -54,9 +54,9 @@ public class HSRStatsEngine {
 		
 		//--------------------------------------
 		// Only Start once
-		if(reporterThread == null) {
+		if(statsengineThread == null) {
 			
-			reporterThread = new Thread(new Runnable() {
+			statsengineThread = new Thread(new Runnable() {
 				@Override
 				public void run() {
 					
@@ -69,12 +69,13 @@ public class HSRStatsEngine {
 						}
 					
 					}catch(InterruptedException e) {
-						logger.info("GatlytronStatsEngine has been stopped.");
+						logger.info("HSRStatsEngine has been stopped.");
 					}
 				}
 			});
 			
-			reporterThread.start();
+			statsengineThread.setName("statsengine");
+			statsengineThread.start();
 		}
 	}
 	
@@ -84,7 +85,7 @@ public class HSRStatsEngine {
 	public static void stop() {
 		
 		isStopped = true;
-		reporterThread.interrupt();
+		statsengineThread.interrupt();
 		
 		aggregateAndReport();
 		generateFinalReport();
@@ -274,13 +275,13 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static void generateFinalReport() {
 
-		System.out.println("======== generateFinalReport ======");
 		if(groupedStats.isEmpty()) { return; }
 
 		//----------------------------------------
 		// Create User Records
 		//TODO InjectedDataReceiver.createUserRecords(); 
 		
+
 		//----------------------------------------
 		// Steal Reference to not block writing
 		// new records
@@ -288,11 +289,11 @@ public class HSRStatsEngine {
 
 		//----------------------------------------
 		// Iterate Grouped Stats
+		long reportTime = System.currentTimeMillis();
 		for(Entry<String, ArrayList<HSRRecordStats>> entry : groupedStats.entrySet()) {
 			
 			//---------------------------
 			// Make stats group
-			String statsID = entry.getKey();
 			ArrayList<HSRRecordStats> currentGroupedStats = entry.getValue();
 			
 			if(currentGroupedStats.isEmpty()) { continue; }
@@ -338,8 +339,9 @@ public class HSRStatsEngine {
 			// Use first as base, Override
 			// all metrics.
 			HSRRecordStats first = currentGroupedStats.get(0);
+			first.setTime(reportTime);
 			first.clearValues();
-			System.out.println("StatsID: "+first.getStatsIdentifier());
+
 			for(HSRRecordState state : HSRRecordState.values()) {
 				
 				//--------------------------------

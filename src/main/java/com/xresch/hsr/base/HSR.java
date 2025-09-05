@@ -47,9 +47,7 @@ public class HSR {
 	private static Logger logger = LoggerFactory.getLogger(HSR.class.getName());
 	
 	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
-	
-	private static HSRHooks hooks = new HSRHooks();
-	
+		
 	/***********************************************************************************
 	 * Utility References
 	 ***********************************************************************************/
@@ -180,7 +178,7 @@ public class HSR {
 	 ***********************************************************************************/
 	private static HSRRecord startItem(HSRRecordType type, String name){
 		
-		hooks.beforeStart(type, name);
+		HSRConfig.hooks.beforeStart(type, name);
 		
 			HSRRecord item = new HSRRecord(type, name);
 			item.simulation(currentSimulation.get());
@@ -191,7 +189,7 @@ public class HSR {
 			openItems().add(item);
 			activeItem.set(item);
 			
-		hooks.afterStart(type, item);
+		HSRConfig.hooks.afterStart(type, item);
 		
 		logger.info("START "+getLogIndendation(item)+" "+name);	
 		return item;
@@ -234,7 +232,7 @@ public class HSR {
 			
 			HSRRecord itemToEnd = items.pop();
 			
-			hooks.beforeEnd(status, itemToEnd );
+			HSRConfig.hooks.beforeEnd(status, itemToEnd );
 			
 				itemToEnd.end();
 				itemToEnd.status(status);
@@ -267,7 +265,7 @@ public class HSR {
 					activeItem.set(rootItem.get());
 				}
 			
-			hooks.afterEnd(status, itemToEnd );
+			HSRConfig.hooks.afterEnd(status, itemToEnd );
 			
 			return itemToEnd;
 			
@@ -304,6 +302,14 @@ public class HSR {
 	public static HSRRecord addErrorMessage(String message){
 				
 		return addItem(HSRRecordType.MessageError, message).status(HSRRecordStatus.None);
+	}
+	
+	/***********************************************************************************
+	 * Add a item to the report without the need of starting and ending it.
+	 ***********************************************************************************/
+	public static HSRRecord addException(Throwable e){	
+		String message = HSRConfig.hooks.createExceptionItemName(e);
+		return addItem(HSRRecordType.Exception, message).status(HSRRecordStatus.None);
 	}
 	
 	/***********************************************************************************
