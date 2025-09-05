@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
+import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -26,6 +27,8 @@ public class HSRReporterJson implements HSRReporter {
 	private static final Logger logger = LoggerFactory.getLogger(HSRReporterJson.class);
 	
 	private boolean makeArray = false;
+	private boolean isFirst = true;
+	private String filepath = "";
 	private String arrayComma = "";
 	
 	BufferedWriter writer = null;
@@ -38,24 +41,38 @@ public class HSRReporterJson implements HSRReporter {
 	 ****************************************************************************/
 	public HSRReporterJson(String filepath, boolean makeArray) {
 		
+		this.filepath = filepath;
 		this.makeArray = makeArray;
+		
 		if(makeArray) {
 			arrayComma = ",";
 		}
 		
+		writer = createFile(filepath, makeArray);
+		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public BufferedWriter createFile(String filepath, boolean makeArray) {
 		try {
 			Path path = Path.of(filepath);
 			Files.deleteIfExists(path);
 			
-			writer = new BufferedWriter(new FileWriter(filepath, true));
+			BufferedWriter writer = new BufferedWriter(new FileWriter(filepath, true));
 		    
 			if(makeArray) {
 				writer.write("[\n");
 			}
+			
+			return writer;
+			
 		} catch (IOException e) {
 			logger.error("Error while deleting JSON file.", e);
 		}
 		
+		return null;
 	}
 	
 	/****************************************************************************
@@ -67,7 +84,12 @@ public class HSRReporterJson implements HSRReporter {
 		try {
 
 			for(HSRRecordStats record : records ) {
-				writer.write(record.toJsonString() +  arrayComma + "\r\n");
+				if(!isFirst) { // yep, all just because of one comma
+					writer.write(arrayComma + " " + record.toJsonString() + "\r\n");
+				}else {
+					writer.write(record.toJsonString() + "\r\n");
+					isFirst = false;
+				}
 			}
 
 		} catch (IOException e) {
@@ -81,7 +103,36 @@ public class HSRReporterJson implements HSRReporter {
 	 ****************************************************************************/
 	@Override
 	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
-		// TODO Auto-generated method stub
+		
+		//--------------------------------
+		// Summary File Path
+		String summaryFilePath = "";
+		if(filepath.contains(".")) {
+			summaryFilePath =  filepath.substring(0, filepath.lastIndexOf("."));
+			summaryFilePath += "-summary";
+			summaryFilePath += filepath.substring(filepath.lastIndexOf("."));
+		}else {
+			summaryFilePath = filepath + "-summary";
+		}
+		
+		//--------------------------------
+		// Create File
+		BufferedWriter writer = createFile(summaryFilePath, false);
+		try {
+			writer.write(HSR.JSON.toJSON(finalRecordsArrayWithSeries));
+			writer.flush();
+			
+		} catch (IOException e) {
+			logger.error("Error while writing JSON data to file.", e);
+		}finally {
+			if(writer != null) {
+				try {
+					writer.close();
+				} catch (IOException e) {
+					logger.error("Error while closing JSON file writer.", e);
+				}
+			}
+		}
 		
 	}
 	
@@ -95,6 +146,8 @@ public class HSRReporterJson implements HSRReporter {
 			if(makeArray) {
 				writer.write("]");
 			}
+			
+			writer.flush();
 
 		} catch (IOException e) {
 			logger.error("Error while writing JSON data to file.", e);

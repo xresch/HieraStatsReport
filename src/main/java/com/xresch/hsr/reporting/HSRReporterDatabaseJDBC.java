@@ -68,8 +68,8 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportTestSettings(String simulationName) {
-		gtronDB.reportTestSettings(simulationName);
+	public void reportTestSettings(String testName) {
+		gtronDB.reportTestSettings(testName);
 	}
 	
 	/****************************************************************************

@@ -183,7 +183,7 @@ public class HSRReporterEMP implements HSRReporter {
 				
 		//-------------------------------
 		// Initialize Values
-		String category = categoryPrefix+record.getSimulation();
+		String category = categoryPrefix+record.getTest();
 		String entityName = record.getMetricName();
 
 		

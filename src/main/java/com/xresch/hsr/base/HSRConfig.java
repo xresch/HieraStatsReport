@@ -30,7 +30,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static ArrayList<HSRReporter> reporterList = new ArrayList<>();
 	private static ArrayList<HSRScenario> scenarioList = new ArrayList<>();
 	
-	private static String simulationName = "UnknownSimulation";
+	//private static String testname = "UnknownTest";
 	private static boolean debug = false;
 	private static boolean keepEmptyRecords = false;
 	
@@ -200,22 +200,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		
 	    logger.setLevel(level);
 	}
-	
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public static String getSimulationName() {
-		return simulationName;
-	}
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public static void setSimulationName(String simulationName) {
-		HSRConfig.simulationName = simulationName;
-	}
-	
+		
 
 	/******************************************************************
 	 * Enable age out of data that was reported to Databases.
@@ -314,15 +299,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			}
 		}
 		
-		//--------------------------------
-		// Terminate Reporters
-		for(HSRReporter reporter : reporterList) {
-			try {
-				reporter.terminate();
-			} catch (Throwable e) {
-				logger.warn("Error while terminating Reporter: "+e.getMessage(), e);
-			}
-		}
 	}
 	
 	

@@ -33,7 +33,7 @@ public class HSRScenario {
 			+ "		    time BIGINT \r\n"
 			+ "		  , endtime BIGINT \r\n"
 			+ "		  , execID VARCHAR(4096) \r\n"
-			+ "		  , simulation VARCHAR(4096) \r\n"
+			+ "		  , test VARCHAR(4096) \r\n"
 			+ "		  , scenario VARCHAR(4096) \r\n"
 			+ "		  , users INT \r\n"
 			+ "		  , execsHour INT \r\n"
@@ -46,7 +46,7 @@ public class HSRScenario {
 	
 	private static String sqlInsertIntoTemplate = 
 						  "INSERT INTO {tablename} "
-						+ " (time, endtime, execID, simulation, scenario, users, execsHour, startOffset, rampUp, rampUpInterval, pacingSeconds) "
+						+ " (time, endtime, execID, test, scenario, users, execsHour, startOffset, rampUp, rampUpInterval, pacingSeconds) "
 						+ " VALUES (?,?,?,?,?,?,?,?,?,?,?)"
 						;
 
@@ -71,7 +71,7 @@ public class HSRScenario {
 	/***********************************************************************
 	 * Returns an insert statement 
 	 ***********************************************************************/
-	public boolean insertIntoDatabase(DBInterface db, String tableName, String simulationName) {
+	public boolean insertIntoDatabase(DBInterface db, String tableName, String testName) {
 		
 		if(db == null || tableName == null) { return false; }
 
@@ -83,7 +83,7 @@ public class HSRScenario {
 		valueList.add(HSRConfig.STARTTIME_MILLIS);
 		valueList.add(null); //report nothing for endtime
 		valueList.add(HSRConfig.EXECUTION_ID);
-		valueList.add(simulationName);
+		valueList.add(testName);
 		valueList.add(scenarioName);
 		valueList.add(users);
 		valueList.add(execsHour);

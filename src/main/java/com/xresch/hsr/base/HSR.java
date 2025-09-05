@@ -36,7 +36,7 @@ public class HSR {
 	
 	// For each type until test level one thread local to make it working in multi-threaded mode
 	private static InheritableThreadLocal<HSRRecord> rootItem = new InheritableThreadLocal<HSRRecord>();
-	private static InheritableThreadLocal<String> currentSimulation = new InheritableThreadLocal<String>();
+	private static InheritableThreadLocal<String> currentTest = new InheritableThreadLocal<String>();
 	private static InheritableThreadLocal<String> currentScenario = new InheritableThreadLocal<String>();
 
 	//everything else goes here.
@@ -130,12 +130,19 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * 
+	 * Set the name of the test.
 	 ***********************************************************************************/
-	public static void setSimulationName(String simulation){
-		currentSimulation.set(simulation);
+	public static void setTest(String test){
+		currentTest.set(test);
 	}
 	
+	
+	/***********************************************************************************
+	 * Set the name of the test.
+	 ***********************************************************************************/
+	public static String getTest(){
+		return currentTest.get();
+	}
 	/***********************************************************************************
 	 * 
 	 ***********************************************************************************/
@@ -181,7 +188,7 @@ public class HSR {
 		HSRConfig.hooks.beforeStart(type, name);
 		
 			HSRRecord item = new HSRRecord(type, name);
-			item.simulation(currentSimulation.get());
+			item.test(currentTest.get());
 			item.scenario(currentScenario.get());
 			
 			item.setParent(getActiveItem());
@@ -333,7 +340,7 @@ public class HSR {
 						, getActiveItem()
 						, name);
 				
-		item.simulation(currentSimulation.get());
+		item.test(currentTest.get());
 		item.scenario(currentScenario.get());
 		
 		HSRStatsEngine.addRecord(item);

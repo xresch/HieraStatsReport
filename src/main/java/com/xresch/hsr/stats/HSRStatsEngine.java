@@ -86,11 +86,15 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static void stop() {
 		
-		isStopped = true;
-		statsengineThread.interrupt();
-		
-		aggregateAndReport();
-		generateFinalReport();
+		if(!isStopped) {
+			isStopped = true;
+			
+			statsengineThread.interrupt();
+			
+			aggregateAndReport();
+			generateFinalReport();
+			terminateReporters();
+		}
 		
 	}
 	
@@ -270,7 +274,7 @@ public class HSRStatsEngine {
 		}
 		
 	}
-	
+		
 	/***************************************************************************
 	 * Aggregates the grouped statistics and makes one final report
 	 * 
@@ -488,6 +492,23 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
+	 * Aggregates the grouped statistics and makes one final report
+	 * 
+	 ***************************************************************************/
+	public static void terminateReporters() {
+		//--------------------------------
+		// Terminate Reporters
+		for(HSRReporter reporter : HSRConfig.getReporterList()) {
+			try {
+				logger.info("Terminate Reporter: "+reporter.getClass().getSimpleName());
+				reporter.terminate();
+			} catch (Throwable e) {
+				logger.warn("Error while terminating Reporter: "+e.getMessage(), e);
+			}
+		}
+	}
+	
+	/***************************************************************************
 	 * Send the test settings to Database Reporters.
 	 * 
 	 ***************************************************************************/
@@ -498,7 +519,7 @@ public class HSRStatsEngine {
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			if(reporter instanceof HSRReporterDatabase) {
 				logger.debug("Send TestSettings Data to: "+reporter.getClass().getName());
-				((HSRReporterDatabase)reporter).reportTestSettings(HSRConfig.getSimulationName());
+				((HSRReporterDatabase)reporter).reportTestSettings(HSR.getTest());
 			}
 		}
 		

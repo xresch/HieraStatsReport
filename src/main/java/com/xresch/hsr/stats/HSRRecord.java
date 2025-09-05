@@ -18,7 +18,7 @@ public class HSRRecord {
 	
 	private transient HSRRecord parent = null;
 	
-	private String simulation = null;
+	private String test = null;
 	private String scenario = null;
 	
 	private List<String> groups = new ArrayList<>();
@@ -165,7 +165,7 @@ public class HSRRecord {
 	 * Creates a new record.
 	 * 
 	 * @param type the type of the record
-	 * @param simulation the name of the simulation (E.g. Test Suite, Test Set etc...)
+	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param scenario the name of the scenario (Use Case etc...)
 	 * @param groups the groups that are defining the hierarchy
 	 * @param recordName the name of this record (e.g. Step name)
@@ -173,7 +173,7 @@ public class HSRRecord {
 	 *******************************************************************/
 	public HSRRecord(
 			  HSRRecordType type
-			, String simulation
+			, String test
 			, String scenario
 			, List<String> groups
 			, String recordName
@@ -182,7 +182,7 @@ public class HSRRecord {
 		
 		type(type);
 		
-		simulation(simulation);
+		test(test);
 		scenario(scenario);
 		recordName(recordName);
 		
@@ -197,7 +197,7 @@ public class HSRRecord {
 	 * Creates a new record.
 	 * 
 	 * @param type the type of the record
-	 * @param simulation the name of the simulation (E.g. Test Suite, Test Set etc...)
+	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param scenario the name of the scenario (Use Case etc...)
 	 * @param groups the groups that are defining the hierarchy
 	 * @param recordName the name of this record (e.g. Step name)
@@ -210,7 +210,7 @@ public class HSRRecord {
 	 *******************************************************************/
 	public HSRRecord(
 			  HSRRecordType type
-			, String simulation
+			, String test
 			, String scenario
 			, List<String> groups
 			, String recordName
@@ -224,7 +224,7 @@ public class HSRRecord {
 		
 		type(type);
 		
-		simulation(simulation);
+		test(test);
 		scenario(scenario);
 		recordName(recordName);
 		
@@ -242,7 +242,7 @@ public class HSRRecord {
 	
 	/******************************************************************
 	 * This will also take over other values from the parent and override
-	 * them, including: simulation, scenario, recordName groups
+	 * them, including: test, scenario, recordName groups
 	 ******************************************************************/
 	public HSRRecord setParent(HSRRecord parent) {
 		this.parent = parent;
@@ -251,8 +251,8 @@ public class HSRRecord {
 			//--------------------------
 			// Set Values from Parent
 			
-			if(parent.getSimulation() != null) {
-				simulation(parent.getSimulation());
+			if(parent.getTest() != null) {
+				test(parent.getTest());
 			}
 			
 			if(parent.getScenario() != null) {
@@ -274,11 +274,11 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * 
+	 * Sets the name of the test
 	 ******************************************************************/
-	public HSRRecord simulation(String simulation) {
-		if(simulation != null && !simulation.isBlank() ) {	
-			this.simulation = simulation; 
+	public HSRRecord test(String test) {
+		if(test != null && !test.isBlank() ) {	
+			this.test = test; 
 			identityChanged = true;
 		}
 		return this;
@@ -414,7 +414,7 @@ public class HSRRecord {
 	public String getStatsIdentifier() {
 		
 		if(identityChanged || this.statsIdentifier == null) {
-			this.statsIdentifier = type.toString() + simulation + scenario;
+			this.statsIdentifier = type.toString() + test + scenario;
 			
 			if( !this.groups.isEmpty() ) {
 				this.statsIdentifier += "/" + getGroupsAsString("/", "");
@@ -470,8 +470,8 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public String getSimulation() {
-		return simulation;
+	public String getTest() {
+		return test;
 	}
 	
 	/******************************************************************
@@ -499,12 +499,12 @@ public class HSRRecord {
 
 	/******************************************************************
 	 * Returns the full path of the metric including groups:
-	 *   {simulation}.{scenario}.{group}.{metricName}
+	 *   {test}.{scenario}.{group}.{metricName}
 	 ******************************************************************/
 	public String getMetricPathFull() {
 		
 		if(groups.isEmpty()) {
-			return  simulation.replaceAll(" ", "_")
+			return  test.replaceAll(" ", "_")
 					+ "."
 					+ scenario.replaceAll(" ", "_")
 					+ "."
@@ -512,7 +512,7 @@ public class HSRRecord {
 					;
 		}
 		
-		return simulation.replaceAll(" ", "_")
+		return test.replaceAll(" ", "_")
 				+ "."
 				+ scenario.replaceAll(" ", "_")
 				+ "."

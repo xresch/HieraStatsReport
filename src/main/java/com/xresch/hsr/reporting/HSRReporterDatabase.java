@@ -8,6 +8,6 @@ package com.xresch.hsr.reporting;
  **************************************************************************************************************/
 public abstract class HSRReporterDatabase implements HSRReporter {
 
-	public abstract void reportTestSettings(String simulationName);
+	public abstract void reportTestSettings(String testName);
 	
 }

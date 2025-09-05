@@ -29,7 +29,7 @@ public class HSRRecordStats {
 	private HSRRecordType type;
 	private HSRRecordStatus status;
 	private HSRRecordState state;
-	private String simulation;		// the name of the test
+	private String test;		// the name of the test
 	private String scenario;		// the name of the scenario
 	private String metricName;		// the name of the metric, one of the items in the lost metricNames
 	private String groupsPath;		// 
@@ -52,7 +52,7 @@ public class HSRRecordStats {
 	public enum RecordField {
 		  time("DECIMAL(19, 0)") // ANSI SQL for Long value
 		, type("VARCHAR(32)")
-		, simulation("VARCHAR(4096)")
+		, test("VARCHAR(4096)")
 		, scenario("VARCHAR(4096)")
 		, groups("VARCHAR(4096)")
 		, name("VARCHAR(4096)")
@@ -279,7 +279,7 @@ public class HSRRecordStats {
 		this.type = record.getType();
 		this.status = record.getStatus();
 		this.state = record.getStatus().state();
-		this.simulation = record.getSimulation();
+		this.test = record.getTest();
 		this.scenario = record.getScenario();
 		this.metricName = record.getName();
 		this.groupsPath = record.getGroupsAsString(" / ", "");
@@ -322,7 +322,7 @@ public class HSRRecordStats {
 		this.type = record.getType();
 		this.status = record.getStatus();
 		this.state = record.getStatus().state();
-		this.simulation = record.getSimulation();
+		this.test = record.getTest();
 		this.scenario = record.getScenario();
 		this.metricName = record.getName();
 		this.groupsPath = record.getGroupsAsString(" / ", "");
@@ -414,7 +414,7 @@ public class HSRRecordStats {
 		
 		String csv = time 
 					+ separator + type.toString()
-					+ separator + simulation.replace(separator, "_")
+					+ separator + test.replace(separator, "_")
 					+ separator + scenario.replace(separator, "_")  
 					+ separator + groupsPath.replace(separator, "_").replace("\n", " ")  
 					+ separator + metricName.replace(separator, "_").replace("\n", " ")  
@@ -449,7 +449,7 @@ public class HSRRecordStats {
 		
 		object.addProperty(RecordField.time.toString(), 		time);
 		object.addProperty(RecordField.type.toString(), 		type.toString());
-		object.addProperty(RecordField.simulation.toString(), 	simulation);
+		object.addProperty(RecordField.test.toString(), 	test);
 		object.addProperty(RecordField.scenario.toString(), 	scenario);
 		object.addProperty(RecordField.groups.toString(), 		groupsPath);
 		object.addProperty(RecordField.name.toString(), 		metricName);
@@ -494,7 +494,7 @@ public class HSRRecordStats {
 	 * <pre><code>
 INSERT INTO TEMP_STATS_AGGREGATION (time,
 type,
-simulation,
+test,
 scenario,
 groups,
 metric,
@@ -522,7 +522,7 @@ nok_p90,
 nok_p95)
 SELECT 
       MIN("time") + ((MAX("time") - MIN("time"))/2) AS "time"
-    , "type","simulation","scenario","groups","metric","code"
+    , "type","test","scenario","groups","metric","code"
     , ? AS "granularity"
     
 , SUM("ok_count") AS "ok_count"
@@ -550,7 +550,7 @@ WHERE
 	"time" >= ? 
 AND "time" < ? 
 AND "granularity" < ?
-GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
+GROUP BY "type","test","scenario","groups","metric","code","granularity"
 	 * </code></pre>
 	 ***********************************************************************/
 	public static String createAggregationSQL(String tablenameStats, String tablenameTempAggregation) {
@@ -594,7 +594,7 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 		
 		valueList.add(time);
 		valueList.add(type.toString());
-		valueList.add(simulation);
+		valueList.add(test);
 		valueList.add(scenario);
 		valueList.add(groupsPath);
 		valueList.add(metricName);
@@ -673,14 +673,14 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	}
 	
 	/***********************************************************************
-	 * Returns the name of the gatling simulation.
+	 * Returns the name of the gatling test.
 	 ***********************************************************************/
-	public String getSimulation() {
-		return simulation;
+	public String getTest() {
+		return test;
 	}
 	
 	/***********************************************************************
-	 * Returns the name of the gatling simulation.
+	 * Returns the name of the gatling test.
 	 ***********************************************************************/
 	public String getScenario() {
 		return scenario;
@@ -702,9 +702,9 @@ GROUP BY "type","simulation","scenario","groups","metric","code","granularity"
 	}
 	
 	/******************************************************************
-	 * Returns the full path of the metric including simulation, scenario
+	 * Returns the full path of the metric including test, scenario
 	 * and groups:
-	 *   {simulation}.{scenario}.{group}.{metricName}
+	 *   {test}.{scenario}.{group}.{metricName}
 	 ******************************************************************/
 	public String getMetricPathFull() {
 		return metricPathFull;

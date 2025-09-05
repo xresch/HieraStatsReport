@@ -37,6 +37,15 @@ public class HSRReporterCSV implements HSRReporter {
 		
 		this.filepath = filepath;
 		this.separator = separator;
+		
+		initializeCSVFile(filepath, separator);
+		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void initializeCSVFile(String filepath, String separator) {
 		try {
 			path = Path.of(filepath);
 			String header = HSRRecordStats.getCSVHeader(separator)+"\r\n";
@@ -51,7 +60,6 @@ public class HSRReporterCSV implements HSRReporter {
 		} catch (IOException e) {
 			logger.error("Error while initializing CSV file.", e);
 		}
-		
 	}
 	
 	/****************************************************************************
@@ -68,16 +76,25 @@ public class HSRReporterCSV implements HSRReporter {
 	 ****************************************************************************/
 	@Override
 	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
-		String finalReportPath = "";
+		
+		//----------------------------
+		// Make Summary File
+		String summaryFilePath = "";
 		if(filepath.contains(".")) {
-			finalReportPath =  filepath.substring(0, filepath.lastIndexOf("."));
-			finalReportPath += "-summary";
-			finalReportPath += filepath.substring(filepath.lastIndexOf("."));
+			summaryFilePath =  filepath.substring(0, filepath.lastIndexOf("."));
+			summaryFilePath += "-summary";
+			summaryFilePath += filepath.substring(filepath.lastIndexOf("."));
 		}else {
-			finalReportPath = filepath + "-summary";
+			summaryFilePath = filepath + "-summary";
 		}
 
-		reportToFile(finalReportPath, finalRecords);
+		//----------------------------
+		// Make Summary File
+		initializeCSVFile(summaryFilePath, separator);
+		
+		//----------------------------
+		// Report to Summary File
+		reportToFile(summaryFilePath, finalRecords);
 		
 	}
 	
@@ -93,6 +110,8 @@ public class HSRReporterCSV implements HSRReporter {
 			for(HSRRecordStats record : records ) {
 				writer.write(record.toCSV(separator)+"\r\n");
 			}
+			
+			writer.flush();
 			
 		} catch (IOException e) {
 			logger.error("Error while writing CSV data.", e);
@@ -113,7 +132,7 @@ public class HSRReporterCSV implements HSRReporter {
 	 ****************************************************************************/
 	@Override
 	public void terminate() {
-		// nothing to do
+		
 	}
 	
 }

@@ -32,7 +32,7 @@ public class HSRReporterOTel implements HSRReporter {
     private final SdkMeterProvider meterProvider;
     private final MetricExporter metricExporter;
 
-    static final AttributeKey<String> SIMULATION = AttributeKey.stringKey("simulation");
+    static final AttributeKey<String> TEST = AttributeKey.stringKey("test");
     static final AttributeKey<String> SCENARIO = AttributeKey.stringKey("scenario");
     static final AttributeKey<String> GROUPS = AttributeKey.stringKey("groups");
     static final AttributeKey<String> NAME = AttributeKey.stringKey("name");
@@ -173,7 +173,7 @@ public class HSRReporterOTel implements HSRReporter {
 					 gauge.set(
 							   value.longValue()
 							 , Attributes.builder()
-									   .put(SIMULATION, record.getSimulation())
+									   .put(TEST, record.getTest())
 									   .put(SCENARIO, record.getScenario())
 									   .put(GROUPS, record.getGroupsPath())
 									   .put(NAME, record.getMetricName())
@@ -190,7 +190,7 @@ public class HSRReporterOTel implements HSRReporter {
 					gauge.set(
 							   value.longValue()
 							 , Attributes.builder()
-								   .put(SIMULATION, record.getSimulation())
+								   .put(TEST, record.getTest())
 								   .put(SCENARIO, record.getScenario())
 								   .put(GROUPS, record.getGroupsPath())
 								   .put(NAME, record.getMetricName())

@@ -126,12 +126,12 @@ public class HSRDBInterface {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public void reportTestSettings(String simulationName) {
+	public void reportTestSettings(String testName) {
 		
 		ArrayList<HSRScenario> scenarioList = HSRConfig.getScenarioList();
 		
 		for(HSRScenario scenario : scenarioList ) {
-			scenario.insertIntoDatabase(db, tablenameTestsettings, simulationName);
+			scenario.insertIntoDatabase(db, tablenameTestsettings, testName);
 		}
 	}
 	

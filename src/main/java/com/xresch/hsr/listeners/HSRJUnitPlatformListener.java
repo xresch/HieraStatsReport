@@ -70,7 +70,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 	 */
 	public void executionSkipped(TestIdentifier testIdentifier, String reason) {
 		
-		System.out.println("================ SKIPPED =====================");
+		//System.out.println("================ SKIPPED =====================");
 		ResolvedIdentifiers resolved = resolveIdentifiers(testIdentifier);
 		//---------------------------------------
 		// Start Test
@@ -120,7 +120,11 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		// Start Class
 		if (resolved.className != null) {
 		    //HSRRecord clazz = HSR.startGroup(resolved.className);
-		    HSR.setSimulationName(resolved.className);
+		    HSR.setTest(
+		    		resolved.className.substring(
+		    				resolved.className.lastIndexOf(".")+1
+		    		)
+		    	);
 		}
 		
 		//---------------------------------------
@@ -166,7 +170,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 		
 		currentTestplan.getChildren(testIdentifier.getParentId().get());
 		
-		System.out.println("================ END =====================");
+		//System.out.println("================ END =====================");
 		ResolvedIdentifiers resolved = resolveIdentifiers(testIdentifier);
 		
 		if (resolved.methodName != null) {
