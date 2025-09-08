@@ -318,10 +318,30 @@ var CFW = {
 		, formToArray: 			cfw_format_formToArray
 		, formToObject: 		cfw_format_formToObject
 	},
+	
+	http: {
+		readCookie: cfw_http_readCookie,
+		getURLParams: cfw_http_getURLParams,
+		getURLParamsDecoded: cfw_http_getURLParamsDecoded,
+		setURLParams: cfw_http_setURLParams,
+		removeURLParam: cfw_http_removeURLParam,
+		getHostURL: cfw_http_getHostURL,
+		getURLPath: cfw_http_getURLPath,
+		secureDecodeURI: cfw_http_secureDecodeURI,
+		getJSON: cfw_http_getJSON,
+		postJSON: cfw_http_postJSON,
+		postFormData: cfw_http_postFormData,
+		getForm: cfw_http_getForm,
+		createForm: cfw_http_createForm,
+		evaluateFormScript: cfw_http_evaluateFormScript,
+		fetchAndCacheData: cfw_http_fetchAndCacheData
+	},
+	
 	customizer: {
 		booleanFormat: 	cfw_customizer_booleanFormat,
 		badgesFromArray: 	cfw_customizer_badgesFromArray,
 		badgesFromObjectValues: 	cfw_customizer_badgesFromObjectValues,
+		number: cfw_customizer_number,
 	},
 
 	selection: {

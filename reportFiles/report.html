@@ -25,7 +25,6 @@
 
 	<body>
 
-
 	<div id="menubar" class="navbar"navbar-fixed-top">
 		<nav class="navbar navbar-expand-md fixed-top navbar-dark">
 			<div class="navbar-header">
@@ -45,81 +44,22 @@
 						General <span class="caret"></span></a>
 						<ul class="dropdown-menu dropdown-submenu">
 							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'overview'})">Overview</a></li>
-							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'status'})">Status Overview</a></li>
-							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'screenshots'})">Screenshot Browser</a></li>
-							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'tree'})">Panel Tree</a></li>
 						</ul>
 					</li>
-					
-					<!--li class="dropdown">
-						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-						Statistics <span class="caret"></span></a>
-						<ul class="dropdown-menu dropdown-submenu">
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsStatusByType'})">Statistics: Status by Type</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: 'All', fieldName: 'title'})">Group by Title &gt;&gt; All</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Suite, fieldName: 'title'})">Group by Title &gt;&gt; Suite</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Class, fieldName: 'title'})">Group by Title &gt;&gt; Class</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Test, fieldName: 'title'})">Group by Title &gt;&gt; Test</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Step, fieldName: 'title'})">Group by Title &gt;&gt; Step</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Assert, fieldName: 'title'})">Group by Title &gt;&gt; Assert</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Wait, fieldName: 'title'})">Group by Title &gt;&gt; Wait</a></li>
-							
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: 'All', fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; All</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Suite, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Suite</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Class, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Class</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Test, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Test</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Step, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Step</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Assert, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Assert</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statsByField', itemType: ItemType.Wait, fieldName: 'exceptionMessage'})">Group by Exception Message &gt;&gt; Wait</a></li>
-						</ul>
-					</li>
-					
-					<li class="dropdown">
-						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-						Charts <span class="caret"></span></a>
-						<ul class="dropdown-menu dropdown-submenu">
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'typebarchart'})">Bar >> Status by Type</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'typeCharts', chartType: 'doughnut', type: ItemType.Suite})">Donut &gt;&gt; Suite</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'typeCharts', chartType: 'doughnut', type: ItemType.Class})">Donut &gt;&gt; Class</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'typeCharts', chartType: 'doughnut', type: ItemType.Test})">Donut &gt;&gt; Test</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'typeCharts', chartType: 'bar', type: ItemType.Suite})">Bar &gt;&gt; Suite</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'typeCharts', chartType: 'bar', type: ItemType.Class})">Bar &gt;&gt; Class</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'typeCharts', chartType: 'bar', type: ItemType.Test})">Bar &gt;&gt; Test</a></li>
-						</ul>
-					</li>
-					
-					<li class="dropdown">
-						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-						Tests <span class="caret"></span></a>
-						<ul id="testDropdown" class="dropdown-menu dropdown-submenu">
-						  
-						</ul>
-					</li-->
 					
 					<li class="dropdown">
 						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
 							Tables <span class="caret"></span></a>
 						<ul class="dropdown-menu dropdown-submenu">
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableDetailed'})">All Items(Detailed)</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableSimple'})">All Items(Simple)</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'exceptions'})">Exceptions</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statusTable', itemType: ItemType.Suite})">Status &gt;&gt; Suite </a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statusTable', itemType: ItemType.Class})">Status &gt;&gt; Class </a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statusTable', itemType: ItemType.Test})">Status &gt;&gt; Test </a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statusTable', itemType: ItemType.Step})">Status &gt;&gt; Step </a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statusTable', itemType: ItemType.Assert})">Status &gt;&gt; Assert </a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'statusTable', itemType: ItemType.Wait})">Status &gt;&gt; Wait </a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableAll'})">All Types</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGroups'})">Groups</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableSteps'})">Steps</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableAsserts'})">Asserts</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableMessages'})">Messages</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableExceptions'})">Exceptions</a></li>
 						</ul>
 					</li>
 					
-					<li class="dropdown">
-						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-							Export <span class="caret"></span></a>
-						<ul class="dropdown-menu dropdown-submenu">
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'csv'})">CSV</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'json'})">JSON</a></li>
-						</ul>
-					</li>
 
 				</ul>
 			</div><!--/.nav-collapse -->
@@ -173,6 +113,7 @@
 	<script src="./js/cfw/cfw_components.js"></script>
 	<script src="./js/cfw/cfw_colors.js"></script>
 	<script src="./js/cfw/cfw_format.js"></script>
+	<script src="./js/cfw/cfw_http.js"></script>
 	<script src="./js/cfw/cfw_ui.js"></script>
 	<script src="./js/cfw/cfw_utils.js"></script>
 	<script src="./js/cfw/cfw.js"></script>

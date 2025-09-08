@@ -1083,3 +1083,17 @@ function cfw_customizer_badgesFromObjectValues(record, value) {
 	return cfw_format_badgesFromObjectValues(value);
 };
 
+/**************************************************************************************
+ * Returns the number with separators and aligned right.
+ *************************************************************************************/
+function cfw_customizer_number(record, value, renderer) { 
+
+	let clazz = 'd-inline-block w-100 pl-1 pr-1 text-right';
+	if(renderer != 'table'){
+		clazz = '';
+	}
+	return '<span class="'+clazz+'">'
+		+cfw_format_numberSeparators(value)
+	+'</span>';
+			 		
+};
