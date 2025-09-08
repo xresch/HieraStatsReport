@@ -2,3 +2,4 @@
 
 DATA_FILES=[];
 DATA_FILES.push("data.js");
+DATA_FILES.push("data2.js");

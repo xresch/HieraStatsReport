@@ -14,7 +14,7 @@
 //this variable or not.
 var DATA_FILES;
 
-DATA = [];
+var DATA = [];
 
 ALL_ITEMS_FLAT = [];
 
@@ -127,30 +127,30 @@ const CUSTOMIZERS = {
 		return '<span class="maxvw-30 maxvw-30 word-wrap-prewrap word-break-word">'+value+'</span>';
 	},
 	
-	"ok_count": CFW.customizer.number,
-	"ok_min": CFW.customizer.number,
-	"ok_avg": CFW.customizer.number,
-	"ok_max": CFW.customizer.number,
-	"ok_stdev": CFW.customizer.number,
-	"ok_p25": CFW.customizer.number,
-	"ok_p50": CFW.customizer.number,
-	"ok_p75": CFW.customizer.number,
-	"ok_p90": CFW.customizer.number,
-	"ok_p95": CFW.customizer.number,
-	"nok_count": CFW.customizer.number,
-	"nok_min": CFW.customizer.number,
-	"nok_avg": CFW.customizer.number,
-	"nok_max": CFW.customizer.number,
-	"nok_stdev": CFW.customizer.number,
-	"nok_p25": CFW.customizer.number,
-	"nok_p50": CFW.customizer.number,
-	"nok_p75": CFW.customizer.number,
-	"nok_p90": CFW.customizer.number,
-	"nok_p95": CFW.customizer.number,
-	"success": CFW.customizer.number,
-	"failed": CFW.customizer.number,
-	"skipped": CFW.customizer.number,
-	"aborted": CFW.customizer.number,
+	"ok_count": customizerStatsNumber,
+	"ok_min": customizerStatsNumber,
+	"ok_avg": customizerStatsNumber,
+	"ok_max": customizerStatsNumber,
+	"ok_stdev": customizerStatsNumber,
+	"ok_p25": customizerStatsNumber,
+	"ok_p50": customizerStatsNumber,
+	"ok_p75": customizerStatsNumber,
+	"ok_p90": customizerStatsNumber,
+	"ok_p95": customizerStatsNumber,
+	"nok_count": customizerStatsNumber,
+	"nok_min": customizerStatsNumber,
+	"nok_avg": customizerStatsNumber,
+	"nok_max": customizerStatsNumber,
+	"nok_stdev": customizerStatsNumber,
+	"nok_p25": customizerStatsNumber,
+	"nok_p50": customizerStatsNumber,
+	"nok_p75": customizerStatsNumber,
+	"nok_p90": customizerStatsNumber,
+	"nok_p95": customizerStatsNumber,
+	"success": customizerStatsNumber,
+	"failed": customizerStatsNumber,
+	"skipped": customizerStatsNumber,
+	"aborted": customizerStatsNumber,
 
 };
 
@@ -221,6 +221,98 @@ const TypeIcon = {
 		Unknown: '<i class="fa fa-question-circle" style="color: gray;"></i>&nbsp;'
 	}
 
+/**************************************************************************************
+ * The main customizer for statistical values.
+ *************************************************************************************/
+function customizerStatsNumber(record, value, rendererName, fieldname){
+	
+	//----------------------
+	// Check input
+	if(value == null){ return ''; }
+	
+	//----------------------
+	// Format Value
+	let formatted = CFW.customizer.number(record, value, rendererName, fieldname);
+	
+	//----------------------
+	// Get Series data
+	let seriesData = {};
+	let metricName = fieldname.replace("nok_", "")
+							  .replace("ok_", "");
+	
+	seriesData.name = record.name;
+		seriesData.metricName = metricName;
+	if(!fieldname.startsWith("nok") ){
+		seriesData.time = record.series.ok.time;
+		seriesData[metricName] = record.series.ok[metricName];
+	}else{
+		seriesData.time = record.series.nok.time;
+		seriesData[metricName] = record.series.nok[metricName];
+	}
+	
+
+	
+	//----------------------
+	// Create Link
+	let chartLink = $('<a href="javascript:void">');
+	chartLink.append(formatted);
+	chartLink.click(function(){
+		console.log(record);
+		console.log(seriesData);
+		//---------------------------
+		// Render Settings
+		var dataToRender = {
+			data: seriesData,
+			titlefields: ["name"],
+			//bgstylefield: options.bgstylefield,
+			//textstylefield: options.textstylefield,
+			//titleformat: options.titleFormat,
+			visiblefields: ["name"],
+			labels: FIELDLABELS,
+			customizers: CUSTOMIZERS,
+			rendererSettings:{
+				chart: {
+					charttype: "area",
+					// How should the input data be handled groupbytitle|arrays 
+					datamode: 'arrays',
+					xfield: "time",
+					yfield: metricName,
+					type: "line",
+					xtype: "time",
+					ytype: "linear",
+					stacked: false,
+					legend: true,
+					axes: true,
+					ymin: 0,
+					ymax: null,
+					pointradius: 1,
+					spangaps: false,
+					padding: '2px',
+					height: '50vh'
+					
+				}
+			}
+		};
+		
+		//--------------------------
+		// Render Widget
+		var renderer = CFW.render.getRenderer('chart');
+		
+		var renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
+		
+		// ----------------------------
+		// Create Modal
+		let resultDiv = $('<div>');
+		
+		resultDiv.append(renderedChart);
+			console.log(renderedChart);
+		let modalTitle = `Chart: ${record.name} - ${fieldname}`;
+		CFW.ui.showModalLarge(modalTitle, renderedChart, null, true);
+		
+	});
+	
+	return chartLink;
+}
 
 /**************************************************************************************
  * The first method called, it starts to load the data from the data files.
@@ -229,15 +321,20 @@ loadData();
 
 function loadData(){
 	
+	//------------------------------------------
 	//if not defined set data.js as default
 	if(DATA_FILES == undefined){
 		DATA_FILES = ["./data.js"];
 	}
-	
+	//------------------------------------------
 	//dedup the files so nothing is loaded twice
 	DATA_FILES = dedupArray(DATA_FILES);
 
+	//------------------------------------------
+	// Concatenate all data into DATA
 	loadDataScript(0);
+	
+
 }
 
 /**************************************************************************************
@@ -248,6 +345,7 @@ function loadData(){
  * 
  *************************************************************************************/
 function loadDataScript(scriptIndex){
+	
 	
 	if(scriptIndex < DATA_FILES.length){
 		
@@ -291,11 +389,17 @@ function loadDataScript(scriptIndex){
  *************************************************************************************/
 function initialize(){
 	
-
+	//------------------------------------------
+	// Sort the Data
+	DATA = _.orderBy(DATA, ['test', 'usecase', 'groups', 'name']);
 	
-	for(var i = 0; i < DATA.length; i++){
-		initialWalkthrough(null, DATA[i]);
-	}
+	console.log(DATA);
+	
+	//------------------------------------------
+	// Walkthrough
+	// for(var i = 0; i < DATA.length; i++){
+		// initialWalkthrough(null, DATA[i]);
+	// }
 	
 	//------------------------------------
 	// Calculate Statistics per Type
@@ -385,12 +489,7 @@ function initialWalkthrough(parent, currentItem){
 		ALL_ITEMS_FLAT.push(currentItem);
 		
 		TYPE_STATS[currentItem.type].All.push(currentItem);	
-		
-		
-		console.log("============")
-		console.log("type:"+currentItem.type)
-		console.log("status:"+currentItem.status)
-	
+			
 		TYPE_STATS[currentItem.type][currentItem.status].push(currentItem);
 
 
@@ -575,101 +674,6 @@ function getFullItemTitle(item){
 
 
 
-/**************************************************************************************
- * 
- *************************************************************************************/
-function createItemPanel(item){
-	
-	GLOBAL_COUNTER++;
-	
-	var style = getItemStyle(item); 
-	
-	var panel = $(document.createElement("div"));
-	panel.addClass("panel panel-"+style.colorClass);
-	
-	//----------------------------
-	// Create Header
-	var panelHeader = $(document.createElement("div"));
-	panelHeader.addClass("panel-heading");
-	panelHeader.attr("id", "panelHead"+GLOBAL_COUNTER);
-	panelHeader.attr("role", "tab");
-	panelHeader.append(
-		'<span class="panel-title">'+
-		style.icon+
-		'<a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse'+GLOBAL_COUNTER+'" aria-expanded="'+style.expanded+'" aria-controls="collapse'+GLOBAL_COUNTER+'">'+
-		getFullItemTitle(item) + 
-		'</a></span>'
-	); 
-	panelHeader.append(
-			'<span style="float: right;">' + item.duration+"&nbsp;ms"+'</span>'
-		); 
-	
-	panel.append(panelHeader);
-	
-	//----------------------------
-	// Create Collapse Container
-	var collapseContainer = $(document.createElement("div"));
-	collapseContainer.addClass(style.collapsedClass);
-	collapseContainer.attr("id", "collapse"+GLOBAL_COUNTER);
-	collapseContainer.attr("role", "tabpanel");
-	collapseContainer.attr("aria-labelledby", "panelHead"+GLOBAL_COUNTER);
-	
-	panel.append(collapseContainer);
-	
-	//----------------------------
-	// Create Body
-	var panelBody = $(document.createElement("div"));
-	panelBody.addClass("panel-body");
-	collapseContainer.append(panelBody);
-	
-	printItemDetails(panelBody, item);
-	
-	return {
-		panel: panel,
-		panelHeader: panelHeader,
-		panelBody: panelBody
-	};
-}
-
-/**************************************************************************************
- * getItemDetailsLink
- *************************************************************************************/
-function getItemDetailsLink(item, showIndent){
-	
-	pixelIndent = "";
-	if(showIndent){
-		pixelIndent = 'style="margin-left: '+15*item.level+'px;"';
-	}
-	
-	var link = $('<a role="button" '+pixelIndent+' href="javascript:void(0)" onclick="showDetailsModal(this)">'+getFullItemTitle(item)+'</a>');
-
-	link.data("item", item);
-	
-	return link;
-}
-
-/**************************************************************************************
- * filterTable
- *************************************************************************************/
-function filterTable(searchField){
-	
-	var table = $(searchField).data("table");
-	var input = searchField;
-	
-	filter = input.value.toUpperCase();
-	
-	table.find("tbody tr").each(function( index ) {
-		  console.log( index + ": " + $(this).text() );
-		  
-		  if ($(this).html().toUpperCase().indexOf(filter) > -1) {
-			  $(this).css("display", "");
-		  } else {
-			  $(this).css("display", "none");
-			}
-	});
-
-}
-
 /*******************************************************************************
  * Show Loading Animation
  ******************************************************************************/
@@ -839,189 +843,6 @@ function calculateStatisticsByField(currentItem, fieldName, statistics){
 	return statistics;
 }
 
-/**************************************************************************************
- * 
- *************************************************************************************/
-function printItemDetails(parent,item){
-	if(item.screenshotPath != null){ 	parent.append('&nbsp;&nbsp;<a target="_blank" href="'+item.screenshotPath+'"><i class="fa fa-image"></i>&nbsp;Screenshot</a>');}
-	if(item.sourcePath != null){		parent.append('&nbsp;&nbsp;<a target="_blank" href="'+item.sourcePath+'"><i class="fa fa-code"></i>&nbsp;HTML</a>');}
-	
-	if(item.title != null){ 			parent.append('<p><strong>Title:&nbsp;</strong>'+item.title+'</p>');}
-	if(item.status != null){ 			parent.append('<p><strong>Type:&nbsp;</strong>'+item.type+'</p>');}
-	if(item.type != null){ 				parent.append('<p><strong>Status:&nbsp;</strong>'+item.status+'</p>');}
-	if(item.description != null){ 		parent.append('<p><strong>Description:&nbsp;</strong>'+item.description+'</p>');}
-	if(item.url != null){ 				parent.append('<p><strong>URL:&nbsp;</strong><a target="_blank" href="'+item.url+'">'+item.url+'</a></p>');}
-	if(item.custom != null){ 			
-		parent.append('<p><strong>Custom Values:</strong></p>');
-		var list = $('<ul>');
-		parent.append(list);
-		for(var key in item.custom){
-			list.append('<li><strong>'+key+':&nbsp;</strong>'+item.custom[key]+'</li>');
-		}
-	}
-
-	if(item.timestamp != null){ 		parent.append('<p><strong>Timestamp:&nbsp;</strong>'+item.timestamp+'</p>');}
-	if(item.duration != null){ 			parent.append('<p><strong>Duration:&nbsp;</strong>'+item.duration+' ms</p>');}
-	if(item.exceptionMessage != null){ 	parent.append('<p><strong>Exception Message:&nbsp;</strong>'+item.exceptionMessage+'</p>');}
-	if(item.exceptionStacktrace != null){parent.append('<p><strong>Exception Stacktrace:&nbsp;</strong><br>'+item.exceptionStacktrace+'</p>');}
-	
-}
-
-/**************************************************************************************
- * 
- *************************************************************************************/
-function printRootPath(parentElement, item, subElement){
-	
-	var div = $('<div style="margin-left: 20px;">');
-	div.append(getItemDetailsLink(item, false));
-	
-	if(subElement != null){
-		div.append(subElement);
-	}
-	if(item.parent != null){
-		printRootPath(parentElement, item.parent, div);
-	}else{
-		parentElement.append(div);
-	}
-}
-
-
-
-/**************************************************************************************
- * 
- *************************************************************************************/
-function printCSVRows(parent, currentItem){
-	
-	var row = 	currentItem.title+';'+
-				currentItem.type+';'+
-				currentItem.status+';'+
-				currentItem.duration+';'+
-				
-				currentItem.statusCount.All+';'+
-				currentItem.statusCount.Success+';'+
-				currentItem.statusCount.Skipped+';'+
-				currentItem.statusCount.Fail+';'+
-				currentItem.statusCount.Undefined+';'+
-
-				currentItem.percentSuccess+';'+
-				currentItem.percentSkipped+';'+
-				currentItem.percentFail+';'+
-				currentItem.percentUndefined+';'+
-				
-				currentItem.url+
-				'</br>';
-	
-	parent.append(row);
-	
-	if(isArrayWithData(currentItem.children)){
-		var childrenCount = currentItem.children.length;
-		for(var i = 0; i < childrenCount; i++){
-			printCSVRows(parent, currentItem.children[i]);
-		}
-	}	
-}
-
-
-/**************************************************************************************
- * 
- *************************************************************************************/
-function printCountStatistics(parent){
-	
-	var table = $('<table class="table table-striped">');
-	var header = $('<thead>');
-	var headerRow = $('<tr>');
-	header.append(headerRow);
-	table.append(header);
-	parent.append(table);
-
-	headerRow.append('<th>Type</td>');
-	for(var status in ItemStatus ){
-		headerRow.append('<th>'+status+'</td>');
-	}
-	for(var type in ItemType ){
-		
-		var row = $('<tr>');
-		row.append('<td>'+type+'</td>');
-		for(var status in ItemStatus ){
-			row.append('<td>'+TYPE_STATS[type][status].length+'</td>'); 
-		}
-		
-		table.append(row);
-	}
-}
-
-/**************************************************************************************
- * 
- *************************************************************************************/
-function printPercentageStatistics(parent){
-	
-	var table = $('<table class="table table-striped">');
-	var header = $('<thead>');
-	var headerRow = $('<tr>');
-	header.append(headerRow);
-	table.append(header);
-	parent.append(table);
-
-	headerRow.append('<th>Type</td>');
-	headerRow.append('<th>Success%</td>');
-	headerRow.append('<th>Skipped%</td>');
-	headerRow.append('<th>Fail%</td>');
-	headerRow.append('<th>Undefined%</td>');
-	for(var type in ItemType ){
-		
-		var row = $('<tr>');
-		
-		TYPE_STATS[type].percentSuccess
-		TYPE_STATS[type].percentSkipped 
-		TYPE_STATS[type].percentFail
-		TYPE_STATS[type].percentUndefined
-					
-		row.append('<td>'+type+'</td>');
-		row.append('<td>'+TYPE_STATS[type].percentSuccess+'</td>'); 
-		row.append('<td>'+TYPE_STATS[type].percentSkipped+'</td>'); 
-		row.append('<td>'+TYPE_STATS[type].percentFail+'</td>'); 
-		row.append('<td>'+TYPE_STATS[type].percentUndefined+'</td>'); 
-				
-		table.append(row);
-	}
-}
-
-/**************************************************************************************
- * 
- *************************************************************************************/
-function printTable(parent, data, withFilter, isResponsive){
-	
-	
-	var table = $('<table class="table table-striped">');
-	var header = $('<thead>');
-	var headerRow = $('<tr>');
-	header.append(headerRow);
-	table.append(header);
-	
-	if(withFilter){
-		var filter = $('<input type="text" class="form-control" onkeyup="filterTable(this)" placeholder="Filter Table...">');
-		parent.append(filter);
-		parent.append('<span style="font-size: xx-small;"><strong>Hint:</strong> The filter searches through the innerHTML of the table rows. Use &quot;&gt;&quot; and &quot;&lt;&quot; to search for the beginning and end of a cell content(e.g. &quot;&gt;Test&lt;&quot; )</span>');
-		filter.data("table", table);
-	}
-	
-	parent.append(table);
-
-	for(var key in data.headers){
-		headerRow.append('<th>'+data.headers[key]+'</th>');
-	}
-	
-	for(var rowKey in data.rows ){
-		var row = $('<tr>');
-		
-		for(var cellKey in data.rows[rowKey]){
-			row.append('<td>'+data.rows[rowKey][cellKey]+'</td>');
-		}
-		table.append(row);
-	}
-}
-
-
 
 /**************************************************************************************
  * 
@@ -1036,6 +857,32 @@ function drawOverviewPage(){
 	
 	printTypeOverview(row, ItemType.Suite, 6);
 	printTypeOverview(row, ItemType.Test, 6);
+}
+
+/**************************************************************************************
+ * 
+ * @param baseOptions the object that where the options should be added.
+ * @param fieldArray array of fieldnames
+ *************************************************************************************/
+function addFieldSortOptions(baseOptions, fieldArray) {
+	
+	let sortDirection = ['asc'];
+	
+	for(let i in fieldArray){
+		
+		let field = fieldArray[i];
+		let label = field;
+		if(FIELDLABELS[field] != undefined){
+			label = FIELDLABELS[field];
+		}
+		
+		let sorting = [ [field], sortDirection ];
+		
+		baseOptions[label] = sorting;
+		
+	}
+
+	return baseOptions;
 }
 
 
@@ -1126,6 +973,11 @@ function drawTable(data, showFields, typeFilterArray){
 					dataviewer:{
 						storeid: "table-"+filterID,
 						download: true,
+						sortable: true,
+						sortoptions: addFieldSortOptions(
+								  {"Test, Usecase, Groups, Name": [["test", "usecase", "groups", "name"], ["asc","asc","asc","asc"] ]}
+								, showFields.concat(FIELDS_STATUS)
+							) ,
 						renderers: [
 							{	label: 'Table',
 								name: 'table',
@@ -1135,7 +987,7 @@ function drawTable(data, showFields, typeFilterArray){
 			 							IS_SHARED: 'Shared'
 									},
 									rendererSettings: {
-										table: {filterable: false, narrow: true},
+										table: {filterable: false, narrow: true, stickyheader: true},
 										
 									},
 								}
