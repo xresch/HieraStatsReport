@@ -41,7 +41,7 @@ public class TestExampleJUnitPlaywright {
 	//--------------------------
 	// HSR Config
 	HSRConfig.enable(5);
-	HSRConfig.addReporter(new HSRReporterSysoutCSV(";"));
+	HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 	
 	//--------------------------
 	// Create Playwright

@@ -10,28 +10,39 @@ import org.junit.jupiter.api.Test;
 
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.reporting.HSRReporterCSV;
 import com.xresch.hsr.reporting.HSRReporterHTML;
+import com.xresch.hsr.reporting.HSRReporterJson;
+import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
+
+import ch.qos.logback.classic.Level;
 
 public class TestExampleLoadTestEmulation {
 
 	public static final String DIR_RESULTS = "./target";
-	public static final int REPORT_INTERVAL_SECONDS = 5;
+	public static final int REPORT_INTERVAL_SECONDS = 1;
 
 	/************************************************************************
 	 * 
 	 ************************************************************************/
 	@BeforeAll
 	static void config() {
-		  
 		//--------------------------
-		// HSR Config
-		//HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
+		// Log Levels
+		HSRConfig.setLogLevelRoot(Level.ERROR);
+		
+		
+		//--------------------------
+		// Define Reporters
+		HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 		//HSRConfig.addReporter(new HSRReporterSysoutJson());
-		//HSRConfig.addReporter(new HSRReporterJson( DIR_RESULTS + "/hsr-stats.json", true) );
-		//HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ",") );
+		HSRConfig.addReporter(new HSRReporterJson( DIR_RESULTS + "/hsr-stats.json", true) );
+		HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ",") );
 		HSRConfig.addReporter(new HSRReporterHTML( DIR_RESULTS + "/HTMLReport") );
 		
+		//--------------------------
+		// Enable
 		HSRConfig.enable(REPORT_INTERVAL_SECONDS); 
 		
 	}
@@ -66,9 +77,9 @@ public class TestExampleLoadTestEmulation {
 	@Test
 	void emulateLoadTest() throws InterruptedException {
 		
-		int users = 4;
-		int rampUpSeconds = 1;
-		int executionsPerUser = 20;
+		int users = 200;
+		int rampUpMillis = 100;
+		int executionsPerUser = 200;
 		
 		CountDownLatch latch = new CountDownLatch(users);
 		
@@ -144,7 +155,7 @@ public class TestExampleLoadTestEmulation {
 			
 			userThread.setName("User-"+i);
 			userThread.start();
-			Thread.sleep(rampUpSeconds * 1000);
+			Thread.sleep(rampUpMillis);
 		}
 		
 		latch.await();

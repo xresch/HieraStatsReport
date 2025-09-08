@@ -1,25 +1,24 @@
 package com.xresch.hsr.base;
 
-import java.io.File;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Stack;
-import java.util.zip.ZipInputStream;
 
 import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xresch.hsr.stats.HSRRecord;
-import com.xresch.hsr.stats.HSRStatsEngine;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
+import com.xresch.hsr.stats.HSRStatsEngine;
 import com.xresch.hsr.utils.HSRFiles;
 import com.xresch.hsr.utils.HSRJson;
+import com.xresch.hsr.utils.HSRLog;
 import com.xresch.hsr.utils.HSRMath;
 import com.xresch.hsr.utils.HSRRandom;
-import com.xresch.hsr.utils.HSRReportUtils;
 import com.xresch.hsr.utils.HSRTime;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 /**************************************************************************************
  * The Report class provides methods to add items to the reports, create screenshots
@@ -42,7 +41,7 @@ public class HSR {
 	private static ThreadLocal<Stack<HSRRecord>> openItems = new ThreadLocal<Stack<HSRRecord>>();
 	private static InheritableThreadLocal<HSRRecord> activeItem = new InheritableThreadLocal<HSRRecord>();
 	
-	private static Logger logger = LoggerFactory.getLogger(HSR.class.getName());
+	private static Logger logger = (Logger) LoggerFactory.getLogger(HSR.class.getName());
 	
 	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
 		
@@ -189,6 +188,7 @@ public class HSR {
 		HSRConfig.hooks.afterStart(type, item);
 		
 		logger.info("START "+getLogIndendation(item)+" "+name);	
+		HSRLog.log(logger, Level.INFO, "START "+getLogIndendation(item)+" "+name);
 		return item;
 	}
 	

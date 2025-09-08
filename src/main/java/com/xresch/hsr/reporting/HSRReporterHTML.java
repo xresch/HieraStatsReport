@@ -37,19 +37,10 @@ public class HSRReporterHTML implements HSRReporter {
 	public HSRReporterHTML(String directoryPath) {
 		
 		this.directoryPath = directoryPath;
-		
-		try {
-			
-			path = Path.of(directoryPath);
-			Files.deleteIfExists(path);
-			
-			logger.info("Cleanup report directory: "+directoryPath);
-	    	HSRReportUtils.deleteRecursively(new File(directoryPath));	
+	
+		logger.info("Cleanup report directory: "+directoryPath);
+    	HSRReportUtils.deleteRecursively(new File(directoryPath));	
 	    	
-		} catch (IOException e) {
-			logger.error("Error while initializing CSV file.", e);
-		}
-		
 	}
 	
 	/****************************************************************************

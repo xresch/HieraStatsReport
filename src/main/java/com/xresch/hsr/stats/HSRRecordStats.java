@@ -275,19 +275,20 @@ public class HSRRecordStats {
 		
 		//-----------------------------------
 		// Parse Message
+		// Intern Strings to reduce memory overhead
 		this.time = System.currentTimeMillis();
 		this.type = record.getType();
 		this.status = record.getStatus();
 		this.state = record.getStatus().state();
-		this.test = record.getTest();
-		this.usecase = record.getUsecase();
-		this.metricName = record.getName();
-		this.groupsPath = record.getGroupsAsString(" / ", "");
-		this.metricPath = record.getMetricPath();
-		this.metricPathFull = record.getMetricPathFull();
-		this.code = record.getResponseCode();
+		this.test = record.getTest().intern();
+		this.usecase = record.getUsecase().intern();
+		this.metricName = record.getName().intern();
+		this.groupsPath = record.getGroupsAsString(" / ", "").intern();
+		this.metricPath = record.getMetricPath().intern();
+		this.metricPathFull = record.getMetricPathFull().intern();
+		this.code = record.getResponseCode().intern();
 		this.granularity = HSRConfig.getAggregationInterval();
-		this.statsIdentifier = record.getStatsIdentifier();
+		this.statsIdentifier = record.getStatsIdentifier().intern();
 
 	}
 	/***********************************************************************
@@ -318,19 +319,7 @@ public class HSRRecordStats {
 		
 		//-----------------------------------
 		// Parse Message
-		this.time = timeMillis;
-		this.type = record.getType();
-		this.status = record.getStatus();
-		this.state = record.getStatus().state();
-		this.test = record.getTest();
-		this.usecase = record.getUsecase();
-		this.metricName = record.getName();
-		this.groupsPath = record.getGroupsAsString(" / ", "");
-		this.metricPath = record.getMetricPath();
-		this.metricPathFull = record.getMetricPathFull();
-		this.code = record.getResponseCode();
-		this.granularity = HSRConfig.getAggregationInterval();
-		this.statsIdentifier = record.getStatsIdentifier();
+		this(record);
 
 		//-----------------------------------
 		// Get Target Record
