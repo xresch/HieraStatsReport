@@ -20,10 +20,112 @@ ALL_ITEMS_FLAT = [];
 
 GLOBAL_COUNTER = 0;
 
-TYPE_STATS = {
-	Suite: { 		All: [], Undefined: [], Success: [], Skipped: [], Fail: [] },
-	Class: { 		All: [], Undefined: [], Success: [], Skipped: [], Fail: [] },
-	Test: { 		All: [], Undefined: [], Success: [], Skipped: [], Fail: [] },
+const FIELDS_BASE = [
+	"type",
+	"test",
+	"usecase",
+	"groups",
+	"name",
+	"code",
+	"ok_count",
+	"nok_count",
+	"ok_min",
+	"ok_avg",
+	"ok_max",
+	"ok_stdev",
+	"ok_p25",
+	"ok_p50",
+	"ok_p75",
+	"ok_p90",
+	"ok_p95",
+	//"granularity",
+];
+const FIELDS_PROPERTIES = [
+	"time",
+	"type",
+	"test",
+	"usecase",
+	"groups",
+	"name",
+	"code",
+	//"granularity",
+];
+
+const FIELDS_OK = [
+	"ok_count",
+	"ok_min",
+	"ok_avg",
+	"ok_max",
+	"ok_stdev",
+	"ok_p25",
+	"ok_p50",
+	"ok_p75",
+	"ok_p90",
+	"ok_p95",
+];
+
+const FIELDS_NOK = [
+	"nok_count",
+	"nok_min",
+	"nok_avg",
+	"nok_max",
+	"nok_stdev",
+	"nok_p25",
+	"nok_p50",
+	"nok_p75",
+	"nok_p90",
+	"nok_p95",
+];
+
+const FIELDS_STATUS = [
+	"success",
+	"failed",
+	"skipped",
+	"aborted",
+	"none",
+];
+
+const FIELDLABELS = {
+	"time": "Time",
+	"type": "Type",
+	"test": "Test",
+	"usecase": "Usecase",
+	"groups": "Groups",
+	"name": "Name",
+	"code": "Code",
+	"granularity": "Granularity",
+	"ok_count": "Count",
+	"ok_min": "Min",
+	"ok_avg": "Avg",
+	"ok_max": "Max",
+	"ok_stdev": "Stdev",
+	"ok_p25": "P25",
+	"ok_p50": "P50",
+	"ok_p75": "P75",
+	"ok_p90": "P90",
+	"ok_p95": "P95",
+	"nok_count": "Count(nok)",
+	"nok_min": "Min(nok)",
+	"nok_avg": "Avg(nok)",
+	"nok_max": "Max(nok)",
+	"nok_stdev": "Stdev(nok)",
+	"nok_p25": "P25(nok)",
+	"nok_p50": "P50(nok)",
+	"nok_p75": "P75(nok)",
+	"nok_p90": "P90(nok)",
+	"nok_p95": "P95(nok)",
+	"success": "Success",
+	"failed": "Failed",
+	"skipped": "Skipped",
+	"aborted": "Aborted",
+	"none": "None"
+}
+
+
+
+
+const TYPE_STATS = {
+	Group: { 		All: [], Undefined: [], Success: [], Skipped: [], Fail: [] },
 	Step: { 		All: [], Undefined: [], Success: [], Skipped: [], Fail: [] },
 	Wait: { 		All: [], Undefined: [], Success: [], Skipped: [], Fail: [] },
 	Assert: { 		All: [], Undefined: [], Success: [], Skipped: [], Fail: [] },
@@ -33,32 +135,31 @@ TYPE_STATS = {
 	Undefined: 	  { All: [], Undefined: [], Success: [], Skipped: [], Fail: [] }
 }
 
-BG_COLORS = [
+
+const BG_COLORS = [
 	 "#d6e9c6",
 	 "#faebcc",
 	 "#ebccd1",
 	 "#ddd"
 ];
 
-BORDER_COLORS= [
+const BORDER_COLORS= [
     "#3c763d",
     "#8a6d3b",
     "#a94442",
     "#333"
 ]
-GLOBAL_EXCEPTION_ITEMS = [];
+const GLOBAL_EXCEPTION_ITEMS = [];
 
-ItemStatus = {
+const ItemStatus = {
 		Success: "Success",
 		Skipped: "Skipped",
 		Fail: "Fail",
 		Undefined: "Undefined",
 }
 
-ItemType = {
-	Suite: "Suite",
-	Class: "Class",
-	Test: "Test",
+const ItemType = {
+	Group: "Suite",
 	Step: "Step",
 	Wait: "Wait",
 	Assert: "Assert",
@@ -68,17 +169,15 @@ ItemType = {
 	Undefined: "Undefined"
 }
 
-StatusIcon = {
+const StatusIcon = {
 		Success: '<i class="fa fa-check-circle" style="color: green;"></i>&nbsp;',
 		Skipped: '<i class="fa fa-chevron-circle-right" style="color: orange;"></i>&nbsp;',
 		Fail: '<i class="fa fa-times-circle" style="color: red;"></i>&nbsp;',
 		Undefined: '<i class="fa fa-question-circle" style="color: gray;"></i>&nbsp;'
 }
 
-TypeIcon = {
-		Suite: '<i class="fa fa-folder-open"></i>&nbsp;',
-		Class: '<i class="fa fa-copyright"></i>&nbsp;',
-		Test: '<i class="fa fa-cogs"></i>&nbsp;',
+const TypeIcon = {
+		Group: '<i class="fa fa-folder-open"></i>&nbsp;',
 		Step: '<i class="fa fa-gear"></i>&nbsp;',
 		Wait: '<i class="fa fa-clock-o"></i>&nbsp;',
 		Assert: '<i class="fa fa-question-circle"></i>&nbsp;',
@@ -183,7 +282,7 @@ function initialize(){
 	
 	//-----------------------------
 	// Populate Test Dropdown
-	testDropdown = $("#testDropdown");
+/* 	testDropdown = $("#testDropdown");
 	
 	var length = TYPE_STATS.Test.All.length;
 	for(var i = 0 ;	 i < length; i++){
@@ -199,9 +298,9 @@ function initialize(){
 		
 		listItem.append(link);
 		testDropdown.append(listItem);
-	}
+	} */
 	
-	draw({view: "overview"});
+	draw({view: "tableDetailed"});
 }
 
 /**************************************************************************************
@@ -360,13 +459,13 @@ function getItemStyle(item){
 
 	
 	switch(item.type){
-	case "Suite": 	style.collapsedClass = "panel-collapse collapse in"; 
-					style.expanded = true; 
-					break;
-			
-	case "Class": 	style.collapsedClass = "panel-collapse collapse in"; 
-					style.expanded = true; 
-					break;
+		case "Suite": 	style.collapsedClass = "panel-collapse collapse in"; 
+						style.expanded = true; 
+						break;
+				
+		case "Class": 	style.collapsedClass = "panel-collapse collapse in"; 
+						style.expanded = true; 
+						break;
 	}
 	
 	return style;
@@ -1072,105 +1171,6 @@ function printTable(parent, data, withFilter, isResponsive){
 
 
 /**************************************************************************************
- * Print Screenshots for Test
- *************************************************************************************/
-function printScreenshotsForTest(element){
-	var test = $(element).data("test");
-	
-	var container = $('#screenshotContainer');
-	container.html("");
-	printScreenshotsList(container,test);
-	//printScreenshotsGallery(container,test,null,null,null);
-}
-
-/**************************************************************************************
- * Print Screenshots List
- *************************************************************************************/
-function printScreenshotsList(targetElement, currentItem){
-	
-	if(currentItem.screenshotPath != null){
-		targetElement.append("<h4>"+getFullItemTitle(currentItem)+"</h4>");
-		targetElement.append('&nbsp;&nbsp;<a target="_blank" href="'+currentItem.screenshotPath+'"><i class="fa fa-image"></i>&nbsp;Open Screenshot</a>');
-	
-		if(currentItem.sourcePath != null){
-			targetElement.append('&nbsp;&nbsp;<a target="_blank" href="'+currentItem.sourcePath+'"><i class="fa fa-code"></i>&nbsp;HTML</a>');
-		}
-		
-		targetElement.append('<a target="_blank" href="'+currentItem.screenshotPath+'"><img class="screenshot" src='+currentItem.screenshotPath+'></a>');
-	}
-	
-	if(isArrayWithData(currentItem.children)){
-		var childrenCount = currentItem.children.length;
-		for(var i = 0; i < childrenCount; i++){
-			printScreenshotsList(targetElement, currentItem.children[i]);
-		}
-	}
-		
-}
-
-/**************************************************************************************
- * Print Screenshots Gallery
- *************************************************************************************/
-function printScreenshotsGallery(targetElement, currentItem, galleryDiv, indicatorList, slidesDiv ){
-	
-	if(galleryDiv == null){
-		
-		galleryDiv = $('<div id="gallery" class="report-carousel carousel slide" data-ride="carousel">');
-		indicatorList = $('<ol class="carousel-indicators">');
-		slidesDiv = $('<div class="carousel-inner" role="listbox">');
-		
-		galleryDiv.append(indicatorList);
-		galleryDiv.append(slidesDiv);
-		galleryDiv.append(
-		  '<!-- Controls -->'+
-		  '<a class="left carousel-control" href="#gallery" role="button" data-slide="prev">'+
-		    '<span class="fa fa-chevron-left fa-2x" aria-hidden="true"></span>'+
-		    '<span class="sr-only">Previous</span>'+
-		  '</a>'+
-		  '<a class="right carousel-control" href="#gallery" role="button" data-slide="next">'+
-		    '<span class="fa fa-chevron-right fa-2x"></span>'+
-		    '<span class="sr-only">Next</span>'+
-		  '</a>');
-		
-		galleryDiv.data("slideCount", 0);
-		
-		targetElement.append(galleryDiv);
-	}
-	
-	if(currentItem.screenshotPath != null){
-
-		//------------------------------------------
-		// Handle slide count
-		var slideCount = galleryDiv.data("slideCount")+1;
-		galleryDiv.data("slideCount", slideCount);
-		
-		var active = "";
-		if(slideCount == 1) { active = "active"};
-		
-		//------------------------------------------
-		// Create Indicator
-		var indicator = $('<li data-target="#gallery" data-slide-to="'+(slideCount-1)+'" class="'+active+'">');
-		indicatorList.append(indicator);
-		
-		//------------------------------------------
-		// Create Slide
-		var slide = $('<div class=" item '+active+'">');
-		
-		var image = $('<img class="carousel-image" src='+currentItem.screenshotPath+'></a>');
-		slide.append(image);
-		slidesDiv.append(slide);
-		
-	}
-	
-	if(isArrayWithData(currentItem.children)){
-		var childrenCount = currentItem.children.length;
-		for(var i = 0; i < childrenCount; i++){
-			printScreenshotsGallery(targetElement, currentItem.children[i], galleryDiv, indicatorList, slidesDiv);
-		}
-	}		
-}
-
-/**************************************************************************************
  * Draws charts for the given type.
  * 
  * @param the args param has to contain a field "type".
@@ -1414,163 +1414,164 @@ function drawStatistics(){
 	printPercentageStatistics(content);
 }
 
-/**************************************************************************************
- * 
- *************************************************************************************/
-function drawCSV(){
-	
-	$("#content").append("<h2>CSV</h2>");
-	
-	var pre = $('<pre>');
-	$("#content").append(pre);
-	
-	var code = $('<code>');
-	code.attr("onclick", "selectElementContent(this)");
-	pre.append(code);
-	
-	var headerRow = "Title;Type;Status;Duration(ms);#Total;#Success;#Skipped;#Fail;#Undefined;Success(%);Skipped(%);Fail(%);Undefined(%);URL</br>";
-	code.append(headerRow);
-	
-	for(var i = 0; i < DATA.length; i++){
-		printCSVRows(code, DATA[i]);
-	}
-	
-}
-
-/**************************************************************************************
- * 
- *************************************************************************************/
-function drawJSON(){
-	
-	$("#content").append("<h2>JSON</h2>");
-	
-	var pre = $('<pre>');
-	$("#content").append(pre);
-	
-	var code = $('<code>');
-	code.attr("onclick", "selectElementContent(this)");
-	pre.append(code);
-	
-	code.text(JSON.stringify(DATA, 
-		function(key, value) {
-	    if (key == 'parent') {
-            // Ignore parent field to prevent circular reference error
-            return;
-	    }
-	    return value;
-	},2));
-	
-}
 
 
 /**************************************************************************************
  * 
  * @param boolean printDetails print more details 
  *************************************************************************************/
-function drawTable(item, printDetails){
+function drawTable(data, printDetails){
 	
-	$("#content").append("<h2>Table</h2>");
-	
-	var filter = $('<input type="text" class="form-control" onkeyup="filterTable(this)" placeholder="Filter Table...">');
-	$("#content").append(filter);
-	$("#content").append('<span style="font-size: xx-small;"><strong>Hint:</strong> The filter searches through the innerHTML of the table rows. Use &quot;&gt;&quot; and &quot;&lt;&quot; to search for the beginning and end of a cell content(e.g. &quot;&gt;Test&lt;&quot; )</span>');
-	
-	
-	var table = $('<table class="table table-striped">');
-	$("#content").append(table);
-	filter.data("table", table);
-	
-	var header = $('<thead>');
-	table.append(header);
-	
-	var headerRow = $('<tr>');
-	header.append(headerRow);
-	headerRow.append('<th>&nbsp;</th>');
-	headerRow.append('<th>Report Item</th>');
-	headerRow.append('<th>Type</th>');
-	headerRow.append('<th>Status</th>');
-	headerRow.append('<th>Duration(ms)</th>');
-	
-	if(printDetails){
-		headerRow.append('<th>#Total</th>');
-		headerRow.append('<th>#Success</th>');
-		headerRow.append('<th>#Skipped</th>');
-		headerRow.append('<th>#Fail</th>');
-		headerRow.append('<th>#Undefined</th>');
-		headerRow.append('<th>Success(%)</th>');
-		headerRow.append('<th>Skipped(%)</th>');
-		headerRow.append('<th>Fail(%)</th>');
-		headerRow.append('<th>Undefined(%)</th>');
+	console.log(data)
+	if(!isArrayWithData(data)){
+		return;
 	}
 	
-	headerRow.append('<th><i class="fa fa-image"></i></th>');
-	headerRow.append('<th><i class="fa fa-code"></i></th>');
-	headerRow.append('<th><i class="fa fa-link"></i></th>');
+	var parent = $("#content");
+	parent.html('');
 	
-	if(isArrayWithData(item)){
-		for(var i = 0; i < item.length; i++){
-			printTableRows(table, item[i], printDetails);
+
+	//--------------------------------
+	// Table
+	
+	if(data != undefined){
+		
+		var resultCount = data.length;
+		if(resultCount == 0){
+			CFW.ui.addToastInfo("Hmm... seems there aren't any storedfile in the list.");
 		}
-	}else{
-		printTableRows(table, item, printDetails);
+		
+		//-----------------------------------
+		// Prepare Columns
+		var showFields = [].concat(FIELDS_BASE);
+		
+		if(printDetails){
+			showFields = showFields.concat(FIELDS_STATUS); 
+		}
+		
+
+		//======================================
+		// Prepare actions
+		
+		var actionButtons = [ ];		
+		var bulkActions = {};		
+		
+		//-------------------------
+		// Details Button
+		actionButtons.push(
+			function (record, id){ 
+				
+				let htmlString = '<button class="btn btn-primary btn-sm" alt="Edit" title="Edit" '
+						+'onclick="cfw_filemanager_editStoredFile('+id+')");">'
+						+ '<i class="fa fa-pen"></i>'
+						+ '</button>';
+
+				return htmlString;
+			});
+		
+		//-----------------------------------
+		// Render Data
+
+		var rendererSettings = {
+			 	idfield: null,
+			 	bgstylefield: null,
+			 	textstylefield: null,
+			 	titlefields: ['groups', 'name'],
+			 	titleformat: "{0} / {1}",
+			 	visiblefields: showFields,
+			 	labels: FIELDLABELS,
+			 	customizers: {
+						
+					'name': function(record, value) { 
+						return '<span class="maxvw-30 maxvw-30 word-wrap-prewrap word-break-word">'+value+'</span>';
+			 		},
+
+			 	},
+				actions: actionButtons,
+				
+				bulkActionsPos: "top",
+				
+				data: data,
+				rendererSettings: {
+					dataviewer:{
+						download: true,
+						renderers: [
+							{	label: 'Table',
+								name: 'table',
+								renderdef: {
+									labels: {
+										PK_ID: "ID",
+			 							IS_SHARED: 'Shared'
+									},
+									rendererSettings: {
+										table: {filterable: false, narrow: true},
+										
+									},
+								}
+							},
+							{	label: 'Bigger Table',
+								name: 'table',
+								renderdef: {
+									labels: {
+										PK_ID: "ID",
+			 							IS_SHARED: 'Shared'
+									},
+									rendererSettings: {
+										table: {filterable: false},
+									},
+								}
+							},
+							{	label: 'Panels',
+								name: 'panels',
+								renderdef: {}
+							},
+							{	label: 'Cards',
+								name: 'cards',
+								renderdef: {}
+							},
+							{	label: 'Tiles',
+								name: 'tiles',
+								renderdef: {
+									visiblefields: showFields,
+									rendererSettings: {
+										tiles: {
+											popover: false,
+											border: '2px solid black'
+										},
+									},
+									
+								}
+							},
+							{	label: 'CSV',
+								name: 'csv',
+								renderdef: {
+									visiblefields: null
+								}
+							},
+							{	label: 'XML',
+								name: 'xml',
+								renderdef: {
+									visiblefields: null
+								}
+							},
+							{	label: 'JSON',
+								name: 'json',
+								renderdef: {}
+							}
+						],
+					},
+					table: {filterable: false}
+				},
+			};
+				
+		
+		var renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);	
+		
+		parent.append(renderResult);
 	}
-	
 }
 
-/**************************************************************************************
- * 
- *************************************************************************************/
-function printTableRows(table, currentItem, printDetails){
-	
-	var row = $('<tr>');
-	var itemCell = $('<td>');
-	itemCell.append(getItemDetailsLink(currentItem, true));
-	
-	table.append(row);
-	var rowString;
-	row.append('<td>'+TypeIcon[currentItem.type]+'</td>');
-	row.append(itemCell);
-	row.append('<td>'+currentItem.type+'</td>');
-	row.append('<td class="'+getStatusStyle(currentItem.status)+'">'+currentItem.status+'</td>');
-	row.append('<td>'+currentItem.duration+'</td>');
-	
-	if(printDetails){
-		row.append(
-		'<td>'+currentItem.statusCount.All+'</td>'+
-		'<td>'+currentItem.statusCount.Success+'</td>'+
-		'<td>'+currentItem.statusCount.Skipped+'</td>'+
-		'<td>'+currentItem.statusCount.Fail+'</td>'+
-		'<td>'+currentItem.statusCount.Undefined+'</td>'+
-		'<td>'+currentItem.percentSuccess+'</td>'+
-		'<td>'+currentItem.percentSkipped+'</td>'+
-		'<td>'+currentItem.percentFail+'</td>'+
-		'<td>'+currentItem.percentUndefined+'</td>');
-	}
-	
-	if(currentItem.screenshotPath != null){
-		row.append('<td><a target="_blank" href="'+currentItem.screenshotPath+'"><i class="fa fa-image"></i></a></td>');
-	}else{
-		row.append('<td>&nbsp;</td>');
-	}
-	
-	if(currentItem.sourcePath != null){
-		row.append('<td><a target="_blank" href="'+currentItem.sourcePath+'"><i class="fa fa-code"></i></a></td>');
-	}else{
-		row.append('<td>&nbsp;</td>');
-	}
-	
-	row.append('<td><a target="_blank" href="'+currentItem.url+'"><i class="fa fa-link"></i></a></td>');
-	
-	
-	if(isArrayWithData(currentItem.children)){
-		var childrenCount = currentItem.children.length;
-		for(var i = 0; i < childrenCount; i++){
-			printTableRows(table, currentItem.children[i], printDetails);
-		}
-	}
-	
-	
-}
+
 
 
 /**************************************************************************************
