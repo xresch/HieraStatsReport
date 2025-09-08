@@ -1064,10 +1064,8 @@ function drawTable(data, showFields, typeFilterArray){
 				if(o.type.includes( typeFilterArray[i]) ){
 					return true;
 				}
-				
-				return false;
 			}
-
+			return false;
 		});
 	}
 
@@ -1115,9 +1113,16 @@ function drawTable(data, showFields, typeFilterArray){
 				actions: actionButtons,
 				
 				bulkActionsPos: "top",
-				
+
 				data: data,
 				rendererSettings: {
+					csv:{
+						csvcustomizers: {
+							series: function(record, value){
+								return null;
+							}
+						}
+					},
 					dataviewer:{
 						storeid: "table-"+filterID,
 						download: true,
@@ -1167,7 +1172,7 @@ function drawTable(data, showFields, typeFilterArray){
 							{	label: 'CSV',
 								name: 'csv',
 								renderdef: {
-									visiblefields: null
+									visiblefields: showFields.concat(FIELDS_STATUS),
 								}
 							},
 							{	label: 'XML',
@@ -1208,6 +1213,7 @@ function draw(args){
 			case "overview": 			drawOverviewPage(); break;
 				
 			case "tableAll": 			drawTable(DATA, FIELDS_BASE_STATS); break;
+			case "tableGroupsSteps": 	drawTable(DATA, FIELDS_BASE_STATS, ["Group", "Step"]); break;
 			case "tableGroups": 		drawTable(DATA, FIELDS_BASE_STATS, ["Group"]); break;
 			case "tableSteps": 			drawTable(DATA, FIELDS_BASE_STATS, ["Step"]); break;
 			case "tableAsserts": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
