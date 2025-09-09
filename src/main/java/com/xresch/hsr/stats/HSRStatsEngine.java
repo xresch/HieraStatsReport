@@ -1,5 +1,7 @@
 package com.xresch.hsr.stats;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -20,8 +22,15 @@ import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.reporting.HSRReporterDatabase;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
+import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
 import com.xresch.hsr.stats.HSRRecordStats.RecordMetric;
-import com.xresch.hsr.utils.HSRJson;
+
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.GlobalMemory;
+import oshi.hardware.NetworkIF;
+import oshi.software.os.OSFileStore;
+import oshi.software.os.OperatingSystem;
 
 /**************************************************************************************************************
  * The statistics engine that aggregates stuff.
@@ -115,6 +124,228 @@ public class HSRStatsEngine {
 	
 	}
 	
+	
+	/***************************************************************************
+	 * Creates user records and adds them to the list of records.
+	 ***************************************************************************/
+	private static void createSystemUsageRecords() {
+		
+
+			String test = HSR.getTest();
+			SystemInfo systemInfo = new SystemInfo();
+			
+			ArrayList<String> systemUsageGroup = new ArrayList();
+			systemUsageGroup.add("System Usage");
+			
+			double MB = 1024.0 * 1024.0;
+			
+			//------------------------------
+			// Process Memory
+			try {
+				MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+				double usage = memoryMXBean.getHeapMemoryUsage().getUsed();
+				double committed = memoryMXBean.getHeapMemoryUsage().getCommitted();
+				double max = memoryMXBean.getHeapMemoryUsage().getMax();
+				double usageMB = usage / MB;
+				double committedMB = committed / MB;
+				double maxMB = max / MB;
+				double usagePercent = (usage * 100.0) / max;
+				
+				addRecord(
+					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [MB]")
+						.test(test)
+						.groups(systemUsageGroup)
+						.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
+					);
+				
+				addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "Process Memory Committed [MB]")
+						.test(test)
+						.groups(systemUsageGroup)
+						.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
+						);
+				
+				addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "Process Memory Max [MB]")
+						.test(test)
+						.groups(systemUsageGroup)
+						.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
+					);
+				
+				addRecord(
+					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [%]")
+						.test(test)
+						.groups(systemUsageGroup)
+						.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
+					);
+
+			}catch(Throwable e) {
+				logger.error("Error while reading process memory: "+e.getMessage(), e);
+			}
+			
+			//------------------------------
+			// Host Memory
+			try {
+	        GlobalMemory memory = systemInfo.getHardware().getMemory();
+	
+	        long memTotal = memory.getTotal();
+	        long memAvailable = memory.getAvailable();
+	        long memUsed = memTotal - memAvailable;
+	
+	        double memUsagePercent = (memUsed * 100.0) / memTotal;
+	
+	        addRecord(
+					new HSRRecord(HSRRecordType.Gauge, "Host Memory Usage [%]")
+						.test(test)
+						.groups(systemUsageGroup)
+						.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
+					);
+			}catch(Throwable e) {
+				logger.error("Error while reading host memory: "+e.getMessage(), e);
+			}
+	        
+			//------------------------------
+			// CPU
+			try {
+		        CentralProcessor processor = systemInfo.getHardware().getProcessor();
+		
+		        double cpuUsage = 100 * processor.getSystemCpuLoad(500);
+	
+				addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "CPU Usage [%]")
+							.test(test)
+							.groups(systemUsageGroup)
+							.value(new BigDecimal(cpuUsage).setScale(1, RoundingMode.HALF_UP))
+						);
+			}catch(Throwable e) {
+				logger.error("Error while reading CPU usage: "+e.getMessage(), e);
+			}
+
+			//------------------------------
+			// Disk Usage
+			try {
+				OperatingSystem os = systemInfo.getOperatingSystem();
+		        for (OSFileStore fs : os.getFileSystem().getFileStores()) {
+		            
+		        	String diskName = fs.getName() +" ("+ fs.getMount() + ")";
+		        	long diskTotal = fs.getTotalSpace();
+		        	
+		        	// skip disks that have no size
+		        	if(diskTotal == 0) { continue; }
+		        	
+		            long diskUsable = fs.getUsableSpace();
+		            long diskUsed = diskTotal - diskUsable;
+		
+		            double diskUsagePercent = (diskUsed * 100.0) / diskTotal;
+		           
+					addRecord(
+							new HSRRecord(HSRRecordType.Gauge, "Disk Usage [%]: "+diskName)
+								.test(test)
+								.groups(systemUsageGroup)
+								.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
+							);
+		        }
+			}catch(Throwable e) {
+				logger.error("Error while reading Disk usage: "+e.getMessage(), e);
+			}   
+			
+			//------------------------------
+			// Network I/O
+			
+			// this gives total bytes sent, not useful...
+			// TODO: Create a thread that calculates difference per second.
+//			try {
+//		        List<NetworkIF> networkIFs = systemInfo.getHardware().getNetworkIFs();
+//	
+//		        for (NetworkIF net : networkIFs) {
+//		            net.updateAttributes(); // Refresh stats
+//		            
+//		            String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
+//		            
+//		            double bytesSent = net.getBytesSent() / MB;
+//		            double bytesReceived = net.getBytesRecv() / MB;
+//		            
+//		            addRecord(
+//							new HSRRecord(HSRRecordType.Gauge, "Network I/O [Bytes Sent]: "+intefaceName)
+//								.test(test)
+//								.groups(systemUsageGroup)
+//								.value(new BigDecimal(bytesSent).setScale(1, RoundingMode.HALF_UP))
+//							);
+//		            
+//		            addRecord(
+//							new HSRRecord(HSRRecordType.Gauge, "Network I/O [Bytes Recv]: "+intefaceName)
+//								.test(test)
+//								.groups(systemUsageGroup)
+//								.value(new BigDecimal(bytesReceived).setScale(1, RoundingMode.HALF_UP))
+//							);
+//		        }
+//	        }catch(Throwable e) {
+//				logger.error("Error while reading Network I/O stats: "+e.getMessage(), e);
+//			}
+
+	}
+	/***************************************************************************
+	 * Creates user records and adds them to the list of records.
+	 ***************************************************************************/
+	private static void createUserRecords() {
+		
+		String test = HSR.getTest();
+		
+		//-------------------------------
+		// Started Users
+		for(Entry<String, Integer> entry : HSR.getUsersStartedMap().entrySet()) {
+			String usecase = entry.getKey();
+			int amount = entry.getValue();
+			
+			HSRRecord record = 
+				new HSRRecord(HSRRecordType.User, "Started")
+					.test(test)
+					.usecase(usecase)
+					.value(new BigDecimal(amount))
+					;
+			
+			addRecord(record);
+		}
+		
+		//-------------------------------
+		// Active Users
+		for(Entry<String, Integer> entry : HSR.getUsersActiveMap().entrySet()) {
+			String usecase = entry.getKey();
+			int amount = entry.getValue();
+			
+			HSRRecord record = 
+				new HSRRecord(HSRRecordType.User, "Active")
+					.test(test)
+					.usecase(usecase)
+					.value(new BigDecimal(amount))
+					;
+			
+			addRecord(record);
+		}
+		
+		//----------------------------------------------------
+		// Stopped Users
+		// Iterate over Started Map to also report when there 
+		// wasn't anything stopped yet.
+		TreeMap<String, Integer> stoppedMap = HSR.getUsersStoppedMap();
+		for(Entry<String, Integer> startedEntry : HSR.getUsersStartedMap().entrySet()) {
+			String usecase = startedEntry.getKey();
+			int amount = 0;
+			if(stoppedMap.containsKey(usecase)) {
+				amount = stoppedMap.get(usecase);
+			}
+			
+			HSRRecord record = 
+					new HSRRecord(HSRRecordType.User, "Stopped")
+					.test(test)
+					.usecase(usecase)
+					.value(new BigDecimal(amount))
+					;
+			
+			addRecord(record);
+		}
+	}
+	
 	/***************************************************************************
 	 * Aggregates the raw records into statistics and sends the statistical
 	 * records to the reporters.
@@ -126,7 +357,8 @@ public class HSRStatsEngine {
 		
 		//----------------------------------------
 		// Create User Records
-		//TODO InjectedDataReceiver.createUserRecords(); 
+		createUserRecords();
+		createSystemUsageRecords();
 		
 		//----------------------------------------
 		// Steal Reference to not block writing
@@ -191,6 +423,7 @@ public class HSRStatsEngine {
 			//---------------------------
 			// Create StatsRecord
 			HSRRecord firstRecord = records.get(0);
+			
 			HSRRecordStats statsRecord = new HSRRecordStats(firstRecord);
 			statsRecordList.add(statsRecord);
 			
@@ -203,28 +436,35 @@ public class HSRStatsEngine {
 			//---------------------------
 			// Calculate OK Stats
 			if( ! ok_values.isEmpty()) {
-				
 				// sort, needed for calculating the stats
 				ok_values.sort(null);
-				
 				BigDecimal ok_count 	= new BigDecimal(ok_values.size());
 				BigDecimal ok_avg 		= ok_sum.divide(ok_count, RoundingMode.HALF_UP);
-
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.count, 	ok_count);
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.min,  		ok_values.get(0));
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.avg, 		ok_avg);
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.max, 		ok_values.get( ok_values.size()-1 ));
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.stdev, 	bigStdev(ok_values, ok_avg, false));
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.p25, 		bigPercentile(25, ok_values) );
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.p50, 		bigPercentile(50, ok_values) );
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.p75, 		bigPercentile(75, ok_values) );
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.p90, 		bigPercentile(90, ok_values) );
-				statsRecord.addValue(HSRRecordState.ok, RecordMetric.p95, 		bigPercentile(95, ok_values) );
-
+				
+				if(firstRecord.type().isCount()) {
+					
+					if( ! firstRecord.type().isGauge() ) { 
+						statsRecord.addValue(HSRRecordState.ok, RecordMetric.count, ok_sum);
+					} else { 
+						statsRecord.addValue(HSRRecordState.ok, RecordMetric.count, ok_avg);
+					}
+					
+				}else {
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.count,		ok_count);
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.min,  		ok_values.get(0));
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.avg, 		ok_avg);
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.max, 		ok_values.get( ok_values.size()-1 ));
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.stdev, 	bigStdev(ok_values, ok_avg, false));
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p25, 		bigPercentile(25, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p50, 		bigPercentile(50, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p75, 		bigPercentile(75, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p90, 		bigPercentile(90, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p95, 		bigPercentile(95, ok_values) );
+				}
 			}
 			
 			//---------------------------
-			// Calculate OK Stats
+			// Calculate NOK Stats
 			if( ! nok_values.isEmpty()) {
 				
 				// sort, needed for calculating the stats
@@ -232,17 +472,25 @@ public class HSRStatsEngine {
 				
 				BigDecimal nok_count 	= new BigDecimal(nok_values.size());
 				BigDecimal nok_avg 		= nok_sum.divide(nok_count, RoundingMode.HALF_UP);
-
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.count, 	nok_count);
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.min,  	nok_values.get(0));
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.avg, 		nok_avg);
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.max, 		nok_values.get( nok_values.size()-1 ));
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.stdev, 	bigStdev(nok_values, nok_avg, false));
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.p25, 		bigPercentile(25, nok_values) );
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.p50, 		bigPercentile(50, nok_values) );
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.p75, 		bigPercentile(75, nok_values) );
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.p90, 		bigPercentile(90, nok_values) );
-				statsRecord.addValue(HSRRecordState.nok, RecordMetric.p95, 		bigPercentile(95, nok_values) );
+				
+				if(firstRecord.type().isCount()) {
+					if( ! firstRecord.type().isGauge() ) { 
+						statsRecord.addValue(HSRRecordState.nok, RecordMetric.count, nok_sum);
+					} else { 
+						statsRecord.addValue(HSRRecordState.nok, RecordMetric.count, nok_avg);
+					}
+				}else {
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.count, 	nok_count);
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.min,  	nok_values.get(0));
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.avg, 		nok_avg);
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.max, 		nok_values.get( nok_values.size()-1 ));
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.stdev, 	bigStdev(nok_values, nok_avg, false));
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p25, 		bigPercentile(25, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p50, 		bigPercentile(50, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p75, 		bigPercentile(75, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p90, 		bigPercentile(90, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p95, 		bigPercentile(95, nok_values) );
+				}
 
 			}
 			
@@ -339,10 +587,11 @@ public class HSRStatsEngine {
 			//---------------------------
 			// Use first as base, Override
 			// all metrics.
-			HSRRecordStats first = currentGroupedStats.get(0);
+			HSRRecordStats first = currentGroupedStats.get(0).clone();
 			first.setTime(reportTime);
 			first.clearValues();
-
+			
+			HSRRecordType type = first.getType();
 			for(HSRRecordState state : HSRRecordState.values()) {
 				
 				//--------------------------------
@@ -361,18 +610,21 @@ public class HSRStatsEngine {
 							
 							BigDecimal value = null;
 							switch(recordMetric) {
-								case avg:		value = HSR.Math.bigAvg(metricValues, 0, true); 	break;
-								case count:		value = HSR.Math.bigSum(metricValues, 0, true);		break;
-								case max:		value = HSR.Math.bigMax(metricValues);				break;
-								case min:		value = HSR.Math.bigMin(metricValues);				break;
-								case p25:		value = HSR.Math.bigPercentile(25, metricValues);	break;
-								case p50:		value = HSR.Math.bigPercentile(50, metricValues);	break;
-								case p75:		value = HSR.Math.bigPercentile(75, metricValues);	break;
-								case p90:		value = HSR.Math.bigPercentile(90, metricValues);	break;
-								case p95:		value = HSR.Math.bigPercentile(95, metricValues);	break;
-								case stdev:		value = HSR.Math.bigStdev(metricValues, false, 2);	break;
-								default: 		continue; /* not an ok-nok metric field, e.g "times"*/
-							}
+								case avg	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
+								case count	->	{	
+													if( ! type.isGauge() ) { value = HSR.Math.bigSum(metricValues, 0, true); }
+													else				   { value = HSR.Math.bigAvg(metricValues, 0, true); }
+												}
+								case max	->		value = HSR.Math.bigMax(metricValues);				
+								case min	->		value = HSR.Math.bigMin(metricValues);				
+								case p25	->		value = HSR.Math.bigPercentile(25, metricValues);	
+								case p50	->		value = HSR.Math.bigPercentile(50, metricValues);	
+								case p75	->		value = HSR.Math.bigPercentile(75, metricValues);	
+								case p90	->		value = HSR.Math.bigPercentile(90, metricValues);	
+								case p95	->		value = HSR.Math.bigPercentile(95, metricValues);	
+								case stdev	->		value = HSR.Math.bigStdev(metricValues, false, 2);
+								
+							};
 							
 							first.addValue(state, recordMetric, value);
 

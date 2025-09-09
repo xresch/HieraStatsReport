@@ -2,6 +2,7 @@ package com.xresch.hsr.base;
 
 import java.math.BigDecimal;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import org.openqa.selenium.WebDriver;
 import org.slf4j.LoggerFactory;
@@ -31,11 +32,18 @@ public class HSR {
 	
 	private static int testNumber = 1;
 	
+	private static String testname = "";
+	
 	// For each type until test level one thread local to make it working in multi-threaded mode
 	private static InheritableThreadLocal<HSRRecord> rootItem = new InheritableThreadLocal<HSRRecord>();
-	private static InheritableThreadLocal<String> currentTest = new InheritableThreadLocal<String>();
 	private static InheritableThreadLocal<String> currentUsecase = new InheritableThreadLocal<String>();
+	
+	// key is usecase name and value is count
+	private static TreeMap<String, Integer> usersStarted = new TreeMap<String, Integer>();
+	private static TreeMap<String, Integer> usersActive = new TreeMap<String, Integer>();
+	private static TreeMap<String, Integer> usersStopped = new TreeMap<String, Integer>();
 
+	
 	//everything else goes here.
 	private static ThreadLocal<Boolean> areThreadLocalsInitialized = new ThreadLocal<Boolean>();
 	private static ThreadLocal<Stack<HSRRecord>> openItems = new ThreadLocal<Stack<HSRRecord>>();
@@ -44,7 +52,8 @@ public class HSR {
 	private static Logger logger = (Logger) LoggerFactory.getLogger(HSR.class.getName());
 	
 	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
-		
+	
+
 	/***********************************************************************************
 	 * Utility References
 	 ***********************************************************************************/
@@ -67,8 +76,122 @@ public class HSR {
 	 * Set the WebDriver.
 	 ***********************************************************************************/
 	public static void setDriver(WebDriver driver) {
-		HSR.driver.set(driver);;
+		HSR.driver.set(driver);
 	}
+	
+	/***********************************************************************************
+	 * Increases the user count by the defined amount for the usecase of the current 
+	 * thread.
+	 * @param amount the amount to increase by
+	 ***********************************************************************************/
+	public static void increaseUsers(int amount) {
+		String usecase = currentUsecase.get();
+		if(usecase != null) {
+			int started = HSR.getUsersStarted();
+			usersStarted.put(usecase, started + amount);
+			int active = HSR.getUsersActive();
+			usersActive.put(usecase, active + amount);
+		}
+	}
+	
+	/***********************************************************************************
+	 * Increases the user count by the defined amount for the usecase of the current 
+	 * thread.
+	 * @param amount the amount to increase by
+	 ***********************************************************************************/
+	public static void decreaseUsers(int amount) {
+		String usecase = currentUsecase.get();
+		if(usecase != null) {
+			
+			int stopped = HSR.getUsersStopped();
+			usersStopped.put(usecase, stopped + amount);
+			
+			int active = HSR.getUsersActive();
+			if(active - amount >= 0) {
+				usersActive.put(usecase, active - amount);
+			}else {
+				usersActive.put(usecase, 0);
+			}
+			
+		}
+	}
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
+	private static int getUsersStarted() {
+		
+		String usecase = currentUsecase.get();
+		
+		if(usecase != null) {
+			if( ! usersStarted.containsKey(usecase) ){
+				usersStarted.put(usecase, 0);
+			}
+			return usersStarted.get(usecase);
+		}
+		
+		return 0;
+	}
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
+	private static int getUsersActive() {
+
+		String usecase = currentUsecase.get();
+		
+		if(usecase != null) {
+			if( ! usersActive.containsKey(usecase) ){
+				usersActive.put(usecase, 0);
+			}
+			return usersActive.get(usecase);
+		}
+		
+		return 0;
+	}
+	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
+	private static int getUsersStopped() {
+		
+		String usecase = currentUsecase.get();
+		
+		if(usecase != null) {
+			if( ! usersStopped.containsKey(usecase) ){
+				usersStopped.put(usecase, 0);
+			}
+			return usersStopped.get(usecase);
+		}
+		
+		return 0;
+	}
+	
+	/***********************************************************************************
+	 * Returns a copy of the map that tracks the amount of users started.
+	 * @return map with usecase as key and count as value
+	 ***********************************************************************************/
+	public static TreeMap<String, Integer> getUsersStartedMap() {
+		return new TreeMap<>(usersStarted);
+	}
+	
+	/***********************************************************************************
+	 * Returns a copy of the map that tracks the amount of users active.
+	 * @return map with usecase as key and count as value
+	 ***********************************************************************************/
+	public static TreeMap<String, Integer> getUsersActiveMap() {
+		return new TreeMap<>(usersActive);
+	}
+	
+	/***********************************************************************************
+	 * Returns a copy of the map that tracks the amount of users stopped.
+	 * @return map with usecase as key and count as value
+	 ***********************************************************************************/
+	public static TreeMap<String, Integer> getUsersStoppedMap() {
+		return new TreeMap<>(usersStopped);
+	}
+	
+	
 	
 	/***********************************************************************************
 	 * 
@@ -121,15 +244,15 @@ public class HSR {
 	 * Set the name of the test.
 	 ***********************************************************************************/
 	public static void setTest(String test){
-		currentTest.set(test);
+		HSR.testname = test;
 	}
 	
 	
 	/***********************************************************************************
-	 * Set the name of the test.
+	 * Returns the name of the test.
 	 ***********************************************************************************/
 	public static String getTest(){
-		return currentTest.get();
+		return testname;
 	}
 	
 	/***********************************************************************************
@@ -177,7 +300,7 @@ public class HSR {
 		HSRConfig.hooks.beforeStart(type, name);
 		
 			HSRRecord item = new HSRRecord(type, name);
-			item.test(currentTest.get());
+			item.test(testname);
 			item.usecase(currentUsecase.get());
 			
 			item.parent(getActiveItem());
@@ -336,6 +459,8 @@ public class HSR {
 	
 	/***********************************************************************************
 	 * Add a count to the report.
+	 * In the final report, count values will be aggregated as a sum. If you want
+	 * to have an average in the final report, use addGauge()-method.
 	 ***********************************************************************************/
 	public static HSRRecord addCount(String name, BigDecimal count){	
 		return addItem(HSRRecordType.Count, name)
@@ -344,22 +469,40 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Add a duration to the report.
-	 * @param name the name of the record
-	 * @param durationMillis duration in milliseconds
+	 * Add a gauge to the report.
+	 * In the final report, gauge values will be aggregated as an average. If you want
+	 * to have a sum in the final report, use addCount()-method.
 	 ***********************************************************************************/
-	public static HSRRecord addDuration(String name, BigDecimal durationMillis){	
-		return addItem(HSRRecordType.Duration, name)
-					.value(durationMillis)
+	public static HSRRecord addGauge(String name, BigDecimal gauge){	
+		return addItem(HSRRecordType.Gauge, name)
+				.value(gauge)
+				;
+	}
+	
+	/***********************************************************************************
+	 * Add a metric to the report. Useful to report duration and other values you want
+	 * to have statistical values for like min, avg, max.
+	 * For values use the addCount()-method.
+	 * 
+	 * @param name the name of the record
+	 * @param value the value you want to report
+	 ***********************************************************************************/
+	public static HSRRecord addMetric(String name, BigDecimal value){	
+		return addItem(HSRRecordType.Metric, name)
+					.value(value)
 					;
 	}
 	
 	/***********************************************************************************
-	 * Add a duration to the report. A range will be appended to the name. This is useful
+	 * Add a metric to the report. Useful to report duration and other values you want
+	 * to have statistical values for like min, avg, max.
+	 * For values use the addCount()-method.
+	 * 
+	 * A range will be appended to the name. This is useful
 	 * for measuring the impact of response times during load testing. For Example, you
 	 * could extract the number of total records from a table (rangeValue) and measure
 	 * the duration by the amount of data.
-	 * The ranges this method creates are exponential. Each new range has twice the size
+	 * The ranges this method creates are exponential. Each new range adds the size
 	 * of the previous one. For example, if you define an initialRange of 50, the ranges 
 	 * would look like this:
 	 *   <ul>
@@ -375,10 +518,11 @@ public class HSR {
 	 * This method can only deal with positive values.
 	 * 
 	 * @param name the name of the record
-	 * @param durationMillis duration in milliseconds
+	 * @param value the value you want to report
 	 * @param rangeValue a count that defines in which range 
+	 * @param initialRange the size of the initial range
 	 ***********************************************************************************/
-	public static HSRRecord addDurationRanged(String name, BigDecimal durationMillis, int rangeValue, int initialRange){	
+	public static HSRRecord addMetricRanged(String name, BigDecimal value, int rangeValue, int initialRange){	
 		
 		//------------------------------
 		// Calculate Range
@@ -400,9 +544,9 @@ public class HSR {
 		if(rangeEnd < 1000) {   endString   = "0".repeat(4-endString.length()) + endString; }
 		
 		//------------------------------
-		// Add Duration 
-		return addItem(HSRRecordType.Duration, name + " " + startString +"-"+endString)
-					.value(durationMillis)
+		// Add Metric 
+		return addItem(HSRRecordType.Metric, name + " " + startString +"-"+endString)
+					.value(value)
 					;
 	}
 	
@@ -418,7 +562,7 @@ public class HSR {
 						, getActiveItem()
 						, name);
 				
-		item.test(currentTest.get());
+		item.test(testname);
 		item.usecase(currentUsecase.get());
 		
 		HSRStatsEngine.addRecord(item);

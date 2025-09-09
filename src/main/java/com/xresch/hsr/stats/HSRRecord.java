@@ -18,8 +18,8 @@ public class HSRRecord {
 	
 	private transient HSRRecord parent = null;
 	
-	private String test = null;
-	private String usecase = null;
+	private String test = "";
+	private String usecase = "";
 	
 	private List<String> groups = new ArrayList<>();
 	private HSRRecordType type = HSRRecordType.Unknown;
@@ -28,7 +28,7 @@ public class HSRRecord {
 	private long startMillis = -1;
 	private long endTimeMillis = -1;
 	private HSRRecordStatus status = HSRRecordStatus.Success;
-	private String code = null;
+	private String code = "";
 	
 	
 	private BigDecimal value = null;
@@ -44,30 +44,36 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public enum HSRRecordType{
-		  Step(false)
-		, Group(false)
-		, User(true)
-		, Exception(true)
-		, Count(true)
-		, Duration(false)
-		, Unknown(true)
-		, Assert(true)
-		, Wait(false)
-		, MessageInfo(true)
-		, MessageWarn(true)
-		, MessageError(true)
+		  Step(false, false)
+		, Group(false, false)
+		, User(true, true)
+		, Exception(true, false)
+		, Count(true, false)
+		, Metric(false, false)
+		, Gauge(true, true)
+		, Unknown(true, false)
+		, Assert(true, false)
+		, Wait(false, false)
+		, MessageInfo(true, false)
+		, MessageWarn(true, false)
+		, MessageError(true, false)
 		;
 		
 		// Defines that the value is a count and not a duration 
 		private boolean isCount = false;
 		
-		private HSRRecordType(boolean isCount) {
+		// if the value is a Count, set here if it is a gauge
+		// HSRStatsEngine.generateFinalReport() will then use
+		// average instead of sum to aggregate the count values
+		private boolean isGauge = false;
+		
+		private HSRRecordType(boolean isCount, boolean isGauge) {
 			this.isCount = isCount;
+			this.isGauge = isGauge;
 		}
 		
-		public boolean isCount(){
-			return isCount;
-		}
+		public boolean isCount(){  return isCount; }
+		public boolean isGauge(){  return isGauge; }
 		
 	}
 	
@@ -389,10 +395,10 @@ public class HSRRecord {
 	 ******************************************************************/
 	public HSRRecord code(String code) {
 		
-		if(code != null && !code.isBlank() ) {	
-			this.code = code; 
-			identityChanged = true;
-		}
+		if(code == null) { code = ""; }
+		
+		this.code = code; 
+		identityChanged = true;
 		
 		return this;
 	}

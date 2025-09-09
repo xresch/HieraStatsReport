@@ -31,10 +31,10 @@ public class HSRRecordStats {
 	private HSRRecordState state;
 	private String test;		// the name of the test
 	private String usecase;		// the name of the usecase
-	private String metricName;		// the name of the metric, one of the items in the lost metricNames
+	private String name;		// the name of the metric, one of the items in the lost metricNames
 	private String groupsPath;		// 
-	private String metricPath;
-	private String metricPathFull;
+	private String path;
+	private String pathFull;
 	private String code = "";
 	private int granularity;
 	private String statsIdentifier;
@@ -266,10 +266,33 @@ public class HSRRecordStats {
 	
 
 	/***********************************************************************
+	 * Creates a clone of the statistic.
+	 * 
+	 * @param stats another instance to clone
+	 ***********************************************************************/
+	public HSRRecordStats(HSRRecordStats stats){	
+		//-----------------------------------
+		// Parse Message
+		// Intern Strings to reduce memory overhead
+		this.time = System.currentTimeMillis();
+		this.type = stats.type;
+		this.status = stats.status;
+		this.state = stats.status.state();
+		this.test = stats.test.intern();
+		this.usecase = stats.usecase;
+		this.name = stats.name;
+		this.groupsPath = stats.groupsPath;
+		this.path = stats.path;
+		this.pathFull = stats.pathFull;
+		this.code = stats.code;
+		this.granularity = stats.granularity;
+		this.statsIdentifier = stats.statsIdentifier;
+		this.values = new HashMap<>(stats.values);
+	}
+	/***********************************************************************
 	 * Creates a record containing request statistics.
 	 * 
-	 * @param statsRecordList the list to which the stats record should be added too.
-	 * @param record one of the records of the 
+	 * @param record a record to copy data from
 	 ***********************************************************************/
 	public HSRRecordStats(HSRRecord record){	
 		
@@ -282,10 +305,10 @@ public class HSRRecordStats {
 		this.state = record.status().state();
 		this.test = record.test().intern();
 		this.usecase = record.usecase().intern();
-		this.metricName = record.name().intern();
+		this.name = record.name().intern();
 		this.groupsPath = record.getGroupsAsString(" / ", "").intern();
-		this.metricPath = record.getPath().intern();
-		this.metricPathFull = record.getPathFull().intern();
+		this.path = record.getPath().intern();
+		this.pathFull = record.getPathFull().intern();
 		this.code = record.code().intern();
 		this.granularity = HSRConfig.getAggregationInterval();
 		this.statsIdentifier = record.getStatsIdentifier().intern();
@@ -389,6 +412,15 @@ public class HSRRecordStats {
 	
 	
 	/***********************************************************************
+	 * Creates a clone of the instance.
+	 ***********************************************************************/
+	public HSRRecordStats clone() {
+		
+		return new HSRRecordStats(this);
+
+	}
+	
+	/***********************************************************************
 	 * Returns a CSV header
 	 ***********************************************************************/
 	public static String getCSVHeader(String separator) {
@@ -406,7 +438,7 @@ public class HSRRecordStats {
 					+ separator + test.replace(separator, "_")
 					+ separator + usecase.replace(separator, "_")  
 					+ separator + groupsPath.replace(separator, "_").replace("\n", " ")  
-					+ separator + metricName.replace(separator, "_").replace("\n", " ")  
+					+ separator + name.replace(separator, "_").replace("\n", " ")  
 					+ separator + code.replace(separator, "_")  
 					+ separator + granularity
 					;
@@ -441,7 +473,7 @@ public class HSRRecordStats {
 		object.addProperty(RecordField.test.toString(), 	test);
 		object.addProperty(RecordField.usecase.toString(), 	usecase);
 		object.addProperty(RecordField.groups.toString(), 		groupsPath);
-		object.addProperty(RecordField.name.toString(), 		metricName);
+		object.addProperty(RecordField.name.toString(), 		name);
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
 		
@@ -586,7 +618,7 @@ GROUP BY "type","test","usecase","groups","metric","code","granularity"
 		valueList.add(test);
 		valueList.add(usecase);
 		valueList.add(groupsPath);
-		valueList.add(metricName);
+		valueList.add(name);
 		valueList.add(code);
 		valueList.add(granularity);
 				
@@ -679,24 +711,24 @@ GROUP BY "type","test","usecase","groups","metric","code","granularity"
 	 * Returns the name of the request, or null if this is a user record.
 	 ***********************************************************************/
 	public String getMetricName() {
-		return metricName;
+		return name;
 	}
 	
 	/******************************************************************
 	 * Returns the metric path of the metric including groups:
-	 *   {group}.{metricName}
+	 *   {group}.{name}
 	 ******************************************************************/
 	public String getMetricPath() {
-		return metricPath;
+		return path;
 	}
 	
 	/******************************************************************
 	 * Returns the full path of the metric including test, usecase
 	 * and groups:
-	 *   {test}.{usecase}.{group}.{metricName}
+	 *   {test}.{usecase}.{group}.{name}
 	 ******************************************************************/
 	public String getMetricPathFull() {
-		return metricPathFull;
+		return pathFull;
 	}
 	/******************************************************************
 	 * Returns the stats identifier

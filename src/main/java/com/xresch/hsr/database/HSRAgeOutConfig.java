@@ -38,7 +38,7 @@ public class HSRAgeOutConfig {
 	public Duration keep60MinFor() { return keep60MinFor; }
 	
 	/*************************************************************
-	 * Sets the Duration the granularity mentioned in the method
+	 * Sets the Metric the granularity mentioned in the method
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
@@ -50,7 +50,7 @@ public class HSRAgeOutConfig {
 	}
 	
 	/*************************************************************
-	 * Sets the Duration the granularity mentioned in the method
+	 * Sets the Metric the granularity mentioned in the method
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
@@ -62,7 +62,7 @@ public class HSRAgeOutConfig {
 	}
 	
 	/*************************************************************
-	 * Sets the Duration the granularity mentioned in the method
+	 * Sets the Metric the granularity mentioned in the method
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
@@ -74,7 +74,7 @@ public class HSRAgeOutConfig {
 	}
 	
 	/*************************************************************
-	 * Sets the Duration the granularity mentioned in the method
+	 * Sets the Metric the granularity mentioned in the method
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
@@ -86,7 +86,7 @@ public class HSRAgeOutConfig {
 	}
 	
 	/*************************************************************
-	 * Sets the Duration the granularity mentioned in the method
+	 * Sets the Metric the granularity mentioned in the method
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 

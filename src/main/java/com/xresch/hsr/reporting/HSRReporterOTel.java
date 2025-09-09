@@ -58,7 +58,7 @@ public class HSRReporterOTel implements HSRReporter {
         		PeriodicMetricReader
 					.builder(metricExporter)
 					// will be force flushed
-					//.setInterval(Duration.ofSeconds(reportingIntervalSeconds))
+					//.setInterval(Metric.ofSeconds(reportingIntervalSeconds))
 					.build();
         
         this.meterProvider = 
