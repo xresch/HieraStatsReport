@@ -160,10 +160,10 @@ public class HSRStatsEngine {
 			BigDecimal none = BigDecimal.ZERO;
 			
 			for(HSRRecord record : records) {
-				BigDecimal value = record.getMetricValue();
+				BigDecimal value = record.value();
 				if(value != null) {
 					
-					switch(record.getStatus().state()) {
+					switch(record.status().state()) {
 					
 						case ok:	ok_values.add(value);
 									ok_sum = ok_sum.add(value);
@@ -176,7 +176,7 @@ public class HSRStatsEngine {
 	
 					}
 					
-					switch(record.getStatus()) {
+					switch(record.status()) {
 					case Success: 	success = success.add(BigDecimal.ONE);  break;
 					case Failed: 	failed = failed.add(BigDecimal.ONE);  break;
 					case Skipped: 	skipped = skipped.add(BigDecimal.ONE);  break;

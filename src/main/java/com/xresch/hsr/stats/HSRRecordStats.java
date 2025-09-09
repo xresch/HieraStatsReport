@@ -35,7 +35,7 @@ public class HSRRecordStats {
 	private String groupsPath;		// 
 	private String metricPath;
 	private String metricPathFull;
-	private String code;
+	private String code = "";
 	private int granularity;
 	private String statsIdentifier;
 	private HashMap<String, BigDecimal> values = new HashMap<>();
@@ -277,16 +277,16 @@ public class HSRRecordStats {
 		// Parse Message
 		// Intern Strings to reduce memory overhead
 		this.time = System.currentTimeMillis();
-		this.type = record.getType();
-		this.status = record.getStatus();
-		this.state = record.getStatus().state();
-		this.test = record.getTest().intern();
-		this.usecase = record.getUsecase().intern();
-		this.metricName = record.getName().intern();
+		this.type = record.type();
+		this.status = record.status();
+		this.state = record.status().state();
+		this.test = record.test().intern();
+		this.usecase = record.usecase().intern();
+		this.metricName = record.name().intern();
 		this.groupsPath = record.getGroupsAsString(" / ", "").intern();
-		this.metricPath = record.getMetricPath().intern();
-		this.metricPathFull = record.getMetricPathFull().intern();
-		this.code = record.getResponseCode().intern();
+		this.metricPath = record.getPath().intern();
+		this.metricPathFull = record.getPathFull().intern();
+		this.code = record.code().intern();
 		this.granularity = HSRConfig.getAggregationInterval();
 		this.statsIdentifier = record.getStatsIdentifier().intern();
 
@@ -332,7 +332,7 @@ public class HSRRecordStats {
 		
 		//-----------------------------------
 		// Add Values
-		HSRRecordState state = record.getStatus().state();  
+		HSRRecordState state = record.status().state();  
 		
 		targetForData.addValue(state, RecordMetric.count, count);
 		targetForData.addValue(state, RecordMetric.min, min);

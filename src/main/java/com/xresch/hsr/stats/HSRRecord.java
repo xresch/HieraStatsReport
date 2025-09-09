@@ -23,12 +23,12 @@ public class HSRRecord {
 	
 	private List<String> groups = new ArrayList<>();
 	private HSRRecordType type = HSRRecordType.Unknown;
-	private String recordName = null;  // name of this item
+	private String name = null;  // name of this item
 	private String statsIdentifier = null;
 	private long startMillis = -1;
-	private long endTimestamp = -1;
+	private long endTimeMillis = -1;
 	private HSRRecordStatus status = HSRRecordStatus.Success;
-	private String responseCode = "000";
+	private String code = null;
 	
 	
 	private BigDecimal value = null;
@@ -48,6 +48,8 @@ public class HSRRecord {
 		, Group(false)
 		, User(true)
 		, Exception(true)
+		, Count(true)
+		, Duration(false)
 		, Unknown(true)
 		, Assert(true)
 		, Wait(false)
@@ -102,7 +104,7 @@ public class HSRRecord {
 	 * 
 	 * @param type the type of the record
 	 * @param parent the parent of this item
-	 * @param recordName the name of this record (e.g. Step name)
+	 * @param name the name of this record (e.g. Step name)
 	 *******************************************************************/
 	public HSRRecord(
 			  HSRRecordType type
@@ -110,8 +112,8 @@ public class HSRRecord {
 			){
 		
 		type(type);
-		recordName(recordName);
-		startTimestamp(System.currentTimeMillis()); // now
+		name(recordName);
+		startTime(System.currentTimeMillis()); // now
 		value(BigDecimal.ONE); 
 				
 	}
@@ -121,7 +123,7 @@ public class HSRRecord {
 	 * 
 	 * @param type the type of the record
 	 * @param parent the parent of this item
-	 * @param recordName the name of this record (e.g. Step name)
+	 * @param name the name of this record (e.g. Step name)
 	 *******************************************************************/
 	public HSRRecord(
 			  HSRRecordType type
@@ -129,11 +131,11 @@ public class HSRRecord {
 			, String recordName
 			){
 		
-		setParent(parent);
+		parent(parent);
 		
 		type(type);
-		recordName(recordName);
-		startTimestamp(System.currentTimeMillis()); // now
+		name(recordName);
+		startTime(System.currentTimeMillis()); // now
 		value(BigDecimal.ONE); 
 			
 	}
@@ -143,7 +145,7 @@ public class HSRRecord {
 	 * 
 	 * @param type the type of the record
 	 * @param parent the parent of this item
-	 * @param recordName the name of this record (e.g. Step name)
+	 * @param name the name of this record (e.g. Step name)
 	 * @param value the value of this record
 	 *******************************************************************/
 	public HSRRecord(
@@ -153,11 +155,11 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		setParent(parent);
-		recordName(recordName);
+		parent(parent);
+		name(recordName);
 		
 		type(type);
-		startTimestamp(System.currentTimeMillis()); // now
+		startTime(System.currentTimeMillis()); // now
 		value(value); 		
 	}
 	
@@ -168,7 +170,7 @@ public class HSRRecord {
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param usecase the name of the usecase (Use Case etc...)
 	 * @param groups the groups that are defining the hierarchy
-	 * @param recordName the name of this record (e.g. Step name)
+	 * @param name the name of this record (e.g. Step name)
 	 * @param value the value of this record
 	 *******************************************************************/
 	public HSRRecord(
@@ -184,11 +186,11 @@ public class HSRRecord {
 		
 		test(test);
 		usecase(usecase);
-		recordName(recordName);
+		name(recordName);
 		
 		groups(groups);
 		
-		startTimestamp(System.currentTimeMillis()); // now
+		startTime(System.currentTimeMillis()); // now
 		
 		value(value); 
 				
@@ -200,11 +202,11 @@ public class HSRRecord {
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param usecase the name of the usecase (Use Case etc...)
 	 * @param groups the groups that are defining the hierarchy
-	 * @param recordName the name of this record (e.g. Step name)
+	 * @param name the name of this record (e.g. Step name)
 	 * @param startTimestamp the start time of this record in epoch millis
-	 * @param endTimestamp the end time of this record in epoch millis
+	 * @param endTimeMillis the end time of this record in epoch millis
 	 * @param status the status of this record
-	 * @param responseCode custom responseCode of this record
+	 * @param code custom code of this record
 	 * @param message custom message of this record
 	 * @param value the value of this record
 	 *******************************************************************/
@@ -226,15 +228,15 @@ public class HSRRecord {
 		
 		test(test);
 		usecase(usecase);
-		recordName(recordName);
+		name(recordName);
 		
 		groups(groups);
 		
 		status(status);
-		responseCode(responseCode);
+		code(responseCode);
 		
-		startTimestamp(startTimestamp); 
-		endTimestamp(endTimestamp); 
+		startTime(startTimestamp); 
+		endTime(endTimestamp); 
 
 		value(value); 
 				
@@ -242,29 +244,29 @@ public class HSRRecord {
 	
 	/******************************************************************
 	 * This will also take over other values from the parent and override
-	 * them, including: test, usecase, recordName groups
+	 * them, including: test, usecase, name groups
 	 ******************************************************************/
-	public HSRRecord setParent(HSRRecord parent) {
+	public HSRRecord parent(HSRRecord parent) {
 		this.parent = parent;
 		
 		if(parent != null) {
 			//--------------------------
 			// Set Values from Parent
 			
-			if(parent.getTest() != null) {
-				test(parent.getTest());
+			if(parent.test() != null) {
+				test(parent.test());
 			}
 			
-			if(parent.getUsecase() != null) {
-				usecase(parent.getUsecase());
+			if(parent.usecase() != null) {
+				usecase(parent.usecase());
 			}
 					
 			//--------------------------
 			// Set Groups
-			List<String> unmodifyableGroups = parent.getGroups();
+			List<String> unmodifyableGroups = parent.groups();
 			groups(unmodifyableGroups);
 			
-			String parentName = parent.getName();
+			String parentName = parent.name();
 			if(parentName != null && !parentName.isBlank()) {
 				this.groups.add(parentName);
 			}
@@ -274,7 +276,14 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * Sets the name of the test
+	 * 
+	 ******************************************************************/
+	public HSRRecord parent() {
+		return parent;
+	}
+
+	/******************************************************************
+	 * Sets the name of the test.
 	 ******************************************************************/
 	public HSRRecord test(String test) {
 		if(test != null && !test.isBlank() ) {	
@@ -284,6 +293,13 @@ public class HSRRecord {
 		return this;
 	}
 	
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public String test() {
+		return test;
+	}
+
 	/******************************************************************
 	 * 
 	 ******************************************************************/
@@ -298,14 +314,28 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord recordName(String recordName) {
-		if(recordName != null && !recordName.isBlank() ) {	
-			this.recordName = recordName; 
+	public String usecase() {
+		return usecase;
+	}
+
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public HSRRecord name(String name) {
+		if(name != null && !name.isBlank() ) {	
+			this.name = name; 
 			identityChanged = true;
 		}
 		return this;
 	}
 	
+	/******************************************************************
+	 * Returns the name of the record-
+	 ******************************************************************/
+	public String name() {
+		return name;
+	}
+
 	/******************************************************************
 	 * 
 	 ******************************************************************/
@@ -319,16 +349,30 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord startTimestamp(long startTimestamp) {
-		this.startMillis = startTimestamp;
+	public BigDecimal value() {
+		return value;
+	}
+
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public HSRRecord startTime(long startTimeMillis) {
+		this.startMillis = startTimeMillis;
 		return this;
 	}
 	
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord endTimestamp(long endTimestamp) {
-		this.endTimestamp = endTimestamp;
+	public long startTime() {
+		return startMillis;
+	}
+
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public HSRRecord endTime(long endTimeMillis) {
+		this.endTimeMillis = endTimeMillis;
 		return this;
 	}
 	
@@ -336,18 +380,17 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord addProperty(String key, String value) {
-		properties.addProperty(key, value);
-		return this;
+	public long endTime() {
+		return endTimeMillis;
 	}
-	
+
 	/******************************************************************
-	 * 
+	 * Set a custom code for this record, e.g. a HTTP response code.
 	 ******************************************************************/
-	public HSRRecord responseCode(String responseCode) {
+	public HSRRecord code(String code) {
 		
-		if(responseCode != null && !responseCode.isBlank() ) {	
-			this.responseCode = responseCode; 
+		if(code != null && !code.isBlank() ) {	
+			this.code = code; 
 			identityChanged = true;
 		}
 		
@@ -357,6 +400,13 @@ public class HSRRecord {
 	
 	/******************************************************************
 	 * 
+	 ******************************************************************/
+	public String code() {
+		return code;
+	}
+
+	/******************************************************************
+	 * Set the status of this record.
 	 ******************************************************************/
 	public HSRRecord status(HSRRecordStatus status) {
 		
@@ -368,6 +418,13 @@ public class HSRRecord {
 		
 	}
 	
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public HSRRecordStatus status() {
+		return status;
+	}
+
 	/******************************************************************
 	 * Overrides the groups of this record
 	 ******************************************************************/
@@ -383,6 +440,15 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
+	 * BEHOLD YER BUTTOCKS!
+	 * The list that is returned cannot be modified.
+	 * Would return a clone, but doesn't do it for performance reasons.
+	 ******************************************************************/
+	public List<String> groups() {
+		return Collections.unmodifiableList(groups);
+	}
+
+	/******************************************************************
 	 * 
 	 ******************************************************************/
 	public HSRRecord type(HSRRecordType type) {
@@ -394,6 +460,13 @@ public class HSRRecord {
 		return this;
 	}
 	
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public HSRRecordType type() {
+		return type;
+	}
+
 	/***********************************************************************************
 	 * Ends a time measurement and set the duration as the value of this record.
 	 ***********************************************************************************/
@@ -420,8 +493,8 @@ public class HSRRecord {
 				this.statsIdentifier += "/" + getGroupsAsString("/", "");
 			}	
 			
-			//this.statsIdentifier += recordName + status.state() + responseCode;
-			this.statsIdentifier += recordName + responseCode;
+			//this.statsIdentifier += name + status.state() + code;
+			this.statsIdentifier += name + code;
 		}
 		
 		return statsIdentifier;
@@ -454,12 +527,12 @@ public class HSRRecord {
 		builder
 			.append( type.toString() ).append(" ")
 			.append( status ).append(" ")
-			.append( responseCode ).append(" ")
+			.append( code ).append(" ")
 			.append( startMillis ).append(" ")
-			.append( endTimestamp ).append(" ")
+			.append( endTimeMillis ).append(" ")
 			.append( usecase.replaceAll(" ", "_") ).append(" ")
 			.append( getGroupsAsString("/", "noGroup").replaceAll(" ", "_") ).append(" ")
-			.append( recordName.replaceAll(" ", "_") ).append(" ")
+			.append( name.replaceAll(" ", "_") ).append(" ")
 			.append( value ).append(" ")
 				;
 		
@@ -468,47 +541,17 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public String getTest() {
-		return test;
-	}
-	
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public String getUsecase() {
-		return usecase;
-	}
-
-	/******************************************************************
-	 * BEHOLD YER BUTTOCKS!
-	 * The list that is returned cannot be modified.
-	 * Would return a clone, but doesn't do it for performance reasons.
-	 ******************************************************************/
-	public List<String> getGroups() {
-		return Collections.unmodifiableList(groups);
-	}
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public HSRRecordType getType() {
-		return type;
-	}
-
-	/******************************************************************
 	 * Returns the full path of the metric including groups:
 	 *   {test}.{usecase}.{group}.{metricName}
 	 ******************************************************************/
-	public String getMetricPathFull() {
+	public String getPathFull() {
 		
 		if(groups.isEmpty()) {
 			return  test.replaceAll(" ", "_")
 					+ "."
 					+ usecase.replaceAll(" ", "_")
 					+ "."
-					+ recordName.replaceAll(" ", "_")
+					+ name.replaceAll(" ", "_")
 					;
 		}
 		
@@ -518,7 +561,7 @@ public class HSRRecord {
 				+ "."
 				+ getGroupsAsString(".", "noGroup").replaceAll(" ", "_")
 				+ "." 
-				+ recordName.replaceAll(" ", "_");
+				+ name.replaceAll(" ", "_");
 		
 	}
 	
@@ -526,15 +569,15 @@ public class HSRRecord {
 	 * Returns the metric path of the metric including groups:
 	 *   {group}.{metricName}
 	 ******************************************************************/
-	public String getMetricPath() {
+	public String getPath() {
 		
 		if(groups.isEmpty()) {
-			return recordName.replaceAll(" ", "_")
+			return name.replaceAll(" ", "_")
 		   ;
 		}
 		
 		return getGroupsAsString(".", "noGroup").replaceAll(" ", "_")
-		 + "." + recordName.replaceAll(" ", "_");
+		 + "." + name.replaceAll(" ", "_");
 		
 	}
 	
@@ -550,54 +593,13 @@ public class HSRRecord {
 		}
 		
 	}
-	
-	/******************************************************************
-	 * Returns the simple name of the metric
-	 ******************************************************************/
-	public String getName() {
-		return recordName;
-	}
 
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public long getStartTimestamp() {
-		return startMillis;
-	}
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public long getEndTimestamp() {
-		return endTimestamp;
-	}
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public HSRRecordStatus getStatus() {
-		return status;
-	}
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public String getResponseCode() {
-		return responseCode;
-	}
-	
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public HSRRecord getParent() {
-		return parent;
-	}
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public BigDecimal getMetricValue() {
-		return value;
-	}
+//	/******************************************************************
+//	 * 
+//	 ******************************************************************/
+//	public HSRRecord addProperty(String key, String value) {
+//		properties.addProperty(key, value);
+//		return this;
+//	}
 		
 }

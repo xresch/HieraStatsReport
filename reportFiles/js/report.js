@@ -161,6 +161,8 @@ const TYPE_STATS = {
 	Wait: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
 	Assert: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
 	Exception: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
+	Duration: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
+	Count: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
 	MessageInfo: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
 	MessageWarn: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
 	MessageError: { All: [], None: [], Success: [], Skipped: [], Fail: [] },
@@ -196,6 +198,8 @@ const ItemType = {
 	Wait: "Wait",
 	Assert: "Assert",
 	Exception: "Exception",
+	Duration: "Duration",
+	Count: "Count",
 	MessageInfo: "MessageInfo",
 	MessageWarn: "MessageWarn",
 	MessageError: "MessageError",
@@ -1065,9 +1069,14 @@ function draw(args){
 			case "overview": 			drawOverviewPage(); break;
 				
 			case "tableAll": 			drawTable(DATA, FIELDS_BASE_STATS); break;
+			case "tableGSDC": 			drawTable(DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration", "Count"]); break;
+			case "tableGSD": 			drawTable(DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration"]); break;
 			case "tableGroupsSteps": 	drawTable(DATA, FIELDS_BASE_STATS, ["Group", "Step"]); break;
 			case "tableGroups": 		drawTable(DATA, FIELDS_BASE_STATS, ["Group"]); break;
 			case "tableSteps": 			drawTable(DATA, FIELDS_BASE_STATS, ["Step"]); break;
+			case "tableDurations": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Duration"]); break;
+			case "tableCounts": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Count"]); break;
+			case "tableAsserts": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
 			case "tableAsserts": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
 			case "tableMessages": 		drawTable(DATA, FIELDS_BASE_COUNT, ["Message"]); break;
 			case "tableExceptions": 	drawTable(DATA, FIELDS_BASE_COUNT, ["Exception"]); break;

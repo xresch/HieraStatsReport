@@ -1,5 +1,6 @@
 package com.xresch.hierareport.test;
 
+import java.math.BigDecimal;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.jupiter.api.AfterAll;
@@ -78,8 +79,8 @@ public class TestExampleLoadTestEmulation {
 	void emulateLoadTest() throws InterruptedException {
 		
 		int users = 200;
-		int rampUpMillis = 100;
-		int executionsPerUser = 200;
+		int rampUpMillis = 200;
+		int executionsPerUser = 100;
 		
 		CountDownLatch latch = new CountDownLatch(users);
 		
@@ -130,18 +131,34 @@ public class TestExampleLoadTestEmulation {
 									
 									//-------------------------------
 									// 
-									HSR.start("050_RandomStatus");
+									HSR.start("050_RandomStatusAndCode");
 										Thread.sleep(HSR.Random.integer(10, 200));
-									HSR.end(HSR.Random.fromArray(HSRRecordStatus.values()));
+										String code = HSR.Random.fromArray(new String[] {"200", "200", "200", "200", "200", "401", "500"});
+									HSR.end(HSR.Random.fromArray(HSRRecordStatus.values()), code);
 									
 									//-------------------------------
 									// 
 									HSR.assertEquals("A"
 											, HSR.Random.fromArray(new String[] {"A", "A", "A", "B"})
 											,  "060_Assert_ContainsA");
-									
+
 								HSR.end();
 							HSR.end();
+							
+							//-------------------------------
+							// 
+							HSR.start("070_CustomValues");
+								Thread.sleep(HSR.Random.integer(100, 300));
+								
+								HSR.addCount("TiramisusEaten", HSR.Random.bigDecimal(0, 100));
+								HSR.addDuration("TimeWalked", HSR.Random.bigDecimal(100, 300));
+								
+								// simulate a correlation between count and duration
+								int multiplier = HSR.Random.integer(0, 10);
+								int count = multiplier * HSR.Random.integer(1, 900);
+								int duration = multiplier * HSR.Random.integer(10, 1000);
+								HSR.addDurationRanged("TableLoadTime", new BigDecimal(duration), count, 50);
+							HSR.end(HSR.Random.fromArray(HSRRecordStatus.values()));
 						
 						}
 					}catch(InterruptedException e) {

@@ -180,7 +180,7 @@ public class HSR {
 			item.test(currentTest.get());
 			item.usecase(currentUsecase.get());
 			
-			item.setParent(getActiveItem());
+			item.parent(getActiveItem());
 	
 			openItems().add(item);
 			activeItem.set(item);
@@ -197,7 +197,7 @@ public class HSR {
 	 * Status of the record will not be changed (default success).
 	 ***********************************************************************************/
 	public static HSRRecord end(){
-		return end(null); //keep status
+		return end(null, null); //keep status
 	}
 
 	/***********************************************************************************
@@ -207,17 +207,41 @@ public class HSR {
 	public static HSRRecord end(boolean status){
 		
 		if(status) {
-			return end(HSRRecordStatus.Success);
+			return end(HSRRecordStatus.Success, null);
 		}else {
-			return end(HSRRecordStatus.Failed);
+			return end(HSRRecordStatus.Failed, null);
 		}
 		
 	}
+	
+	/***********************************************************************************
+	 * Ends the record and returns it to be able to retrieve details.
+	 * @param status true if successful, false if failed.
+	 ***********************************************************************************/
+	public static HSRRecord endBoolean(boolean status){
+		
+		if(status) {
+			return end(HSRRecordStatus.Success, null);
+		}else {
+			return end(HSRRecordStatus.Failed, null);
+		}
+		
+	}
+	
 	/***********************************************************************************
 	 * Ends the record and returns it to be able to retrieve details.
 	 * @param status of the request, null if it should not be changed.
 	 ***********************************************************************************/
 	public static HSRRecord end(HSRRecordStatus status){
+		return end(status, null);
+	}
+	
+	/***********************************************************************************
+	 * Ends the record and returns it to be able to retrieve details.
+	 * @param status of the request, null if it should not be changed.
+	 * @param code a custom code, like a HTTP response code, can be null 
+	 ***********************************************************************************/
+	public static HSRRecord end(HSRRecordStatus status, String code){
 	
 		Stack<HSRRecord> items = openItems();
 		
@@ -233,21 +257,22 @@ public class HSR {
 			
 				itemToEnd.end();
 				itemToEnd.status(status);
-				logger.info("END   "+getLogIndendation(itemToEnd)+" "+itemToEnd.getName());	
+				itemToEnd.code(code);
+				logger.info("END   "+getLogIndendation(itemToEnd)+" "+itemToEnd.name());	
 				//----------------------------
 				// Add URL
-				try{
-					if(driver.get() != null){
-						itemToEnd.addProperty("URL", driver.get().getCurrentUrl());
-					}
-				}catch(Exception e){
-					//Ignore exceptions like SessionNotFoundException
-				}
+//				try{
+//					if(driver.get() != null){
+//						itemToEnd.addProperty("URL", driver.get().getCurrentUrl());
+//					}
+//				}catch(Exception e){
+//					//Ignore exceptions like SessionNotFoundException
+//				}
 				
 				//----------------------------
 				// Check Order
 				if(!itemToEnd.equals(getActiveItem())){
-					logger.warn("Items are not closed in the correct order: Ended Item: '"+itemToEnd.getName()+"' / Active Item'"+getActiveItem().getName()+"'");
+					logger.warn("Items are not closed in the correct order: Ended Item: '"+itemToEnd.name()+"' / Active Item'"+getActiveItem().name()+"'");
 				}
 				
 				//----------------------------
@@ -310,14 +335,77 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
+	 * Add a count to the report.
 	 ***********************************************************************************/
-//	public static HSRRecord addErrorMessage(String title, String message, Throwable e){
-//				
-//		return addItem(HSRRecordType.MessageError, title)
-//				.addMessage(message)
-//				.setException(e);
-//	}
+	public static HSRRecord addCount(String name, BigDecimal count){	
+		return addItem(HSRRecordType.Count, name)
+					.value(count)
+					;
+	}
+	
+	/***********************************************************************************
+	 * Add a duration to the report.
+	 * @param name the name of the record
+	 * @param durationMillis duration in milliseconds
+	 ***********************************************************************************/
+	public static HSRRecord addDuration(String name, BigDecimal durationMillis){	
+		return addItem(HSRRecordType.Duration, name)
+					.value(durationMillis)
+					;
+	}
+	
+	/***********************************************************************************
+	 * Add a duration to the report. A range will be appended to the name. This is useful
+	 * for measuring the impact of response times during load testing. For Example, you
+	 * could extract the number of total records from a table (rangeValue) and measure
+	 * the duration by the amount of data.
+	 * The ranges this method creates are exponential. Each new range has twice the size
+	 * of the previous one. For example, if you define an initialRange of 50, the ranges 
+	 * would look like this:
+	 *   <ul>
+	 *   	<li>0000-0050</li>
+	 *   	<li>0051-0100</li>
+	 *   	<li>0101-0200</li>
+	 *   	<li>0201-0400</li>
+	 *   	<li>and so on ...</li>
+	 *   <ul>  
+	 * 
+	 * The zeros are added so that alphabetical sorting will not mess up the order, at 
+	 * least up to a range of 9999.
+	 * This method can only deal with positive values.
+	 * 
+	 * @param name the name of the record
+	 * @param durationMillis duration in milliseconds
+	 * @param rangeValue a count that defines in which range 
+	 ***********************************************************************************/
+	public static HSRRecord addDurationRanged(String name, BigDecimal durationMillis, int rangeValue, int initialRange){	
+		
+		//------------------------------
+		// Calculate Range
+		rangeValue = java.lang.Math.abs(rangeValue);
+		
+		int rangeStart = 0;
+		int rangeEnd = java.lang.Math.abs(initialRange);
+		while( rangeValue > rangeEnd) {
+			rangeStart = rangeEnd + 1;
+			rangeEnd += rangeEnd;
+		}
+		
+		//------------------------------
+		// Add Leading Zeros
+		String startString = ""+rangeStart;
+		String endString = ""+rangeEnd;
+		
+		if(rangeStart < 1000) { startString = "0".repeat(4-startString.length()) + startString; }
+		if(rangeEnd < 1000) {   endString   = "0".repeat(4-endString.length()) + endString; }
+		
+		//------------------------------
+		// Add Duration 
+		return addItem(HSRRecordType.Duration, name + " " + startString +"-"+endString)
+					.value(durationMillis)
+					;
+	}
+	
 	
 	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
@@ -491,8 +579,8 @@ public class HSR {
 		// End Items
 		for(HSRRecord item : openItems()){
 			
-			logger.warn("Item was not ended properly: '"+item.getName()+"'");
-			item.end().recordName(item.getName()+"(NOT ENDED PROPERLY)");
+			logger.warn("Item was not ended properly: '"+item.name()+"'");
+			item.end().name(item.name()+"(NOT ENDED PROPERLY)");
 		}
 		
 	}
