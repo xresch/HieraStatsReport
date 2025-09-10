@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -30,7 +31,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static ArrayList<HSRReporter> reporterList = new ArrayList<>();
 	private static ArrayList<HSRUsecase> usecaseList = new ArrayList<>();
 	
-	//private static String testname = "UnknownTest";
+	private static TreeMap<String,String> properties = new TreeMap<>();
+
 	private static boolean debug = false;
 	private static boolean keepEmptyRecords = false;
 	
@@ -44,15 +46,19 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	protected static HSRHooks hooks = new HSRHooks();
 	
+	//----------------------
+	// Raw Data
 	private static boolean rawDataToSysout = false;
 	private static String rawdataLogPath = null;
 	private static BufferedWriter rawDataLogWriter = null;
 	
+	//----------------------
+	// Test Properties
 	public static final String EXECUTION_ID = UUID.randomUUID().toString();
 	public static final long STARTTIME_MILLIS = System.currentTimeMillis();
 	
 	private static boolean isEnabled = false; 
-	private static int aggregationIntervalSec = 15; 
+	private static int reportingIntervalSec = 15; 
 	
 	/******************************************************************
 	 * Starts HSR and the reporting engine.
@@ -65,9 +71,40 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	public static void enable(int reportingInterval) {
 		if(!isEnabled) {
 			isEnabled = true;
-			aggregationIntervalSec = reportingInterval;
+			reportingIntervalSec = reportingInterval;
+			
+			HSRConfig.addProperty("[HSR] reportingInterval", reportingInterval + " sec");
+			HSRConfig.addProperty("[HSR] startTimeMillis", "" + STARTTIME_MILLIS);
+			HSRConfig.addProperty("[HSR] startTime", HSR.Time.formatMillisAsTimestamp(STARTTIME_MILLIS));
+			HSRConfig.addProperty("[HSR] enableStatsProcessMemory", "" + enableStatsProcessMemory);
+			HSRConfig.addProperty("[HSR] enableStatsCPU", "" + enableStatsCPU);
+			HSRConfig.addProperty("[HSR] enableStatsHostMemory", "" + enableStatsHostMemory);
+			HSRConfig.addProperty("[HSR] enableStatsDisk", "" + enableStatsDisk);
+			HSRConfig.addProperty("[HSR] databaseAgeOut", "" + databaseAgeOut);
+			HSRConfig.addProperty("[HSR] rawDataToSysout", "" + rawDataToSysout);
+			HSRConfig.addProperty("[HSR] rawdataLogPath", "" + rawdataLogPath);
+			HSRConfig.addProperty("[HSR] executionID", "" + EXECUTION_ID);
+			HSRConfig.addProperty("[HSR] debug", "" + debug);
+			HSRConfig.addProperty("[HSR] keepEmptyRecords", "" + keepEmptyRecords);
+			
 			HSRStatsEngine.start(reportingInterval);
 		}
+	}
+	
+	/******************************************************************
+	 * Adds a property to the report.
+	 * These properties can be saved by different reporters at the end
+	 * of a test.
+	 ******************************************************************/
+	public static void addProperty(String name, String value) {
+		properties.put(name, value);
+	}
+	
+	/******************************************************************
+	 * Returns a clone of the list of properties
+	 ******************************************************************/
+	public static TreeMap<String,String> getProperties() {
+		return new TreeMap<>(properties);
 	}
 	
 	/******************************************************************
@@ -102,8 +139,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	public static void setHooks(HSRHooks hooks) {
 		HSRConfig.hooks = hooks;
 	}
-	
-	
 	
 	/******************************************************************
 	 * Returns the list of usecases.
@@ -270,7 +305,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 * Returns the report interval in seconds.
 	 ******************************************************************/
 	public static int getAggregationInterval() {
-		return aggregationIntervalSec;
+		return reportingIntervalSec;
 	}
 	
 	/******************************************************************

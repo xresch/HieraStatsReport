@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.zip.ZipInputStream;
 
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class HSRReporterHTML implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
 		//-----------------------------------
 		// Extract Base Report Files				  
     	InputStream in = HSRReporterHTML.class.getClassLoader().getResourceAsStream("com/xresch/hsr/files/reportFiles.zip.txt");
@@ -65,8 +66,13 @@ public class HSRReporterHTML implements HSRReporter {
     			
 		//-----------------------------------
 		// Add to data.js
-		String javascript = "DATA = DATA.concat(\n" + HSR.JSON.toJSON(finalRecordsArrayWithSeries) + "\n);";
+		String javascript = "DATA = DATA.concat(\n" + HSR.JSON.toJSON(summaryRecordsWithSeries) + "\n);";
 		HSRReportUtils.writeStringToFile(directoryPath, "data.js", javascript);
+		
+		//-----------------------------------
+		// Add to properties.js
+		String jsProperties = "PROPERTIES = PROPERTIES.concat(\n" + HSR.JSON.toJSON(properties) + "\n);";
+		HSRReportUtils.writeStringToFile(directoryPath, "properties.js", jsProperties);
 	}
 	
 

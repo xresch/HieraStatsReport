@@ -101,7 +101,7 @@ public class HSRStatsEngine {
 			statsengineThread.interrupt();
 			
 			aggregateAndReport();
-			generateFinalReport();
+			generateSummaryReport();
 			terminateReporters();
 		}
 		
@@ -532,7 +532,7 @@ public class HSRStatsEngine {
 	 * Aggregates the grouped statistics and makes one final report
 	 * 
 	 ***************************************************************************/
-	public static void generateFinalReport() {
+	public static void generateSummaryReport() {
 
 		if(groupedStats.isEmpty()) { return; }
 
@@ -577,7 +577,7 @@ public class HSRStatsEngine {
 						if(value != null) {
 							valuesTable.get(state, metric).add(value);
 						}else {
-							// use zero isntead of null to reduce file size
+							// use zero instead of null to reduce file size
 							valuesTable.get(state, metric).add(BigDecimal.ZERO);
 						}
 					}
@@ -673,7 +673,7 @@ public class HSRStatsEngine {
 		
 		//-------------------------------
 		// Report Stats
-		sendFinalReportToReporter(
+		sendSummaryReportToReporter(
 				  finalRecords
 				, finalRecordsArray
 			);
@@ -707,7 +707,7 @@ public class HSRStatsEngine {
      * Send the records to the Reporters, resets the existingRecords.
      * 
      ***************************************************************************/
-	private static void sendFinalReportToReporter(
+	private static void sendSummaryReportToReporter(
 			  ArrayList<HSRRecordStats> finalRecords
 			, JsonArray finalRecordsAarrayWithSeries
 		){
@@ -726,6 +726,7 @@ public class HSRStatsEngine {
 		
 		//-------------------------
 		// Send Clone of list to each Reporter
+		TreeMap<String,String> properties = HSRConfig.getProperties();
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			ArrayList<HSRRecordStats> clone = new ArrayList<>();
 			clone.addAll(finalRecords);
@@ -736,6 +737,7 @@ public class HSRStatsEngine {
 				reporter.reportSummary(
 						  clone
 						, finalRecordsAarrayWithSeries.deepCopy()
+						, properties
 					);
 			}catch(Exception e) {
 				logger.error("Exception while reporting data.", e);

@@ -36,10 +36,7 @@ public class HSRRecord {
 	private String logString = null;
 	
 	private boolean identityChanged = true;
-	
-	private JsonObject properties = new JsonObject();
-	
-	
+		
 	/******************************************************************
 	 * 
 	 ******************************************************************/
@@ -600,12 +597,5 @@ public class HSRRecord {
 		
 	}
 
-//	/******************************************************************
-//	 * 
-//	 ******************************************************************/
-//	public HSRRecord addProperty(String key, String value) {
-//		properties.addProperty(key, value);
-//		return this;
-//	}
 		
 }

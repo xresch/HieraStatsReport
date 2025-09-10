@@ -1,6 +1,7 @@
 package com.xresch.hsr.reporting;
 
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.xresch.hsr.base.HSRConfig;
@@ -69,7 +70,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -1,6 +1,7 @@
 package com.xresch.hsr.reporting;
 
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.xresch.hsr.base.HSR;
@@ -32,11 +33,11 @@ public class HSRReporterSysoutJson implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
 		System.out.println( "=============================================================");
 		System.out.println( "=================== JSON: SUMMARY STATISTICS ================");
 		System.out.println(   "=============================================================");
-		System.out.println( HSR.JSON.toJSONPretty(finalRecordsArrayWithSeries)  );
+		System.out.println( HSR.JSON.toJSONPretty(summaryRecordsWithSeries)  );
 	}
 	
 	/****************************************************************************

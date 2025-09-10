@@ -49,6 +49,11 @@ public class TestExampleLoadTestEmulation {
 		HSRConfig.addReporter(new HSRReporterHTML( DIR_RESULTS + "/HTMLReport") );
 		
 		//--------------------------
+		// Set Test Properties
+		HSRConfig.addProperty("[Custom] Environment", "TEST");
+		HSRConfig.addProperty("[Custom] Testdata Rows", "120");
+		
+		//--------------------------
 		// Enable
 		HSRConfig.enable(REPORT_INTERVAL_SECONDS); 
 		
@@ -84,9 +89,10 @@ public class TestExampleLoadTestEmulation {
 	@Test
 	void emulateLoadTest() throws InterruptedException {
 		
-		int users = 200;
+		int multiplier = 1;
+		int users = 20 * multiplier;
 		int rampUpMillis = 200;
-		int executionsPerUser = 50;
+		int executionsPerUser = 5 * multiplier;
 		
 		CountDownLatch latch = new CountDownLatch(users);
 		

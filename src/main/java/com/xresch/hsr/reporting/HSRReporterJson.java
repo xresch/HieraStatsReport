@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +103,7 @@ public class HSRReporterJson implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
 		
 		//--------------------------------
 		// Summary File Path
@@ -119,7 +120,7 @@ public class HSRReporterJson implements HSRReporter {
 		// Create File
 		BufferedWriter writer = createFile(summaryFilePath, false);
 		try {
-			writer.write(HSR.JSON.toJSON(finalRecordsArrayWithSeries));
+			writer.write(HSR.JSON.toJSON(summaryRecordsWithSeries));
 			writer.flush();
 			
 		} catch (IOException e) {

@@ -1,6 +1,7 @@
 package com.xresch.hsr.reporting;
 
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.xresch.hsr.stats.HSRRecordStats;
@@ -16,20 +17,25 @@ import com.xresch.hsr.stats.HSRRecordStats;
  **************************************************************************************************************/
 public interface HSRReporter {
 
-	/***********************************************************************
+	/******************************************************************************************
 	 * This method will be called periodically based on the report interval.
 	 * 
 	 * @param records aggregated record statistics
-	 ***********************************************************************/
+	 ******************************************************************************************/
 	public void reportRecords(ArrayList<HSRRecordStats> records);
 	
-	/***********************************************************************
+	/******************************************************************************************
 	 * This method will be called once at the end of the test.
 	 * 
-	 * @param finalRecords the final statistics over the whole test
-	 * @param finalRecordsArrayWithSeries the final statistics as a JsonArray
-	 ***********************************************************************/
-	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries);
+	 * @param summaryRecords the final statistics over the whole test
+	 * @param summaryRecordsWithSeries the final statistics as a JsonArray
+	 * @param properties the properties that have been added with HSRConfig.addProperties()
+	 ******************************************************************************************/
+	public void reportSummary(
+			  ArrayList<HSRRecordStats> summaryRecords
+			, JsonArray summaryRecordsWithSeries
+			, TreeMap<String, String> properties
+			);
 	
 	public void terminate();
 	

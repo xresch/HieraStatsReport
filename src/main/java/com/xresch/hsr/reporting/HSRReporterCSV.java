@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,7 @@ public class HSRReporterCSV implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
 		
 		//----------------------------
 		// Make Summary File
@@ -94,7 +95,7 @@ public class HSRReporterCSV implements HSRReporter {
 		
 		//----------------------------
 		// Report to Summary File
-		reportToFile(summaryFilePath, finalRecords);
+		reportToFile(summaryFilePath, summaryRecords);
 		
 	}
 	

@@ -3,6 +3,7 @@ package com.xresch.hsr.reporting;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.google.gson.JsonArray;
@@ -107,7 +108,7 @@ public class HSRReporterOTel implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> finalRecords, JsonArray finalRecordsArrayWithSeries) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
 		// do nothing
 		
 	}
