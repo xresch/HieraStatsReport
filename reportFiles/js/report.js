@@ -10,11 +10,12 @@
  * GLOBALS
  *************************************************************************************/
 
-//declare with var and do not initialize, this will work when datafiles.js creates
+//declare with var and do not initialize, this will work when filelist.js creates
 //this variable or not.
-var DATA_FILES;
+var FILELIST;
 
 var DATA = [];
+var PROPERTIES = [];
 
 ALL_ITEMS_FLAT = [];
 
@@ -247,14 +248,12 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 	seriesData.name = record.name;
 		seriesData.metricName = metricName;
 	if(!fieldname.startsWith("nok") ){
-		seriesData.time = record.series.ok.time;
+		seriesData.time = record.series.time;
 		seriesData[metricName] = record.series.ok[metricName];
 	}else{
-		seriesData.time = record.series.nok.time;
+		seriesData.time = record.series.time;
 		seriesData[metricName] = record.series.nok[metricName];
 	}
-	
-
 	
 	//----------------------
 	// Create Link
@@ -327,12 +326,12 @@ function loadData(){
 	
 	//------------------------------------------
 	//if not defined set data.js as default
-	if(DATA_FILES == undefined){
-		DATA_FILES = ["./data.js"];
+	if(FILELIST == undefined){
+		FILELIST = ["./data.js"];
 	}
 	//------------------------------------------
 	//dedup the files so nothing is loaded twice
-	DATA_FILES = dedupArray(DATA_FILES);
+	FILELIST = dedupArray(FILELIST);
 
 	//------------------------------------------
 	// Concatenate all data into DATA
@@ -344,30 +343,30 @@ function loadData(){
 /**************************************************************************************
  * Load all javascript files containing data by chaining the method together. 
  * After one file got loaded trigger the method again with "onload" to load the next
- * file defined in the DATA_FILES array. This will prevent concurrency issues.
+ * file defined in the FILELIST array. This will prevent concurrency issues.
  * Execute initialize()-method after the last file was loaded.
  * 
  *************************************************************************************/
 function loadDataScript(scriptIndex){
 	
 	
-	if(scriptIndex < DATA_FILES.length){
+	if(scriptIndex < FILELIST.length){
 		
 		var head = document.getElementsByTagName('head')[0];
 		
 		var script = document.createElement('script');
 		
-		console.log("Load data file >> "+DATA_FILES[scriptIndex]);
-		script.src = DATA_FILES[scriptIndex];
+		console.log("Load data file >> "+FILELIST[scriptIndex]);
+		script.src = FILELIST[scriptIndex];
 		script.type = "text/javascript";
 		
-		if((scriptIndex+1) == DATA_FILES.length){
+		if((scriptIndex+1) == FILELIST.length){
 			script.onload = function(){
 				console.log("all data loaded");
 				initialize();
 			}
 			script.onerror = function(){
-				console.log("Could not load file >> "+DATA_FILES[scriptIndex]);
+				console.log("Could not load file >> "+FILELIST[scriptIndex]);
 				initialize();
 			}
 		}else{
@@ -375,7 +374,7 @@ function loadDataScript(scriptIndex){
 				loadDataScript(scriptIndex+1);
 			}
 			script.onerror = function(){
-				console.log("Could not load file >> "+DATA_FILES[scriptIndex]);
+				console.log("Could not load file >> "+FILELIST[scriptIndex]);
 				loadDataScript(scriptIndex+1);
 			}
 		}
@@ -865,6 +864,48 @@ function drawOverviewPage(){
 
 /**************************************************************************************
  * 
+ *************************************************************************************/
+function drawProperties(target){
+	
+	target = $(target);
+	
+	for(i in PROPERTIES){
+		
+		//-----------------------------------
+		// title
+		let title = "Properties"
+		if(i >= 1){  title = "More Properties"; }
+		
+		if(i > 1){
+			for(k = 1; k < i; k++){
+				title = "Even " + title;
+			}
+		}
+		
+		target.append('<h2>' + title + '</h2>');
+		//-----------------------------------
+		// Render Data
+		let rendererSettings = {
+				data: PROPERTIES[i],
+				rendererSettings: {
+					table: {
+						filterable: true
+						, verticalize: true
+						, verticalizelabelize: false
+						, stickyheader: true
+						}
+				},
+			};
+				
+		let renderResult = CFW.render.getRenderer('table').render(rendererSettings);	
+		
+		target.append(renderResult);
+	}
+
+}
+
+/**************************************************************************************
+ * 
  * @param baseOptions the object that where the options should be added.
  * @param fieldArray array of fieldnames
  *************************************************************************************/
@@ -894,14 +935,14 @@ function addFieldSortOptions(baseOptions, fieldArray) {
  * 
  * @param boolean printDetails print more details 
  *************************************************************************************/
-function drawTable(data, showFields, typeFilterArray){
+function drawTable(target, data, showFields, typeFilterArray){
 	
 
 	if(!isArrayWithData(data)){
 		return;
 	}
 	
-	var parent = $("#content");
+	var parent = $(target);
 	parent.html('');
 	
 
@@ -934,11 +975,10 @@ function drawTable(data, showFields, typeFilterArray){
 		// Prepare actions
 		
 		var actionButtons = [ ];		
-		var bulkActions = {};		
 		
 		//-------------------------
 		// Details Button
-		actionButtons.push(
+/* 		actionButtons.push(
 			function (record, id){ 
 				
 				let htmlString = '<button class="btn btn-primary btn-sm" alt="Edit" title="Edit" '
@@ -947,7 +987,7 @@ function drawTable(data, showFields, typeFilterArray){
 						+ '</button>';
 
 				return htmlString;
-			});
+			}); */
 		
 		//-----------------------------------
 		// Render Data
@@ -962,9 +1002,6 @@ function drawTable(data, showFields, typeFilterArray){
 			 	labels: FIELDLABELS,
 			 	customizers: CUSTOMIZERS,
 				actions: actionButtons,
-				
-				bulkActionsPos: "top",
-
 				data: data,
 				rendererSettings: {
 					csv:{
@@ -1061,25 +1098,27 @@ function draw(args){
 	
 	cleanup();
 	
+	let target = $('#content');
 	showLoader(true);
 	
 	window.setTimeout( 
 	function(){
 		switch(args.view){
 			case "overview": 			drawOverviewPage(); break;
+			case "properties": 			drawProperties(target); break;
 				
-			case "tableAll": 			drawTable(DATA, FIELDS_BASE_STATS); break;
-			case "tableGSDC": 			drawTable(DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration", "Count"]); break;
-			case "tableGSD": 			drawTable(DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration"]); break;
-			case "tableGroupsSteps": 	drawTable(DATA, FIELDS_BASE_STATS, ["Group", "Step"]); break;
-			case "tableGroups": 		drawTable(DATA, FIELDS_BASE_STATS, ["Group"]); break;
-			case "tableSteps": 			drawTable(DATA, FIELDS_BASE_STATS, ["Step"]); break;
-			case "tableDurations": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Duration"]); break;
-			case "tableCounts": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Count"]); break;
-			case "tableAsserts": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
-			case "tableAsserts": 		drawTable(DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
-			case "tableMessages": 		drawTable(DATA, FIELDS_BASE_COUNT, ["Message"]); break;
-			case "tableExceptions": 	drawTable(DATA, FIELDS_BASE_COUNT, ["Exception"]); break;
+			case "tableAll": 			drawTable(target, DATA, FIELDS_BASE_STATS); break;
+			case "tableGSDC": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration", "Count"]); break;
+			case "tableGSD": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration"]); break;
+			case "tableGroupsSteps": 	drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step"]); break;
+			case "tableGroups": 		drawTable(target, DATA, FIELDS_BASE_STATS, ["Group"]); break;
+			case "tableSteps": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Step"]); break;
+			case "tableDurations": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Duration"]); break;
+			case "tableCounts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Count"]); break;
+			case "tableAsserts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
+			case "tableAsserts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
+			case "tableMessages": 		drawTable(target, DATA, FIELDS_BASE_COUNT, ["Message"]); break;
+			case "tableExceptions": 	drawTable(target, DATA, FIELDS_BASE_COUNT, ["Exception"]); break;
 			
 			case "csv": 				drawCSV(); break;
 			case "json": 				drawJSON(); break;

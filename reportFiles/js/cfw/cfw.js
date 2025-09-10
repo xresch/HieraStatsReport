@@ -244,7 +244,7 @@ function cfw_render_createDataviewerDefaults(){
  * CFW FRAMEWORK STRUCTURE
  * -----------------------
  ********************************************************************/
-
+var CFWL = function(name, fallback){ return fallback; } 
 var CFW = {
 	global: {
 		formID: 'cfw-formID',
