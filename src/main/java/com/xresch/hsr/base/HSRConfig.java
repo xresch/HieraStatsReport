@@ -34,6 +34,11 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static boolean debug = false;
 	private static boolean keepEmptyRecords = false;
 	
+	private static boolean enableStatsProcessMemory = true;
+	private static boolean enableStatsCPU = true;
+	private static boolean enableStatsHostMemory= true;
+	private static boolean enableStatsDisk = true;
+	
 	private static boolean databaseAgeOut = false;
 	private static HSRAgeOutConfig databaseAgeOutConfig = new HSRAgeOutConfig(); // use defaults
 	
@@ -266,6 +271,62 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 ******************************************************************/
 	public static int getAggregationInterval() {
 		return aggregationIntervalSec;
+	}
+	
+	/******************************************************************
+	 * Toggle if statistics for the process memory should be collected.
+	 ******************************************************************/
+	public static void statsProcessMemory(boolean isEnabled) {
+		enableStatsProcessMemory = isEnabled;
+	}
+	
+	/******************************************************************
+	 * Return if statistics for the process memory should be collected.
+	 ******************************************************************/
+	public static boolean statsProcessMemory() {
+		return enableStatsProcessMemory;
+	}
+	
+	/******************************************************************
+	 * Toggle if statistics for the host memory should be collected.
+	 ******************************************************************/
+	public static void statsHostMemory(boolean isEnabled) {
+		enableStatsHostMemory = isEnabled;
+	}
+	
+	/******************************************************************
+	 * Return if statistics for the host memory should be collected.
+	 ******************************************************************/
+	public static boolean statsHostMemory() {
+		return enableStatsHostMemory;
+	}
+	
+	/******************************************************************
+	 * Toggle if statistics for the CPU Usage should be collected.
+	 ******************************************************************/
+	public static void statsCPU(boolean isEnabled) {
+		enableStatsCPU = isEnabled;
+	}
+	
+	/******************************************************************
+	 * Return if statistics for the CPU Usage should be collected.
+	 ******************************************************************/
+	public static boolean statsCPU() {
+		return enableStatsCPU;
+	}
+	
+	/******************************************************************
+	 * Toggle if statistics for the Disk Usage should be collected.
+	 ******************************************************************/
+	public static void statsDisk(boolean isEnabled) {
+		enableStatsDisk = isEnabled;
+	}
+	
+	/******************************************************************
+	 * Return if statistics for the Disk Usage should be collected.
+	 ******************************************************************/
+	public static boolean statsDisk() {
+		return enableStatsDisk;
 	}
 	
 	/******************************************************************

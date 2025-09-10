@@ -33,6 +33,12 @@ public class TestExampleLoadTestEmulation {
 		// Log Levels
 		HSRConfig.setLogLevelRoot(Level.ERROR);
 		
+		//--------------------------
+		// Disabling System Usage Stats
+//		HSRConfig.statsProcessMemory(false);
+//		HSRConfig.statsHostMemory(false);
+//		HSRConfig.statsCPU(false);
+//		HSRConfig.statsDisk(false);
 		
 		//--------------------------
 		// Define Reporters

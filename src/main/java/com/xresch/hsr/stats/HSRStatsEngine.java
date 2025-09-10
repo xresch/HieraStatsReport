@@ -141,114 +141,119 @@ public class HSRStatsEngine {
 			
 			//------------------------------
 			// Process Memory
-			try {
-				MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-				double usage = memoryMXBean.getHeapMemoryUsage().getUsed();
-				double committed = memoryMXBean.getHeapMemoryUsage().getCommitted();
-				double max = memoryMXBean.getHeapMemoryUsage().getMax();
-				double usageMB = usage / MB;
-				double committedMB = committed / MB;
-				double maxMB = max / MB;
-				double usagePercent = (usage * 100.0) / max;
-				
-				addRecord(
-					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [MB]")
-						.test(test)
-						.groups(systemUsageGroup)
-						.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
-					);
-				
-				addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "Process Memory Committed [MB]")
-						.test(test)
-						.groups(systemUsageGroup)
-						.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
+			if(HSRConfig.statsProcessMemory()) {
+				try {
+					MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+					double usage = memoryMXBean.getHeapMemoryUsage().getUsed();
+					double committed = memoryMXBean.getHeapMemoryUsage().getCommitted();
+					double max = memoryMXBean.getHeapMemoryUsage().getMax();
+					double usageMB = usage / MB;
+					double committedMB = committed / MB;
+					double maxMB = max / MB;
+					double usagePercent = (usage * 100.0) / max;
+					
+					addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [MB]")
+							.test(test)
+							.groups(systemUsageGroup)
+							.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
 						);
-				
-				addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "Process Memory Max [MB]")
-						.test(test)
-						.groups(systemUsageGroup)
-						.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
-					);
-				
-				addRecord(
-					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [%]")
-						.test(test)
-						.groups(systemUsageGroup)
-						.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
-					);
-
-			}catch(Throwable e) {
-				logger.error("Error while reading process memory: "+e.getMessage(), e);
+					
+					addRecord(
+							new HSRRecord(HSRRecordType.Gauge, "Process Memory Committed [MB]")
+							.test(test)
+							.groups(systemUsageGroup)
+							.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
+							);
+					
+					addRecord(
+							new HSRRecord(HSRRecordType.Gauge, "Process Memory Max [MB]")
+							.test(test)
+							.groups(systemUsageGroup)
+							.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
+						);
+					
+					addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [%]")
+							.test(test)
+							.groups(systemUsageGroup)
+							.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
+						);
+	
+				}catch(Throwable e) {
+					logger.error("Error while reading process memory: "+e.getMessage(), e);
+				}
 			}
 			
 			//------------------------------
 			// Host Memory
-			try {
-	        GlobalMemory memory = systemInfo.getHardware().getMemory();
-	
-	        long memTotal = memory.getTotal();
-	        long memAvailable = memory.getAvailable();
-	        long memUsed = memTotal - memAvailable;
-	
-	        double memUsagePercent = (memUsed * 100.0) / memTotal;
-	
-	        addRecord(
-					new HSRRecord(HSRRecordType.Gauge, "Host Memory Usage [%]")
-						.test(test)
-						.groups(systemUsageGroup)
-						.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
-					);
-			}catch(Throwable e) {
-				logger.error("Error while reading host memory: "+e.getMessage(), e);
-			}
-	        
-			//------------------------------
-			// CPU
-			try {
-		        CentralProcessor processor = systemInfo.getHardware().getProcessor();
+			if(HSRConfig.statsHostMemory()) {
+				try {
+		        GlobalMemory memory = systemInfo.getHardware().getMemory();
 		
-		        double cpuUsage = 100 * processor.getSystemCpuLoad(500);
-	
-				addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "CPU Usage [%]")
+		        long memTotal = memory.getTotal();
+		        long memAvailable = memory.getAvailable();
+		        long memUsed = memTotal - memAvailable;
+		
+		        double memUsagePercent = (memUsed * 100.0) / memTotal;
+		
+		        addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "Host Memory Usage [%]")
 							.test(test)
 							.groups(systemUsageGroup)
-							.value(new BigDecimal(cpuUsage).setScale(1, RoundingMode.HALF_UP))
+							.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
 						);
-			}catch(Throwable e) {
-				logger.error("Error while reading CPU usage: "+e.getMessage(), e);
+				}catch(Throwable e) {
+					logger.error("Error while reading host memory: "+e.getMessage(), e);
+				}
 			}
-
 			//------------------------------
-			// Disk Usage
-			try {
-				OperatingSystem os = systemInfo.getOperatingSystem();
-		        for (OSFileStore fs : os.getFileSystem().getFileStores()) {
-		            
-		        	String diskName = fs.getName() +" ("+ fs.getMount() + ")";
-		        	long diskTotal = fs.getTotalSpace();
-		        	
-		        	// skip disks that have no size
-		        	if(diskTotal == 0) { continue; }
-		        	
-		            long diskUsable = fs.getUsableSpace();
-		            long diskUsed = diskTotal - diskUsable;
+			// CPU
+			if(HSRConfig.statsCPU()) {
+				try {
+			        CentralProcessor processor = systemInfo.getHardware().getProcessor();
+			
+			        double cpuUsage = 100 * processor.getSystemCpuLoad(500);
 		
-		            double diskUsagePercent = (diskUsed * 100.0) / diskTotal;
-		           
 					addRecord(
-							new HSRRecord(HSRRecordType.Gauge, "Disk Usage [%]: "+diskName)
+							new HSRRecord(HSRRecordType.Gauge, "CPU Usage [%]")
 								.test(test)
 								.groups(systemUsageGroup)
-								.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
+								.value(new BigDecimal(cpuUsage).setScale(1, RoundingMode.HALF_UP))
 							);
-		        }
-			}catch(Throwable e) {
-				logger.error("Error while reading Disk usage: "+e.getMessage(), e);
-			}   
+				}catch(Throwable e) {
+					logger.error("Error while reading CPU usage: "+e.getMessage(), e);
+				}
+			}
+			//------------------------------
+			// Disk Usage
+			if(HSRConfig.statsDisk()) {
+				try {
+					OperatingSystem os = systemInfo.getOperatingSystem();
+			        for (OSFileStore fs : os.getFileSystem().getFileStores()) {
+			            
+			        	String diskName = fs.getName() +" ("+ fs.getMount() + ")";
+			        	long diskTotal = fs.getTotalSpace();
+			        	
+			        	// skip disks that have no size
+			        	if(diskTotal == 0) { continue; }
+			        	
+			            long diskUsable = fs.getUsableSpace();
+			            long diskUsed = diskTotal - diskUsable;
 			
+			            double diskUsagePercent = (diskUsed * 100.0) / diskTotal;
+			           
+						addRecord(
+								new HSRRecord(HSRRecordType.Gauge, "Disk Usage [%]: "+diskName)
+									.test(test)
+									.groups(systemUsageGroup)
+									.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
+								);
+			        }
+				}catch(Throwable e) {
+					logger.error("Error while reading Disk usage: "+e.getMessage(), e);
+				}   
+			}
 			//------------------------------
 			// Network I/O
 			
@@ -551,19 +556,13 @@ public class HSRStatsEngine {
 			//---------------------------
 			// Make a Matrix of all values by state and metric
 			Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTable = HashBasedTable.create();
-			
+			ArrayList<BigDecimal> timeArray = new ArrayList<>();
 			for(HSRRecordStats stats : currentGroupedStats) {
 				
+				timeArray.add( new BigDecimal(stats.getTime()) );
+				
 				for(HSRRecordState state : HSRRecordState.values()) {
-					
-					//--------------------------------
-					// Add Time Array
-					if( ! valuesTable.contains(state, "time")) {
-						valuesTable.put(state, "time", new ArrayList<>());
-					}
-					valuesTable.get(state, "time")
-							   .add( new BigDecimal(stats.getTime()) );
-					
+										
 					//--------------------------------
 					// Add Array for Each Metric
 					for(RecordMetric recordMetric : RecordMetric.values()) { 
@@ -576,10 +575,11 @@ public class HSRStatsEngine {
 						BigDecimal value = stats.getValue(state, recordMetric);
 						
 						if(value != null) {
-							
 							valuesTable.get(state, metric).add(value);
+						}else {
+							// use zero isntead of null to reduce file size
+							valuesTable.get(state, metric).add(BigDecimal.ZERO);
 						}
-						
 					}
 				}
 			}
@@ -664,6 +664,7 @@ public class HSRStatsEngine {
 											.getAsJsonObject()
 											;
 				
+				series.add("time", HSR.JSON.toJSONElement(timeArray));
 				recordObject.add("series", series);
 				finalRecordsArray.add(recordObject);
 			}
