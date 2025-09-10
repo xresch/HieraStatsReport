@@ -74,8 +74,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			reportingIntervalSec = reportingInterval;
 			
 			HSRConfig.addProperty("[HSR] reportingInterval", reportingInterval + " sec");
-			HSRConfig.addProperty("[HSR] startTimeMillis", "" + STARTTIME_MILLIS);
-			HSRConfig.addProperty("[HSR] startTime", HSR.Time.formatMillisAsTimestamp(STARTTIME_MILLIS));
+			HSRConfig.addProperty("[HSR] timeStartMillis", "" + STARTTIME_MILLIS);
+			HSRConfig.addProperty("[HSR] timeStartTimestamp", HSR.Time.formatMillisAsTimestamp(STARTTIME_MILLIS));
 			HSRConfig.addProperty("[HSR] enableStatsProcessMemory", "" + enableStatsProcessMemory);
 			HSRConfig.addProperty("[HSR] enableStatsCPU", "" + enableStatsCPU);
 			HSRConfig.addProperty("[HSR] enableStatsHostMemory", "" + enableStatsHostMemory);

@@ -194,17 +194,19 @@ const ItemStatus = {
 }
 
 const ItemType = {
-	Group: "Group",
-	Step: "Step",
-	Wait: "Wait",
-	Assert: "Assert",
-	Exception: "Exception",
-	Duration: "Duration",
-	Count: "Count",
-	MessageInfo: "MessageInfo",
-	MessageWarn: "MessageWarn",
-	MessageError: "MessageError",
-	Unknown: "Unknown"
+	Group: 			{name: "Group"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Step: 			{name: "Step"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Wait: 			{name: "Wait"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Assert: 		{name: "Assert"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Exception: 		{name: "Exception"		, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Metric: 		{name: "Metric"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Count: 			{name: "Count"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Gauge: 			{name: "Gauge"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	User: 			{name: "User"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	MessageInfo: 	{name: "MessageInfo"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	MessageWarn: 	{name: "MessageWarn"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	MessageError: 	{name: "MessageError"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Unknown: 		{name: "Unknown"		, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
 }
 
 const StatusIcon = {
@@ -214,7 +216,7 @@ const StatusIcon = {
 		Unknown: '<i class="fa fa-question-circle" style="color: gray;"></i>&nbsp;'
 }
 
-const TypeIcon = {
+/* const TypeIcon = {
 		Group: '<i class="fa fa-folder-open"></i>&nbsp;',
 		Step: '<i class="fa fa-gear"></i>&nbsp;',
 		Wait: '<i class="fa fa-clock-o"></i>&nbsp;',
@@ -224,7 +226,7 @@ const TypeIcon = {
 		MessageWarn: '<i class="fa fa-warning"  style="color: orange;"></i>&nbsp;',
 		MessageError: '<i class="fa fa-times-circle"  style="color: red;"></i>&nbsp;',
 		Unknown: '<i class="fa fa-question-circle" style="color: gray;"></i>&nbsp;'
-	}
+	} */
 
 /**************************************************************************************
  * The main customizer for statistical values.
@@ -408,16 +410,17 @@ function initialize(){
 	// Calculate Statistics per Type
 	for(var type in ItemType){
 		
-		var all = TYPE_STATS[type].All.length;
-		var success = TYPE_STATS[type][ItemStatus.Success].length;
-		var skipped = TYPE_STATS[type][ItemStatus.Skipped].length;
-		var fail = TYPE_STATS[type][ItemStatus.Fail].length;
-		var undef = TYPE_STATS[type][ItemStatus.None].length;
+		var currentStats = ItemType[type].stats;
+		var all 		= currentStats.All.length;
+		var success 	= currentStats[ItemStatus.Success].length;
+		var skipped 	= currentStats[ItemStatus.Skipped].length;
+		var fail 		= currentStats[ItemStatus.Fail].length;
+		var undef 		= currentStats[ItemStatus.None].length;
 		
-		TYPE_STATS[type].percentSuccess = ( (success / all) * 100).toFixed(1);
-		TYPE_STATS[type].percentSkipped =( (skipped / all) * 100).toFixed(1);
-		TYPE_STATS[type].percentFail = ( (fail / all) * 100).toFixed(1);
-		TYPE_STATS[type].percentUndefined = ( (undef / all) * 100).toFixed(1);
+		currentStats.percentSuccess = ( (success / all) * 100).toFixed(1);
+		currentStats.percentSkipped =( (skipped / all) * 100).toFixed(1);
+		currentStats.percentFail = ( (fail / all) * 100).toFixed(1);
+		currentStats.percentUndefined = ( (undef / all) * 100).toFixed(1);
 					
 	}
 	
@@ -463,10 +466,10 @@ function initialWalkthrough(parent, currentItem){
 	// Check values
 	
 	if(currentItem.type == undefined || currentItem.type == null){
-		currentItem.type = ItemType.Undefined;
+		currentItem.type = ItemType.Unknown;
 	}else if(!(currentItem.type in ItemType)){
-		console.log("ItemType '"+currentItem.status+"' was not found, using 'Undefined'");
-		currentItem.type = ItemType.Undefined;
+		console.log("ItemType '"+currentItem.status+"' was not found, using 'Unknown'");
+		currentItem.type = ItemType.Unknown;
 	}
 	
 	if(currentItem.status == undefined || currentItem.status == null){
@@ -586,35 +589,6 @@ function cleanup(){
 	$("#content").html("");
 }
 
-/**************************************************************************************
- * 
- *************************************************************************************/
-function getItemStyle(item){
-	
-	var style = {
-		colorClass: getStatusStyle(item.status),
-		collapsedClass: "panel-collapse collapse",
-		expanded: false,
-		icon: TypeIcon[item.type]
-	}
-	
-	style.colorClass = getStatusStyle(item.status); 
-
-	
-	switch(item.type){
-		case "Suite": 	style.collapsedClass = "panel-collapse collapse in"; 
-						style.expanded = true; 
-						break;
-				
-		case "Class": 	style.collapsedClass = "panel-collapse collapse in"; 
-						style.expanded = true; 
-						break;
-	}
-	
-	return style;
-					
-	
-}
 
 /**************************************************************************************
  * Select Element Content
@@ -672,20 +646,6 @@ function getFullItemTitle(item){
 		fixSizeNumber = fixSizeNumber + item.itemNumber;
 		
 		return fixSizeNumber +"&nbsp;"+ item.title;
-	}
-}
-
-
-
-/*******************************************************************************
- * Show Loading Animation
- ******************************************************************************/
-function showLoader(isVisible){
-	
-	if(isVisible){
-		$("#loading").css("visibility", "visible");
-	}else{
-		$("#loading").css("visibility", "hidden");
 	}
 }
 
@@ -853,13 +813,7 @@ function calculateStatisticsByField(currentItem, fieldName, statistics){
 function drawOverviewPage(){
 	
 	var content = $("#content")
-	content.append("<h2>Overview</h2>");
-	
-	var row = $('<div class="row">');
-	content.append(row);
-	
-	printTypeOverview(row, ItemType.Suite, 6);
-	printTypeOverview(row, ItemType.Test, 6);
+
 }
 
 /**************************************************************************************
@@ -1099,7 +1053,8 @@ function draw(args){
 	cleanup();
 	
 	let target = $('#content');
-	showLoader(true);
+	
+	CFW.ui.toggleLoader(true);
 	
 	window.setTimeout( 
 	function(){
@@ -1126,8 +1081,8 @@ function draw(args){
 			case "json": 				drawJSON(); break;
 		}
 		
-		showLoader(false);
-	}, 100);
+		CFW.ui.toggleLoader(false);
+	}, 200);
 
 }
 
