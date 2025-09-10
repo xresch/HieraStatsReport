@@ -209,24 +209,6 @@ const ItemType = {
 	Unknown: 		{name: "Unknown"		, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
 }
 
-const StatusIcon = {
-		Success: '<i class="fa fa-check-circle" style="color: green;"></i>&nbsp;',
-		Skipped: '<i class="fa fa-chevron-circle-right" style="color: orange;"></i>&nbsp;',
-		Fail: '<i class="fa fa-times-circle" style="color: red;"></i>&nbsp;',
-		Unknown: '<i class="fa fa-question-circle" style="color: gray;"></i>&nbsp;'
-}
-
-/* const TypeIcon = {
-		Group: '<i class="fa fa-folder-open"></i>&nbsp;',
-		Step: '<i class="fa fa-gear"></i>&nbsp;',
-		Wait: '<i class="fa fa-clock-o"></i>&nbsp;',
-		Assert: '<i class="fa fa-question-circle"></i>&nbsp;',
-		Exception: '<i class="fa fa-times-circle"  style="color: red;"></i>&nbsp;',
-		MessageInfo: '<i class="fa fa-info-circle" style="color: #007EFF;"></i>&nbsp;',
-		MessageWarn: '<i class="fa fa-warning"  style="color: orange;"></i>&nbsp;',
-		MessageError: '<i class="fa fa-times-circle"  style="color: red;"></i>&nbsp;',
-		Unknown: '<i class="fa fa-question-circle" style="color: gray;"></i>&nbsp;'
-	} */
 
 /**************************************************************************************
  * The main customizer for statistical values.
@@ -423,27 +405,7 @@ function initialize(){
 		currentStats.percentUndefined = ( (undef / all) * 100).toFixed(1);
 					
 	}
-	
-	//-----------------------------
-	// Populate Test Dropdown
-/* 	testDropdown = $("#testDropdown");
-	
-	var length = TYPE_STATS.Test.All.length;
-	for(var i = 0 ;	 i < length; i++){
-		var currentTest = TYPE_STATS.Test.All[i];
 		
-		var listItem = $('<li>');
-		//var link = $('<a href="#" onclick="drawTestView(this)">'+
-		var link = $('<a href="#" onclick="draw({view: \'test\', element: this})">'+
-				StatusIcon[currentTest.status]+
-				currentTest.title+
-				'</a>');
-		link.data("test", currentTest);
-		
-		listItem.append(link);
-		testDropdown.append(listItem);
-	} */
-	
 	draw({view: "tableAll"});
 }
 
