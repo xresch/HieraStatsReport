@@ -224,12 +224,9 @@ public class HSRReporterEMP implements HSRReporter {
 			recordKO += SEPARATOR + ( (valueNOK != null) ? valueNOK : "");
 		}
 		
-		if( HSRConfig.isKeepEmptyRecords() || record.hasData()) {
-			
-			if(HSRConfig.isKeepEmptyRecords() || record.hasDataOK()) { csv.append("\r\n"+recordOK); }
-			if(HSRConfig.isKeepEmptyRecords() || record.hasDataNOK()) { csv.append("\r\n"+recordKO); }
-		}
-		
+		csv.append("\r\n"+recordOK);
+		csv.append("\r\n"+recordKO);
+
 	}
 
 	/****************************************************************************

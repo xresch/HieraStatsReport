@@ -52,10 +52,18 @@ public class HSRStatsEngine {
 	// these are used for making reports over the full test duration
 	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
 
-	private static Thread statsengineThread;
 	private static boolean isStopped;
+	private static Thread threadStatsengine;
+	private static Thread threadSystemInfo;
+	
+	// last values collected by threadSystemInfo
+	private static double lastCpuUsage = 0;
+	private static TreeMap<String, Double> networkUsageMB_SentPerSec = new TreeMap<>();
+	private static TreeMap<String, Double> networkUsageMB_RecvPerSec = new TreeMap<>();
 	
 	private static boolean isFirstReport = true;
+	
+	private static final double MB = 1024.0 * 1024.0;
 	
 	/***************************************************************************
 	 * Starts the reporting of the statistics.
@@ -65,29 +73,115 @@ public class HSRStatsEngine {
 		
 		//--------------------------------------
 		// Only Start once
-		if(statsengineThread == null) {
+		if(threadStatsengine == null) {
 			
-			statsengineThread = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					
-					try {
-						while( !Thread.currentThread().isInterrupted()
-							&& !isStopped
-							){
-							Thread.sleep(reportInterval * 1000);
-							aggregateAndReport();
-						}
-					
-					}catch(InterruptedException e) {
-						logger.info("HSRStatsEngine has been stopped.");
-					}
-				}
-			});
-			
-			statsengineThread.setName("statsengine");
-			statsengineThread.start();
+			startThreadStatsEngine(reportInterval);
+			startThreadSystemUsage();
 		}
+	}
+	
+	/***************************************************************************
+	 * Starts the reporting of the statistics.
+	 *  
+	 ***************************************************************************/
+	private static void startThreadStatsEngine(int reportInterval) {
+		threadStatsengine = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				
+				try {
+					while( !Thread.currentThread().isInterrupted()
+						&& !isStopped
+						){
+						Thread.sleep(reportInterval * 1000);
+						aggregateAndReport();
+					}
+				
+				}catch(InterruptedException e) {
+					logger.info("HSRStatsEngine has been stopped.");
+				}
+			}
+		});
+		
+		threadStatsengine.setName("statsengine");
+		threadStatsengine.start();
+	}
+	
+	/***************************************************************************
+	 * Starts the reporting of the statistics.
+	 *  
+	 ***************************************************************************/
+	private static void startThreadSystemUsage() {
+		
+
+		threadSystemInfo = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				
+				try {
+					
+					SystemInfo systemInfo = new SystemInfo();
+					
+					while( !Thread.currentThread().isInterrupted()
+						&& !isStopped
+						){
+						
+						//-----------------------------
+						// Get Previous CPU and Network
+						CentralProcessor processor = systemInfo.getHardware().getProcessor();
+						long[] prevCPUTicks = processor.getSystemCpuLoadTicks();
+						
+						//-----------------------------
+						// Get Previous Network IO
+				        List<NetworkIF> networkIFs = systemInfo.getHardware().getNetworkIFs();
+						
+				        TreeMap<String, Long> prevNetworkUsageSent = new TreeMap<>();
+				        TreeMap<String, Long> prevNetworkUsageRecv = new TreeMap<>();
+				        for (NetworkIF net : networkIFs) {
+				            net.updateAttributes(); // Refresh stats
+				            
+				            String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
+				            
+				            prevNetworkUsageSent.put(intefaceName, net.getBytesSent() );
+				            prevNetworkUsageRecv.put(intefaceName, net.getBytesRecv() );
+
+				        }
+						//-----------------------------
+						// Wait a second
+						Thread.sleep(1000);
+						
+						//-----------------------------
+						// Get Current CPU
+				        lastCpuUsage = 100 * processor.getSystemCpuLoadBetweenTicks(prevCPUTicks);
+				        
+				        //-----------------------------
+						// Get Previous Network IO
+
+				        synchronized(networkUsageMB_SentPerSec) {
+					        networkUsageMB_SentPerSec.clear();
+					        networkUsageMB_RecvPerSec.clear();
+					        for (NetworkIF net : networkIFs) {
+					            net.updateAttributes(); // Refresh stats
+					            
+					            String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
+					            
+					            double bytesSentPerSec = (net.getBytesSent() - prevNetworkUsageSent.get(intefaceName));
+					            double bytesRecPerSec = (net.getBytesRecv() - prevNetworkUsageRecv.get(intefaceName));
+					            networkUsageMB_SentPerSec.put(intefaceName, bytesSentPerSec / MB );
+					            networkUsageMB_RecvPerSec.put(intefaceName, bytesRecPerSec / MB );
+	
+					        }
+				        }
+					}
+				
+				}catch(InterruptedException e) {
+					logger.info("SysInfoCollector thread has been stopped.");
+				}
+			}
+		});
+		
+		threadSystemInfo.setName("SysInfoCollector");
+		threadSystemInfo.start();
 	}
 	
 	/***************************************************************************
@@ -98,7 +192,8 @@ public class HSRStatsEngine {
 		if(!isStopped) {
 			isStopped = true;
 			
-			statsengineThread.interrupt();
+			threadStatsengine.interrupt();
+			threadSystemInfo.interrupt();
 			
 			aggregateAndReport();
 			generateSummaryReport();
@@ -130,163 +225,155 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	private static void createSystemUsageRecords() {
 		
+		String test = HSR.getTest();
+		SystemInfo systemInfo = new SystemInfo();
+		
+		ArrayList<String> systemUsagePathlist = new ArrayList<>();
+		systemUsagePathlist.add("System Usage");
+		
+		
+		//------------------------------
+		// Process Memory
+		if(HSRConfig.statsProcessMemory()) {
+			try {
+				MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+				double usage = memoryMXBean.getHeapMemoryUsage().getUsed();
+				double committed = memoryMXBean.getHeapMemoryUsage().getCommitted();
+				double max = memoryMXBean.getHeapMemoryUsage().getMax();
+				double usageMB = usage / MB;
+				double committedMB = committed / MB;
+				double maxMB = max / MB;
+				double usagePercent = (usage * 100.0) / max;
+				
+				addRecord(
+					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [MB]")
+						.test(test)
+						.pathlist(systemUsagePathlist)
+						.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
+					);
+				
+				addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "Process Memory Committed [MB]")
+						.test(test)
+						.pathlist(systemUsagePathlist)
+						.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
+						);
+				
+				addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "Process Memory Max [MB]")
+						.test(test)
+						.pathlist(systemUsagePathlist)
+						.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
+					);
+				
+				addRecord(
+					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [%]")
+						.test(test)
+						.pathlist(systemUsagePathlist)
+						.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
+					);
 
-			String test = HSR.getTest();
-			SystemInfo systemInfo = new SystemInfo();
-			
-			ArrayList<String> systemUsagePathlist = new ArrayList();
-			systemUsagePathlist.add("System Usage");
-			
-			double MB = 1024.0 * 1024.0;
-			
-			//------------------------------
-			// Process Memory
-			if(HSRConfig.statsProcessMemory()) {
-				try {
-					MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-					double usage = memoryMXBean.getHeapMemoryUsage().getUsed();
-					double committed = memoryMXBean.getHeapMemoryUsage().getCommitted();
-					double max = memoryMXBean.getHeapMemoryUsage().getMax();
-					double usageMB = usage / MB;
-					double committedMB = committed / MB;
-					double maxMB = max / MB;
-					double usagePercent = (usage * 100.0) / max;
-					
-					addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [MB]")
-							.test(test)
-							.pathlist(systemUsagePathlist)
-							.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
-						);
-					
-					addRecord(
-							new HSRRecord(HSRRecordType.Gauge, "Process Memory Committed [MB]")
-							.test(test)
-							.pathlist(systemUsagePathlist)
-							.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
-							);
-					
-					addRecord(
-							new HSRRecord(HSRRecordType.Gauge, "Process Memory Max [MB]")
-							.test(test)
-							.pathlist(systemUsagePathlist)
-							.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
-						);
-					
-					addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [%]")
-							.test(test)
-							.pathlist(systemUsagePathlist)
-							.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
-						);
+			}catch(Throwable e) {
+				logger.error("Error while reading process memory: "+e.getMessage(), e);
+			}
+		}
+		
+		//------------------------------
+		// Host Memory
+		if(HSRConfig.statsHostMemory()) {
+			try {
+	        GlobalMemory memory = systemInfo.getHardware().getMemory();
 	
-				}catch(Throwable e) {
-					logger.error("Error while reading process memory: "+e.getMessage(), e);
-				}
+	        long memTotal = memory.getTotal();
+	        long memAvailable = memory.getAvailable();
+	        long memUsed = memTotal - memAvailable;
+	
+	        double memUsagePercent = (memUsed * 100.0) / memTotal;
+	
+	        addRecord(
+					new HSRRecord(HSRRecordType.Gauge, "Host Memory Usage [%]")
+						.test(test)
+						.pathlist(systemUsagePathlist)
+						.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
+					);
+			}catch(Throwable e) {
+				logger.error("Error while reading host memory: "+e.getMessage(), e);
 			}
-			
-			//------------------------------
-			// Host Memory
-			if(HSRConfig.statsHostMemory()) {
-				try {
-		        GlobalMemory memory = systemInfo.getHardware().getMemory();
+		}
+		//------------------------------
+		// CPU
+		if(HSRConfig.statsCPU()) {
+			try {
+		        //CentralProcessor processor = systemInfo.getHardware().getProcessor();
 		
-		        long memTotal = memory.getTotal();
-		        long memAvailable = memory.getAvailable();
-		        long memUsed = memTotal - memAvailable;
-		
-		        double memUsagePercent = (memUsed * 100.0) / memTotal;
-		
-		        addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "Host Memory Usage [%]")
+		        //double cpuUsage = 100 * processor.getSystemCpuLoad(500);
+	
+				addRecord(
+						new HSRRecord(HSRRecordType.Gauge, "CPU Usage [%]")
 							.test(test)
 							.pathlist(systemUsagePathlist)
-							.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
+							.value(new BigDecimal(lastCpuUsage).setScale(1, RoundingMode.HALF_UP))
 						);
-				}catch(Throwable e) {
-					logger.error("Error while reading host memory: "+e.getMessage(), e);
-				}
+			}catch(Throwable e) {
+				logger.error("Error while reading CPU usage: "+e.getMessage(), e);
 			}
-			//------------------------------
-			// CPU
-			if(HSRConfig.statsCPU()) {
-				try {
-			        CentralProcessor processor = systemInfo.getHardware().getProcessor();
-			
-			        double cpuUsage = 100 * processor.getSystemCpuLoad(500);
+		}
+		//------------------------------
+		// Disk Usage
+		if(HSRConfig.statsDisk()) {
+			try {
+				OperatingSystem os = systemInfo.getOperatingSystem();
+		        for (OSFileStore fs : os.getFileSystem().getFileStores()) {
+		            
+		        	String diskName = fs.getName() +" ("+ fs.getMount() + ")";
+		        	long diskTotal = fs.getTotalSpace();
+		        	
+		        	// skip disks that have no size
+		        	if(diskTotal == 0) { continue; }
+		        	
+		            long diskUsable = fs.getUsableSpace();
+		            long diskUsed = diskTotal - diskUsable;
 		
+		            double diskUsagePercent = (diskUsed * 100.0) / diskTotal;
+		           
 					addRecord(
-							new HSRRecord(HSRRecordType.Gauge, "CPU Usage [%]")
+							new HSRRecord(HSRRecordType.Gauge, "Disk Usage [%]: "+diskName)
 								.test(test)
 								.pathlist(systemUsagePathlist)
-								.value(new BigDecimal(cpuUsage).setScale(1, RoundingMode.HALF_UP))
+								.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
 							);
-				}catch(Throwable e) {
-					logger.error("Error while reading CPU usage: "+e.getMessage(), e);
-				}
-			}
-			//------------------------------
-			// Disk Usage
-			if(HSRConfig.statsDisk()) {
-				try {
-					OperatingSystem os = systemInfo.getOperatingSystem();
-			        for (OSFileStore fs : os.getFileSystem().getFileStores()) {
-			            
-			        	String diskName = fs.getName() +" ("+ fs.getMount() + ")";
-			        	long diskTotal = fs.getTotalSpace();
-			        	
-			        	// skip disks that have no size
-			        	if(diskTotal == 0) { continue; }
-			        	
-			            long diskUsable = fs.getUsableSpace();
-			            long diskUsed = diskTotal - diskUsable;
-			
-			            double diskUsagePercent = (diskUsed * 100.0) / diskTotal;
-			           
+		        }
+			}catch(Throwable e) {
+				logger.error("Error while reading Disk usage: "+e.getMessage(), e);
+			}   
+		}
+		//------------------------------
+		// Network I/O
+		if(HSRConfig.statsNetworkIO()) {
+			synchronized(networkUsageMB_SentPerSec) {
+				
+				for(Entry<String, Double> entry : networkUsageMB_SentPerSec.entrySet()) {
+					 
+						String interfaceName = entry.getKey();
+						double mbytesSentPerSec = entry.getValue();
+						double mbytesRecvPerSec = networkUsageMB_RecvPerSec.get(interfaceName);
+						
 						addRecord(
-								new HSRRecord(HSRRecordType.Gauge, "Disk Usage [%]: "+diskName)
+								new HSRRecord(HSRRecordType.Gauge, "Network I/O [MB sent/sec]: "+interfaceName)
 									.test(test)
 									.pathlist(systemUsagePathlist)
-									.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
+									.value(new BigDecimal(mbytesSentPerSec).setScale(1, RoundingMode.HALF_UP))
 								);
-			        }
-				}catch(Throwable e) {
-					logger.error("Error while reading Disk usage: "+e.getMessage(), e);
-				}   
+			            
+			            addRecord(
+								new HSRRecord(HSRRecordType.Gauge, "Network I/O [MB recv/sec]: "+interfaceName)
+									.test(test)
+									.pathlist(systemUsagePathlist)
+									.value(new BigDecimal(mbytesRecvPerSec).setScale(1, RoundingMode.HALF_UP))
+								);
+				}
 			}
-			//------------------------------
-			// Network I/O
-			
-			// this gives total bytes sent, not useful...
-			// TODO: Create a thread that calculates difference per second.
-//			try {
-//		        List<NetworkIF> networkIFs = systemInfo.getHardware().getNetworkIFs();
-//	
-//		        for (NetworkIF net : networkIFs) {
-//		            net.updateAttributes(); // Refresh stats
-//		            
-//		            String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
-//		            
-//		            double bytesSent = net.getBytesSent() / MB;
-//		            double bytesReceived = net.getBytesRecv() / MB;
-//		            
-//		            addRecord(
-//							new HSRRecord(HSRRecordType.Gauge, "Network I/O [Bytes Sent]: "+intefaceName)
-//								.test(test)
-//								.pathlist(systemUsagePathlist)
-//								.value(new BigDecimal(bytesSent).setScale(1, RoundingMode.HALF_UP))
-//							);
-//		            
-//		            addRecord(
-//							new HSRRecord(HSRRecordType.Gauge, "Network I/O [Bytes Recv]: "+intefaceName)
-//								.test(test)
-//								.pathlist(systemUsagePathlist)
-//								.value(new BigDecimal(bytesReceived).setScale(1, RoundingMode.HALF_UP))
-//							);
-//		        }
-//	        }catch(Throwable e) {
-//				logger.error("Error while reading Network I/O stats: "+e.getMessage(), e);
-//			}
+		}
 
 	}
 	/***************************************************************************
@@ -653,21 +740,20 @@ public class HSRStatsEngine {
 			
 			//---------------------------
 			// Keep Empty
-			if( HSRConfig.isKeepEmptyRecords() || first.hasData() ){
-				finalRecords.add(first);
-				JsonObject recordObject = first.toJson();
-				
-				// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
-				JsonObject series = HSR.JSON.toJSONElement(valuesTable)
-											.getAsJsonObject()
-											.get("backingMap")
-											.getAsJsonObject()
-											;
-				
-				series.add("time", HSR.JSON.toJSONElement(timeArray));
-				recordObject.add("series", series);
-				finalRecordsArray.add(recordObject);
-			}
+			finalRecords.add(first);
+			JsonObject recordObject = first.toJson();
+			
+			// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
+			JsonObject series = HSR.JSON.toJSONElement(valuesTable)
+										.getAsJsonObject()
+										.get("backingMap")
+										.getAsJsonObject()
+										;
+			
+			series.add("time", HSR.JSON.toJSONElement(timeArray));
+			recordObject.add("series", series);
+			finalRecordsArray.add(recordObject);
+			
 					
 		}
 		

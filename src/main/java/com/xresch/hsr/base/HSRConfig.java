@@ -34,12 +34,12 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static TreeMap<String,String> properties = new TreeMap<>();
 
 	private static boolean debug = false;
-	private static boolean keepEmptyRecords = false;
 	
 	private static boolean enableStatsProcessMemory = true;
 	private static boolean enableStatsCPU = true;
 	private static boolean enableStatsHostMemory= true;
 	private static boolean enableStatsDisk = true;
+	private static boolean enableStatsNetworkIO = true;
 	
 	private static boolean databaseAgeOut = false;
 	private static HSRAgeOutConfig databaseAgeOutConfig = new HSRAgeOutConfig(); // use defaults
@@ -85,7 +85,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			HSRConfig.addProperty("[HSR] rawdataLogPath", "" + rawdataLogPath);
 			HSRConfig.addProperty("[HSR] executionID", "" + EXECUTION_ID);
 			HSRConfig.addProperty("[HSR] debug", "" + debug);
-			HSRConfig.addProperty("[HSR] keepEmptyRecords", "" + keepEmptyRecords);
 			
 			HSRStatsEngine.start(reportingInterval);
 		}
@@ -149,22 +148,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		return (ArrayList<HSRUsecase>) usecaseList.clone();
 	}
 
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public static boolean isKeepEmptyRecords() {
-		return keepEmptyRecords;
-	}
-	
-
-	/******************************************************************
-	 * 
-	 ******************************************************************/
-	public static void setKeepEmptyRecords(boolean skipEmptyRecords) {
-		HSRConfig.keepEmptyRecords = skipEmptyRecords;
-	}
-	
 	
 	/******************************************************************
 	 * 
@@ -362,6 +345,20 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 ******************************************************************/
 	public static boolean statsDisk() {
 		return enableStatsDisk;
+	}
+	
+	/******************************************************************
+	 * Toggle if statistics for the Network I/O should be collected.
+	 ******************************************************************/
+	public static void statsNetworkIO(boolean isEnabled) {
+		enableStatsNetworkIO = isEnabled;
+	}
+	
+	/******************************************************************
+	 * Return if statistics for the Network I/O should be collected.
+	 ******************************************************************/
+	public static boolean statsNetworkIO() {
+		return enableStatsNetworkIO;
 	}
 	
 	/******************************************************************

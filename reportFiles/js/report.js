@@ -15,6 +15,10 @@
 var FILELIST;
 
 var DATA = [];
+
+// one record per datapoint, for easier filtering and charting
+var DATA_CFW_STYLE = [];
+
 var PROPERTIES = [];
 
 ALL_ITEMS_FLAT = [];
@@ -51,6 +55,19 @@ const FIELDS_BASE_STATS = FIELDS_BASE_COUNTS.concat([
 	"ok_p90",
 	"ok_p95",
 ]);
+
+const FIELDS_BOXPLOT = [
+	"usecase",
+	"path",
+	"name",
+	"code",
+	"ok_count",
+	"ok_min",
+	"ok_p25",
+	"ok_p50",
+	"ok_p75",
+	"ok_max"
+];
 
 const FIELDS_OK = [
 	"ok_count",
@@ -119,7 +136,9 @@ const FIELDLABELS = {
 	"failed": "Failed",
 	"skipped": "Skipped",
 	"aborted": "Aborted",
-	"none": "None"
+	"none": "None",
+	"Range": "Range",
+	"IQR": "IQR"
 }
 
 const CUSTOMIZERS = {
@@ -193,7 +212,7 @@ const ItemStatus = {
 		None: "None",
 }
 
-const ItemType = {
+const RECORDTYPE = {
 	Group: 			{name: "Group"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
 	Step: 			{name: "Step"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
 	Wait: 			{name: "Wait"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
@@ -390,9 +409,9 @@ function initialize(){
 	
 	//------------------------------------
 	// Calculate Statistics per Type
-	for(var type in ItemType){
+	for(var type in RECORDTYPE){
 		
-		var currentStats = ItemType[type].stats;
+		var currentStats = RECORDTYPE[type].stats;
 		var all 		= currentStats.All.length;
 		var success 	= currentStats[ItemStatus.Success].length;
 		var skipped 	= currentStats[ItemStatus.Skipped].length;
@@ -428,10 +447,10 @@ function initialWalkthrough(parent, currentItem){
 	// Check values
 	
 	if(currentItem.type == undefined || currentItem.type == null){
-		currentItem.type = ItemType.Unknown;
-	}else if(!(currentItem.type in ItemType)){
-		console.log("ItemType '"+currentItem.status+"' was not found, using 'Unknown'");
-		currentItem.type = ItemType.Unknown;
+		currentItem.type = RECORDTYPE.Unknown;
+	}else if(!(currentItem.type in RECORDTYPE)){
+		console.log("RECORDTYPE '"+currentItem.status+"' was not found, using 'Unknown'");
+		currentItem.type = RECORDTYPE.Unknown;
 	}
 	
 	if(currentItem.status == undefined || currentItem.status == null){
@@ -772,6 +791,79 @@ function calculateStatisticsByField(currentItem, fieldName, statistics){
 /**************************************************************************************
  * 
  *************************************************************************************/
+function record_calc_range(record){
+	if(record.ok_min == null  || record.ok_max == null ){
+		return "";
+	}else{
+		return record.ok_max - record.ok_min;
+	}
+}
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function record_calc_IQR(record){
+	if(record.ok_p25 == null  || record.ok_p75 == null ){
+		return "";
+	}else{
+		return record.ok_p75 - record.ok_p25;
+	}
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function record_format_boxplot(record, minMin, maxMax){
+	
+	//-------------------------------
+	// Check input
+	if( RECORDTYPE[record.type].isCount == true
+	|| record.ok_min == null  
+	|| record.ok_max == null ){
+		return "";
+	}
+	
+
+	
+	//-------------------------------
+	// Values
+	let values = {
+		  //"start":
+		 "min": record.ok_min
+		, "low": record.ok_p25
+		, "median": record.ok_p50
+		, "high": record.ok_p75
+		, "max":  record.ok_max
+		//, "end":  record.ok_p25
+	}
+	
+	//-------------------------------
+	// Check relative
+	if(minMin != null && maxMax != null){
+		values.start = minMin;
+		values.end = maxMax;
+	}
+	
+	//-------------------------------
+	// Color
+	
+	let medianOffsetPerc = (record.ok_p50 - record.ok_p25) / (record.ok_p75 - record.ok_p25) * 100 
+	
+	let color = "green";
+	
+	if( medianOffsetPerc > 90 ){ color = "red"; }
+	else if( medianOffsetPerc > 80 ){ color = "orange"; }
+	else if( medianOffsetPerc > 70 ){ color = "yellow"; }
+	else if( medianOffsetPerc > 60 ){ color = "limegreen"; }
+	else { color = "green"; }
+	//-------------------------------
+	// Create Booxplot
+	
+	return CFW.format.boxplot(values, color, false);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
 function drawOverviewPage(){
 	
 	var content = $("#content")
@@ -877,133 +969,199 @@ function drawTable(target, data, showFields, typeFilterArray){
 		});
 	}
 
-
+	//======================================
+	// Find min/max of all records
+	let minMin = null;
+	let maxMax = null;
 	
-	if(data != undefined){
+	for(i in data){
+		let current = data[i];
 		
-		var resultCount = data.length;
-		if(resultCount == 0){
-			CFW.ui.addToastInfo("Hmm... seems there aren't any storedfile in the list.");
+		// skip counts
+		if(RECORDTYPE[current.type].isCount == true){ continue; }
+		
+		// get Minimum of Minimum
+		if(current.ok_min != null){
+			if(minMin != null){
+				minMin = Math.min(current.ok_min, minMin);
+			}else{
+				minMin = current.ok_min;
+			}
 		}
 		
-
-		//======================================
-		// Prepare actions
-		
-		var actionButtons = [ ];		
-		
-		//-------------------------
-		// Details Button
-/* 		actionButtons.push(
-			function (record, id){ 
-				
-				let htmlString = '<button class="btn btn-primary btn-sm" alt="Edit" title="Edit" '
-						+'onclick="cfw_filemanager_editStoredFile('+id+')");">'
-						+ '<i class="fa fa-pen"></i>'
-						+ '</button>';
-
-				return htmlString;
-			}); */
-		
-		//-----------------------------------
-		// Render Data
-
-		var rendererSettings = {
-			 	idfield: null,
-			 	bgstylefield: null,
-			 	textstylefield: null,
-			 	titlefields: ['groups', 'name'],
-			 	titleformat: "{0} / {1}",
-			 	visiblefields: showFields,
-			 	labels: FIELDLABELS,
-			 	customizers: CUSTOMIZERS,
-				actions: actionButtons,
-				data: data,
-				rendererSettings: {
-					csv:{
-						csvcustomizers: {
-							series: function(record, value){
-								return null;
-							}
-						}
-					},
-					dataviewer:{
-						storeid: "table-"+filterID,
-						download: true,
-						sortable: true,
-						sortoptions: addFieldSortOptions(
-								  {"Test, Usecase, Groups, Name": [["test", "usecase", "groups", "name"], ["asc","asc","asc","asc"] ]}
-								, showFields.concat(FIELDS_STATUS)
-							) ,
-						renderers: [
-							{	label: 'Table',
-								name: 'table',
-								renderdef: {
-									labels: {
-										PK_ID: "ID",
-			 							IS_SHARED: 'Shared'
-									},
-									rendererSettings: {
-										table: {filterable: false, narrow: true, stickyheader: true},
-										
-									},
-								}
-							},{	label: 'Table with Details',
-								name: 'table',
-								renderdef: {
-									labels: {
-										PK_ID: "ID",
-			 							IS_SHARED: 'Shared'
-									},
-									visiblefields: showFields.concat(FIELDS_STATUS),
-									rendererSettings: {
-										table: {filterable: false, narrow: true},
-										
-									},
-								}
-							},
-							
-							{	label: 'Panels',
-								name: 'panels',
-								renderdef: {
-									customizers: {}
-								}
-							},
-							{	label: 'Properties',
-								name: 'properties',
-								renderdef: {}
-							},
-							{	label: 'Cards',
-								name: 'cards',
-								renderdef: {}
-							},
-							
-							{	label: 'CSV',
-								name: 'csv',
-								renderdef: {
-									visiblefields: showFields.concat(FIELDS_STATUS),
-								}
-							},
-							{	label: 'XML',
-								name: 'xml',
-								renderdef: {
-									visiblefields: null
-								}
-							},
-							{	label: 'JSON',
-								name: 'json',
-								renderdef: {}
-							}
-						],
-					},
-					table: {filterable: false}
-				},
-			};
-				
-		var renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);	
-		
-		parent.append(renderResult);
+		// get Maximum of Minimum
+		if(current.ok_max != null){
+			if(maxMax != null){
+				maxMax = Math.max(current.ok_max, maxMax);
+			}else{
+				maxMax = current.ok_max;
+			}
+		}
+			
 	}
+
+	
+	//======================================
+	// Check has Results
+	var resultCount = data.length;
+	if(resultCount == 0){
+		CFW.ui.addToastInfo("Hmm... seems there aren't any storedfile in the list.");
+	}
+	
+	//======================================
+	// Prepare actions
+	
+	var actionButtons = [ ];		
+	
+	//-------------------------
+	// Details Button
+/* 		actionButtons.push(
+		function (record, id){ 
+			
+			let htmlString = '<button class="btn btn-primary btn-sm" alt="Edit" title="Edit" '
+					+'onclick="cfw_filemanager_editStoredFile('+id+')");">'
+					+ '<i class="fa fa-pen"></i>'
+					+ '</button>';
+
+			return htmlString;
+		}); */
+	
+	//-----------------------------------
+	// Render Data
+
+	var rendererSettings = {
+			idfield: null,
+			bgstylefield: null,
+			textstylefield: null,
+			titlefields: ['groups', 'name'],
+			titleformat: "{0} / {1}",
+			visiblefields: showFields,
+			labels: FIELDLABELS,
+			customizers: CUSTOMIZERS,
+			actions: actionButtons,
+			data: data,
+			rendererSettings: {
+				csv:{
+					csvcustomizers: {
+						series: function(record, value){
+							return null;
+						}
+					}
+				},
+				table: {filterable: false, narrow: true, stickyheader: true},
+				dataviewer:{
+					storeid: "table-"+filterID,
+					download: true,
+					sortable: true,
+					sortoptions: addFieldSortOptions(
+							  {"Test, Usecase, Groups, Name": [["test", "usecase", "groups", "name"], ["asc","asc","asc","asc"] ]}
+							, showFields.concat(FIELDS_STATUS)
+						) ,
+					renderers: [
+						{	
+							label: 'Table',
+							name: 'table',
+							renderdef: {
+								labels: {
+									PK_ID: "ID",
+									IS_SHARED: 'Shared'
+								},
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},{	
+							label: 'Table with Details',
+							name: 'table',
+							renderdef: {
+								visiblefields: showFields.concat(FIELDS_STATUS),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+									
+								},
+							}
+						},
+						
+						{	
+							label: 'Boxplots',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
+								customizers: {
+									"Range": function(record, value){ return record_calc_range(record); },	
+									"IQR": function(record, value){ return record_calc_IQR(record); },
+									"Boxplot": function(record, value){
+										return $('<div class="vw-25">')
+													.append( record_format_boxplot(record) );
+									}
+								},
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
+						{	
+							label: 'Boxplots Relative',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
+								customizers: {
+									"Range": function(record, value){ return record_calc_range(record); },	
+									"IQR": function(record, value){ return record_calc_IQR(record); },
+									"Boxplot": function(record, value){
+										return $('<div class="vw-25">')
+													.append( record_format_boxplot(record, minMin, maxMax) );
+									}
+								},
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
+						
+						{	label: 'Panels',
+							name: 'panels',
+							renderdef: {
+								customizers: {}
+							}
+						},
+						{	label: 'Properties',
+							name: 'properties',
+							renderdef: {}
+						},
+						{	label: 'Cards',
+							name: 'cards',
+							renderdef: {}
+						},
+						
+						{	label: 'CSV',
+							name: 'csv',
+							renderdef: {
+								visiblefields: showFields.concat(FIELDS_STATUS),
+							}
+						},
+						{	label: 'XML',
+							name: 'xml',
+							renderdef: {
+								visiblefields: null
+							}
+						},
+						{	label: 'JSON',
+							name: 'json',
+							renderdef: {}
+						}
+					],
+				},
+				table: {filterable: false}
+			},
+		};
+			
+	var renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);	
+	
+	parent.append(renderResult);
+	
 }
 
 
