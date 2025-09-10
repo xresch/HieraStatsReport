@@ -89,7 +89,7 @@ public class TestExampleLoadTestEmulation {
 	@Test
 	void emulateLoadTest() throws InterruptedException {
 		
-		int multiplier = 1;
+		int multiplier = 10;
 		int users = 20 * multiplier;
 		int rampUpMillis = 200;
 		int executionsPerUser = 5 * multiplier;

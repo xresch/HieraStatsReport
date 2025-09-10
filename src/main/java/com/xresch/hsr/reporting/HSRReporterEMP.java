@@ -55,7 +55,7 @@ public class HSRReporterEMP implements HSRReporter {
 									+ "  status: \\\"$statusPlaceholder$\\\""
 									+ ", code: \\\"$codePlaceholder$\\\""
 									+ ", type: \\\"$typePlaceholder$\\\""
-									+ ", groups: \\\"$groupsPlaceholder$\\\""
+									+ ", path: \\\"$pathPlaceholder$\\\""
 									+ ", usecase: \\\"$usecasePlaceholder$\\\""
 									+ "}\""; 
 
@@ -185,7 +185,7 @@ public class HSRReporterEMP implements HSRReporter {
 		//-------------------------------
 		// Initialize Values
 		String category = categoryPrefix+record.getTest();
-		String entityName = record.getMetricName();
+		String entityName = record.getName();
 
 		
 		//-------------------------------
@@ -205,7 +205,7 @@ public class HSRReporterEMP implements HSRReporter {
 		String attrPrepared = ATTRIBUTES
 							.replace("$codePlaceholder$",  record.getCode() )
 							.replace("$typePlaceholder$",  record.getType().toString() )
-							.replace("$groupsPlaceholder$",  record.getGroupsPath() )
+							.replace("$pathPlaceholder$",  record.getPath() )
 							.replace("$usecasePlaceholder$",  record.getUsecase().replace("\"", "\\\"") )
 							;
 		

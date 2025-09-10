@@ -40,13 +40,14 @@
 			<div class="collapse navbar-collapse" id="cfw-navbar-top">
 				<ul class="navbar-nav mr-auto">
 					
-					<li><a href="#" class="dropdown-item" onclick="draw({view: 'properties'})">Properties</a></li>
-					
+
 					<li class="dropdown">
 						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
 						General <span class="caret"></span></a>
 						<ul class="dropdown-menu dropdown-submenu">
 							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'overview'})">Overview</a></li>
+							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'properties'})">Properties</a></li>
+					
 						</ul>
 					</li>
 					
@@ -55,13 +56,16 @@
 							Tables <span class="caret"></span></a>
 						<ul class="dropdown-menu dropdown-submenu">
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableAll'})">All Types</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGSDC'})">Groups & Steps & Durations & Counts</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGSD'})">Groups & Steps & Durations</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGSMCG'})">Groups & Steps & Metrics & Counts & Gauges</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGSMC'})">Groups & Steps & Metrics & Counts</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGSM'})">Groups & Steps & Metrics </a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGroupsSteps'})">Groups & Steps</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableCountGauges'})">Counts & Gauges</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGroups'})">Groups</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableSteps'})">Steps</a></li>
-							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableDurations'})">Durations</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableMetrics'})">Metrics</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableCounts'})">Counts</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableGauges'})">Gauge</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableAsserts'})">Asserts</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableMessages'})">Messages</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableExceptions'})">Exceptions</a></li>

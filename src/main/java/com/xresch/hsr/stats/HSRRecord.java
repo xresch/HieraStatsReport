@@ -21,7 +21,7 @@ public class HSRRecord {
 	private String test = "";
 	private String usecase = "";
 	
-	private List<String> groups = new ArrayList<>();
+	private List<String> pathlist = new ArrayList<>();
 	private HSRRecordType type = HSRRecordType.Unknown;
 	private String name = null;  // name of this item
 	private String statsIdentifier = null;
@@ -172,7 +172,7 @@ public class HSRRecord {
 	 * @param type the type of the record
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param usecase the name of the usecase (Use Case etc...)
-	 * @param groups the groups that are defining the hierarchy
+	 * @param pathlist the pathlist that is defining the hierarchy
 	 * @param name the name of this record (e.g. Step name)
 	 * @param value the value of this record
 	 *******************************************************************/
@@ -180,7 +180,7 @@ public class HSRRecord {
 			  HSRRecordType type
 			, String test
 			, String usecase
-			, List<String> groups
+			, List<String> pathlist
 			, String recordName
 			, BigDecimal value
 			){
@@ -191,7 +191,7 @@ public class HSRRecord {
 		usecase(usecase);
 		name(recordName);
 		
-		groups(groups);
+		pathlist(pathlist);
 		
 		startTime(System.currentTimeMillis()); // now
 		
@@ -204,7 +204,7 @@ public class HSRRecord {
 	 * @param type the type of the record
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param usecase the name of the usecase (Use Case etc...)
-	 * @param groups the groups that are defining the hierarchy
+	 * @param pathlist the pathlist that are defining the hierarchy
 	 * @param name the name of this record (e.g. Step name)
 	 * @param startTimestamp the start time of this record in epoch millis
 	 * @param endTimeMillis the end time of this record in epoch millis
@@ -217,7 +217,7 @@ public class HSRRecord {
 			  HSRRecordType type
 			, String test
 			, String usecase
-			, List<String> groups
+			, List<String> pathlist
 			, String recordName
 			, long startTimestamp
 			, long endTimestamp
@@ -233,7 +233,7 @@ public class HSRRecord {
 		usecase(usecase);
 		name(recordName);
 		
-		groups(groups);
+		pathlist(pathlist);
 		
 		status(status);
 		code(responseCode);
@@ -247,7 +247,7 @@ public class HSRRecord {
 	
 	/******************************************************************
 	 * This will also take over other values from the parent and override
-	 * them, including: test, usecase, name groups
+	 * them, including: test, usecase, name pathlist
 	 ******************************************************************/
 	public HSRRecord parent(HSRRecord parent) {
 		this.parent = parent;
@@ -265,13 +265,13 @@ public class HSRRecord {
 			}
 					
 			//--------------------------
-			// Set Groups
-			List<String> unmodifyableGroups = parent.groups();
-			groups(unmodifyableGroups);
+			// Set Path
+			List<String> unmodifyablePathlist = parent.pathlist();
+			pathlist(unmodifyablePathlist);
 			
 			String parentName = parent.name();
 			if(parentName != null && !parentName.isBlank()) {
-				this.groups.add(parentName);
+				this.pathlist.add(parentName);
 			}
 		}
 		
@@ -429,13 +429,13 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
-	 * Overrides the groups of this record
+	 * Overrides the pathlist of this record
 	 ******************************************************************/
-	public HSRRecord groups(List<String> groups) {
+	public HSRRecord pathlist(List<String> pathlist) {
 		
-		if(groups != null) {	
-			this.groups = new ArrayList<>();
-			this.groups.addAll(groups); 
+		if(pathlist != null) {	
+			this.pathlist = new ArrayList<>();
+			this.pathlist.addAll(pathlist); 
 			identityChanged = true;
 		}
 		return this;
@@ -447,8 +447,8 @@ public class HSRRecord {
 	 * The list that is returned cannot be modified.
 	 * Would return a clone, but doesn't do it for performance reasons.
 	 ******************************************************************/
-	public List<String> groups() {
-		return Collections.unmodifiableList(groups);
+	public List<String> pathlist() {
+		return Collections.unmodifiableList(pathlist);
 	}
 
 	/******************************************************************
@@ -492,8 +492,8 @@ public class HSRRecord {
 		if(identityChanged || this.statsIdentifier == null) {
 			this.statsIdentifier = type.toString() + test + usecase;
 			
-			if( !this.groups.isEmpty() ) {
-				this.statsIdentifier += "/" + getGroupsAsString("/", "");
+			if( !this.pathlist.isEmpty() ) {
+				this.statsIdentifier += "/" + getPath("/", "");
 			}	
 			
 			//this.statsIdentifier += name + status.state() + code;
@@ -504,13 +504,13 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * Returns the groups separated by the given separator.
+	 * Returns the pathlist as a string separated by the given separator.
 	 * 
 	 ******************************************************************/
-	public String getGroupsAsString(String separator, String fallbackForNoGrouping) {
-		if(groups.isEmpty()) { return fallbackForNoGrouping; }
+	public String getPath(String separator, String fallbackForNoPath) {
+		if(pathlist.isEmpty()) { return fallbackForNoPath; }
 		
-		return String.join(separator, groups);
+		return String.join(separator, pathlist);
 		
 	}
 	
@@ -534,7 +534,7 @@ public class HSRRecord {
 			.append( startMillis ).append(" ")
 			.append( endTimeMillis ).append(" ")
 			.append( usecase.replaceAll(" ", "_") ).append(" ")
-			.append( getGroupsAsString("/", "noGroup").replaceAll(" ", "_") ).append(" ")
+			.append( getPath("/", "noPath").replaceAll(" ", "_") ).append(" ")
 			.append( name.replaceAll(" ", "_") ).append(" ")
 			.append( value ).append(" ")
 				;
@@ -544,12 +544,12 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
-	 * Returns the full path of the metric including groups:
-	 *   {test}.{usecase}.{group}.{metricName}
+	 * Returns the full path of the record including pathlist:
+	 *   {test}.{usecase}.{path}.{metricName}
 	 ******************************************************************/
 	public String getPathFull() {
 		
-		if(groups.isEmpty()) {
+		if(pathlist.isEmpty()) {
 			return  test.replaceAll(" ", "_")
 					+ "."
 					+ usecase.replaceAll(" ", "_")
@@ -562,24 +562,24 @@ public class HSRRecord {
 				+ "."
 				+ usecase.replaceAll(" ", "_")
 				+ "."
-				+ getGroupsAsString(".", "noGroup").replaceAll(" ", "_")
+				+ getPath(".", "noPath").replaceAll(" ", "_")
 				+ "." 
 				+ name.replaceAll(" ", "_");
 		
 	}
 	
 	/******************************************************************
-	 * Returns the metric path of the metric including groups:
-	 *   {group}.{metricName}
+	 * Returns the metric path of the metric including pathlist:
+	 *   {path}.{metricName}
 	 ******************************************************************/
-	public String getPath() {
+	public String getPathRecord() {
 		
-		if(groups.isEmpty()) {
+		if(pathlist.isEmpty()) {
 			return name.replaceAll(" ", "_")
 		   ;
 		}
 		
-		return getGroupsAsString(".", "noGroup").replaceAll(" ", "_")
+		return getPath(".", "noPath").replaceAll(" ", "_")
 		 + "." + name.replaceAll(" ", "_");
 		
 	}

@@ -25,7 +25,7 @@ const FIELDS_PROPERTIES = [
 	"type",
 	"test",
 	"usecase",
-	"groups",
+	"path",
 	"name",
 	"code",
 	//"granularity",
@@ -91,7 +91,7 @@ const FIELDLABELS = {
 	"type": "Type",
 	"test": "Test",
 	"usecase": "Usecase",
-	"groups": "Groups",
+	"path": "Path",
 	"name": "Name",
 	"code": "Code",
 	"granularity": "Granularity",
@@ -1108,14 +1108,16 @@ function draw(args){
 			case "properties": 			drawProperties(target); break;
 				
 			case "tableAll": 			drawTable(target, DATA, FIELDS_BASE_STATS); break;
-			case "tableGSDC": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration", "Count"]); break;
-			case "tableGSD": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Duration"]); break;
+			case "tableGSMCG": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
+			case "tableGSMC": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
+			case "tableGSM": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Metric"]); break;
 			case "tableGroupsSteps": 	drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step"]); break;
+			case "tableCountGauges": 	drawTable(target, DATA, FIELDS_BASE_STATS, ["Count", "Gauge"]); break;
 			case "tableGroups": 		drawTable(target, DATA, FIELDS_BASE_STATS, ["Group"]); break;
 			case "tableSteps": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Step"]); break;
-			case "tableDurations": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Duration"]); break;
+			case "tableMetrics": 		drawTable(target, DATA, FIELDS_BASE_STATS, ["Metric"]); break;
 			case "tableCounts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Count"]); break;
-			case "tableAsserts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
+			case "tableGauges": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Gauge"]); break;
 			case "tableAsserts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
 			case "tableMessages": 		drawTable(target, DATA, FIELDS_BASE_COUNT, ["Message"]); break;
 			case "tableExceptions": 	drawTable(target, DATA, FIELDS_BASE_COUNT, ["Exception"]); break;

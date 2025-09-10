@@ -44,7 +44,7 @@ public class HSRStatsEngine {
 	
 	private static final Object SYNC_LOCK = new Object();
 
-	// key is a group name, value are all records that are part of the group
+	// key is based on hashCode() which is the StatsIdentifier, value are all records that are part of the group
 	// these are aggregated and purged based on the report interval
 	private static TreeMap<String, ArrayList<HSRRecord> > groupedRecordsInterval = new TreeMap<>();
 	
@@ -134,8 +134,8 @@ public class HSRStatsEngine {
 			String test = HSR.getTest();
 			SystemInfo systemInfo = new SystemInfo();
 			
-			ArrayList<String> systemUsageGroup = new ArrayList();
-			systemUsageGroup.add("System Usage");
+			ArrayList<String> systemUsagePathlist = new ArrayList();
+			systemUsagePathlist.add("System Usage");
 			
 			double MB = 1024.0 * 1024.0;
 			
@@ -155,28 +155,28 @@ public class HSRStatsEngine {
 					addRecord(
 						new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [MB]")
 							.test(test)
-							.groups(systemUsageGroup)
+							.pathlist(systemUsagePathlist)
 							.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
 						);
 					
 					addRecord(
 							new HSRRecord(HSRRecordType.Gauge, "Process Memory Committed [MB]")
 							.test(test)
-							.groups(systemUsageGroup)
+							.pathlist(systemUsagePathlist)
 							.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
 							);
 					
 					addRecord(
 							new HSRRecord(HSRRecordType.Gauge, "Process Memory Max [MB]")
 							.test(test)
-							.groups(systemUsageGroup)
+							.pathlist(systemUsagePathlist)
 							.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
 						);
 					
 					addRecord(
 						new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [%]")
 							.test(test)
-							.groups(systemUsageGroup)
+							.pathlist(systemUsagePathlist)
 							.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
 						);
 	
@@ -200,7 +200,7 @@ public class HSRStatsEngine {
 		        addRecord(
 						new HSRRecord(HSRRecordType.Gauge, "Host Memory Usage [%]")
 							.test(test)
-							.groups(systemUsageGroup)
+							.pathlist(systemUsagePathlist)
 							.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
 						);
 				}catch(Throwable e) {
@@ -218,7 +218,7 @@ public class HSRStatsEngine {
 					addRecord(
 							new HSRRecord(HSRRecordType.Gauge, "CPU Usage [%]")
 								.test(test)
-								.groups(systemUsageGroup)
+								.pathlist(systemUsagePathlist)
 								.value(new BigDecimal(cpuUsage).setScale(1, RoundingMode.HALF_UP))
 							);
 				}catch(Throwable e) {
@@ -246,7 +246,7 @@ public class HSRStatsEngine {
 						addRecord(
 								new HSRRecord(HSRRecordType.Gauge, "Disk Usage [%]: "+diskName)
 									.test(test)
-									.groups(systemUsageGroup)
+									.pathlist(systemUsagePathlist)
 									.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
 								);
 			        }
@@ -273,14 +273,14 @@ public class HSRStatsEngine {
 //		            addRecord(
 //							new HSRRecord(HSRRecordType.Gauge, "Network I/O [Bytes Sent]: "+intefaceName)
 //								.test(test)
-//								.groups(systemUsageGroup)
+//								.pathlist(systemUsagePathlist)
 //								.value(new BigDecimal(bytesSent).setScale(1, RoundingMode.HALF_UP))
 //							);
 //		            
 //		            addRecord(
 //							new HSRRecord(HSRRecordType.Gauge, "Network I/O [Bytes Recv]: "+intefaceName)
 //								.test(test)
-//								.groups(systemUsageGroup)
+//								.pathlist(systemUsagePathlist)
 //								.value(new BigDecimal(bytesReceived).setScale(1, RoundingMode.HALF_UP))
 //							);
 //		        }

@@ -32,8 +32,8 @@ public class HSRRecordStats {
 	private String test;		// the name of the test
 	private String usecase;		// the name of the usecase
 	private String name;		// the name of the metric, one of the items in the lost metricNames
-	private String groupsPath;		// 
-	private String path;
+	private String path;		// 
+	private String pathRecord;
 	private String pathFull;
 	private String code = "";
 	private int granularity;
@@ -54,7 +54,7 @@ public class HSRRecordStats {
 		, type("VARCHAR(32)")
 		, test("VARCHAR(4096)")
 		, usecase("VARCHAR(4096)")
-		, groups("VARCHAR(4096)")
+		, path("VARCHAR(4096)")
 		, name("VARCHAR(4096)")
 		, code("VARCHAR(32)")
 		, granularity("INTEGER")
@@ -281,8 +281,8 @@ public class HSRRecordStats {
 		this.test = stats.test.intern();
 		this.usecase = stats.usecase;
 		this.name = stats.name;
-		this.groupsPath = stats.groupsPath;
 		this.path = stats.path;
+		this.pathRecord = stats.pathRecord;
 		this.pathFull = stats.pathFull;
 		this.code = stats.code;
 		this.granularity = stats.granularity;
@@ -306,8 +306,8 @@ public class HSRRecordStats {
 		this.test = record.test().intern();
 		this.usecase = record.usecase().intern();
 		this.name = record.name().intern();
-		this.groupsPath = record.getGroupsAsString(" / ", "").intern();
-		this.path = record.getPath().intern();
+		this.path = record.getPath(" / ", "").intern();
+		this.pathRecord = record.getPathRecord().intern();
 		this.pathFull = record.getPathFull().intern();
 		this.code = record.code().intern();
 		this.granularity = HSRConfig.getAggregationInterval();
@@ -437,7 +437,7 @@ public class HSRRecordStats {
 					+ separator + type.toString()
 					+ separator + test.replace(separator, "_")
 					+ separator + usecase.replace(separator, "_")  
-					+ separator + groupsPath.replace(separator, "_").replace("\n", " ")  
+					+ separator + path.replace(separator, "_").replace("\n", " ")  
 					+ separator + name.replace(separator, "_").replace("\n", " ")  
 					+ separator + code.replace(separator, "_")  
 					+ separator + granularity
@@ -472,7 +472,7 @@ public class HSRRecordStats {
 		object.addProperty(RecordField.type.toString(), 		type.toString());
 		object.addProperty(RecordField.test.toString(), 	test);
 		object.addProperty(RecordField.usecase.toString(), 	usecase);
-		object.addProperty(RecordField.groups.toString(), 		groupsPath);
+		object.addProperty(RecordField.path.toString(), 		path);
 		object.addProperty(RecordField.name.toString(), 		name);
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
@@ -517,7 +517,7 @@ INSERT INTO TEMP_STATS_AGGREGATION (time,
 type,
 test,
 usecase,
-groups,
+path,
 metric,
 code,
 granularity,
@@ -543,7 +543,7 @@ nok_p90,
 nok_p95)
 SELECT 
       MIN("time") + ((MAX("time") - MIN("time"))/2) AS "time"
-    , "type","test","usecase","groups","metric","code"
+    , "type","test","usecase","path","metric","code"
     , ? AS "granularity"
     
 , SUM("ok_count") AS "ok_count"
@@ -571,7 +571,7 @@ WHERE
 	"time" >= ? 
 AND "time" < ? 
 AND "granularity" < ?
-GROUP BY "type","test","usecase","groups","metric","code","granularity"
+GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 * </code></pre>
 	 ***********************************************************************/
 	public static String createAggregationSQL(String tablenameStats, String tablenameTempAggregation) {
@@ -617,7 +617,7 @@ GROUP BY "type","test","usecase","groups","metric","code","granularity"
 		valueList.add(type.toString());
 		valueList.add(test);
 		valueList.add(usecase);
-		valueList.add(groupsPath);
+		valueList.add(path);
 		valueList.add(name);
 		valueList.add(code);
 		valueList.add(granularity);
@@ -687,21 +687,21 @@ GROUP BY "type","test","usecase","groups","metric","code","granularity"
 	}
 	
 	/***********************************************************************
-	 * Returns the groups path of the record.
+	 * Returns the path.
 	 ***********************************************************************/
-	public String getGroupsPath() {
-		return groupsPath;
+	public String getPath() {
+		return path;
 	}
 	
 	/***********************************************************************
-	 * Returns the name of the gatling test.
+	 * Returns the name of the test.
 	 ***********************************************************************/
 	public String getTest() {
 		return test;
 	}
 	
 	/***********************************************************************
-	 * Returns the name of the gatling test.
+	 * Returns the name of the usecase.
 	 ***********************************************************************/
 	public String getUsecase() {
 		return usecase;
@@ -710,26 +710,27 @@ GROUP BY "type","test","usecase","groups","metric","code","granularity"
 	/***********************************************************************
 	 * Returns the name of the request, or null if this is a user record.
 	 ***********************************************************************/
-	public String getMetricName() {
+	public String getName() {
 		return name;
 	}
 	
 	/******************************************************************
-	 * Returns the metric path of the metric including groups:
-	 *   {group}.{name}
+	 * Returns the path of the record including:
+	 *   {path}.{name}
 	 ******************************************************************/
-	public String getMetricPath() {
-		return path;
+	public String getPathRecord() {
+		return pathRecord;
 	}
 	
 	/******************************************************************
 	 * Returns the full path of the metric including test, usecase
-	 * and groups:
-	 *   {test}.{usecase}.{group}.{name}
+	 * and path:
+	 *   {test}.{usecase}.{path}.{name}
 	 ******************************************************************/
-	public String getMetricPathFull() {
+	public String getPathFull() {
 		return pathFull;
 	}
+	
 	/******************************************************************
 	 * Returns the stats identifier
 	 ******************************************************************/

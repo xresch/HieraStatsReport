@@ -35,7 +35,7 @@ public class HSRReporterOTel implements HSRReporter {
 
     static final AttributeKey<String> TEST = AttributeKey.stringKey("test");
     static final AttributeKey<String> USECASE = AttributeKey.stringKey("usecase");
-    static final AttributeKey<String> GROUPS = AttributeKey.stringKey("groups");
+    static final AttributeKey<String> PATH = AttributeKey.stringKey("path");
     static final AttributeKey<String> NAME = AttributeKey.stringKey("name");
     static final AttributeKey<String> METRIC = AttributeKey.stringKey("metric");
     static final AttributeKey<String> STATUS = AttributeKey.stringKey("status");
@@ -87,7 +87,7 @@ public class HSRReporterOTel implements HSRReporter {
     public void reportRecords(ArrayList<HSRRecordStats> records) {
         
         for (HSRRecordStats record : records) {
-        	String metricName = record.getMetricName().replaceAll("[^A-Za-z0-9_./\\-]", "_");
+        	String metricName = record.getName().replaceAll("[^A-Za-z0-9_./\\-]", "_");
         	
         	metricName = "gtron_"+metricName;
 
@@ -176,8 +176,8 @@ public class HSRReporterOTel implements HSRReporter {
 							 , Attributes.builder()
 									   .put(TEST, record.getTest())
 									   .put(USECASE, record.getUsecase())
-									   .put(GROUPS, record.getGroupsPath())
-									   .put(NAME, record.getMetricName())
+									   .put(PATH, record.getPath())
+									   .put(NAME, record.getName())
 									   .put(METRIC, metric.toString())
 									   .put( CODE, record.getCode())
 									   .put(TYPE, record.getType().toString())
@@ -193,8 +193,8 @@ public class HSRReporterOTel implements HSRReporter {
 							 , Attributes.builder()
 								   .put(TEST, record.getTest())
 								   .put(USECASE, record.getUsecase())
-								   .put(GROUPS, record.getGroupsPath())
-								   .put(NAME, record.getMetricName())
+								   .put(PATH, record.getPath())
+								   .put(NAME, record.getName())
 								   .put(METRIC, metric.toString())
 								   .put( CODE, record.getCode())
 								   .put(TYPE, record.getType().toString())
