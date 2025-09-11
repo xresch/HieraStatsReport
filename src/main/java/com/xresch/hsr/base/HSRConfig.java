@@ -17,9 +17,9 @@ import com.xresch.hsr.stats.HSRStatsEngine;
 import ch.qos.logback.classic.Level;
 
 /***************************************************************************
- * The main class of the HieraStatsReport Framework.
+ * The config class of the HieraStatsReport Framework.
  * 
- * License: MIT License
+ * License: EPL-License
  * 
  * @author Reto Scheiwiller
  * 

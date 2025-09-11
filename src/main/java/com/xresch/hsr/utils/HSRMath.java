@@ -1,5 +1,6 @@
 package com.xresch.hsr.utils;
 
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -7,7 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.UnaryOperator;
-
+/**************************************************************************************************************
+ * A math Utility class that helps with bigDecimal calculations.
+ * 
+ * @author Reto Scheiwiller, (c) Copyright 2025
+ * @license EPL-License
+ * 
+ **************************************************************************************************************/
 public class HSRMath {
 
 	

@@ -4,7 +4,7 @@ package com.xresch.hsr.reporting;
  * Interface for reporting data to a database.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public abstract class HSRReporterDatabase implements HSRReporter {
 

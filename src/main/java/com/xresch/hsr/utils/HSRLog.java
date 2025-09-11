@@ -9,7 +9,7 @@ import ch.qos.logback.classic.Logger;
  * in the first place.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  * 
  **************************************************************************************************************/
 public class HSRLog {

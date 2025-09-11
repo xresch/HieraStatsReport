@@ -34,7 +34,7 @@ import com.google.gson.stream.JsonReader;
  * Utility Class copied and adjusted from the CoreFramework project (Class: com.xresch.cfw.utils.json.CFWJson).
  * 
  * Copyright Owner: Performetriks GmbH, Switzerland
- * License: MIT License
+ * License: EPL License
  * 
  * @author Reto Scheiwiller
  * 

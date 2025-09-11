@@ -18,7 +18,7 @@ import com.xresch.hsr.utils.HSRFiles;
  * This record holds one record of statistical data aggregated from HSRRecord.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRRecordStats {
 	

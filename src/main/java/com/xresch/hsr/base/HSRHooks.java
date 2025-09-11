@@ -8,7 +8,7 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
  * Class that can be extended and overridden to hook into specific points of the HSR Framework.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRHooks {
 	

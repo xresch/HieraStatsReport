@@ -12,7 +12,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
  *  This reporter prints the records as JSON data to sysout. Useful for debugging.
  *  
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRReporterSysoutJson implements HSRReporter {
 
@@ -36,7 +36,7 @@ public class HSRReporterSysoutJson implements HSRReporter {
 	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
 		System.out.println( "=============================================================");
 		System.out.println( "=================== JSON: SUMMARY STATISTICS ================");
-		System.out.println(   "=============================================================");
+		System.out.println( "=============================================================");
 		System.out.println( HSR.JSON.toJSONPretty(summaryRecordsWithSeries)  );
 	}
 	

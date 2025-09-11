@@ -25,7 +25,8 @@ import ch.qos.logback.classic.Logger;
  * The Report class provides methods to add items to the reports, create screenshots
  * and write the report to the disk.
  * 
- * Copyright Reto Scheiwiller, 2017 - MIT License
+ * Copyright Reto Scheiwiller, 2025 - 
+ * @license EPL-License
  **************************************************************************************/
 
 public class HSR {	

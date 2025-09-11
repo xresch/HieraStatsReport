@@ -28,7 +28,7 @@ import com.google.gson.GsonBuilder;
 /**************************************************************************************
  * Just some utility methods used to create the report.
  * 
- * Copyright Reto Scheiwiller, 2017 - MIT License
+ * Copyright Reto Scheiwiller, 2017 - EPL License
  **************************************************************************************/
 
 public class HSRReportUtils {

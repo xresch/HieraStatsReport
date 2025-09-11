@@ -11,7 +11,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
  * This reporter stores the records in a database which is accessible with JDBC.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 

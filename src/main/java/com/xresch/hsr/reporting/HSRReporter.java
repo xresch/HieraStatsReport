@@ -13,7 +13,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
  * heart wishes to have the data be stored.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public interface HSRReporter {
 

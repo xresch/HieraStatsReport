@@ -21,7 +21,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
  * The whole file itself is not a valid JSON string as it is not an array.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRReporterJson implements HSRReporter {
 

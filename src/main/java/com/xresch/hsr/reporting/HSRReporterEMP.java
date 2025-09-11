@@ -29,7 +29,7 @@ import com.xresch.hsr.stats.HSRRecordStats.RecordMetric;
  * and the token used for the connection needs permission to use these endpoints.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRReporterEMP implements HSRReporter {
 

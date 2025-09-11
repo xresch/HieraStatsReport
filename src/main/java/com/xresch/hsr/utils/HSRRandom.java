@@ -28,7 +28,7 @@ import com.google.gson.JsonObject;
  * Utility Class copied and adjusted from the CoreFramework project (Class: com.xresch.cfw.utils.CFWRandom).
  * 
  * Copyright Owner: Performetriks GmbH, Switzerland
- * License: MIT License
+ * License: EPL License
  * 
  * @author Reto Scheiwiller
  * 

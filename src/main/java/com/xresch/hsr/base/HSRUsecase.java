@@ -10,7 +10,7 @@ import com.xresch.hsr.database.DBInterface;
 /***************************************************************************
  * Extend this class to make your usecase a HSRUsecase.
  * 
- * License: MIT License
+ * License: EPL License
  * 
  * @author Reto Scheiwiller
  * 

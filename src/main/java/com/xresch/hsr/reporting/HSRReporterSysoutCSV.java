@@ -10,7 +10,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
  * This reporter prints the records as CSV data to sysout. Useful for debugging.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRReporterSysoutCSV implements HSRReporter {
 

@@ -12,7 +12,7 @@ import com.google.gson.JsonObject;
  * This class holds one single raw record ready to be aggregated.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRRecord {
 	

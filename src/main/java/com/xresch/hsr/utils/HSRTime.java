@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**************************************************************************************************************
  * 
  * Copyright Owner: Performetriks GmbH, Switzerland
- * License: MIT License
+ * License: EPL License
  * 
  * @author Reto Scheiwiller
  * 

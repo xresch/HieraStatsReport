@@ -31,7 +31,7 @@ import com.google.common.cache.CacheBuilder;
 /**************************************************************************************************************
  * 
  * @author Reto Scheiwiller, (c) Copyright 2019 
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRFiles {
 	

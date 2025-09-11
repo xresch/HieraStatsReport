@@ -25,7 +25,7 @@ import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
  * This reporter writes data to an OpenTelemetry Endpoint.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRReporterOTel implements HSRReporter {
 

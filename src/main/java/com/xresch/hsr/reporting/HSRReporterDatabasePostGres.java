@@ -13,7 +13,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
  * This reporter stores the data in a Postgres Database.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 

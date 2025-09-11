@@ -9,10 +9,17 @@ import org.junit.platform.launcher.TestPlan;
 
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
-import com.xresch.hsr.base.HSRReportItem.ItemStatus;
-import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 
+/***************************************************************************
+ * Hooks into JUnit to do some awesomeness.
+ * Causes HSR to be used for JUnit Tests
+ * 
+ * License: EPL License
+ * 
+ * @author Reto Scheiwiller
+ * 
+ ***************************************************************************/
 public class HSRJUnitPlatformListener implements TestExecutionListener {
 
 	// Checkout this: https://www.swtestacademy.com/reporting-test-results-tesults-junit5-jupiter/

@@ -20,7 +20,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
  * You might choose the separator for your CSV data so that you can properly delimit your data.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  * 
  **************************************************************************************************************/
 public class HSRReporterCSV implements HSRReporter {
