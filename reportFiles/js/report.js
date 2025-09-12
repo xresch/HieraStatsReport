@@ -242,10 +242,10 @@ const RECORDTYPE = {
 /**************************************************************************************
  * Returns the SLA description for a specific record Name
  *************************************************************************************/
-function slaForName(recordname){
+function slaForRecord(record){
 	for(i in SLA){
-		if(SLA[i].hasOwnProperty(recordname) ){
-			return SLA[i][recordname];
+		if(SLA[i].hasOwnProperty(record.pathrecord) ){
+			return SLA[i][record.pathrecord];
 		};
 	}
 	
@@ -265,7 +265,7 @@ function customizerSLA(record, value, rendererName, fieldname){
 	//----------------------
 	// Popover
 	let popoverSettings = Object.assign({}, cfw_renderer_common_getPopoverDefaults());
-	popoverSettings.content = '<span class="text-white">' + slaForName(record.name)+"</span>";
+	popoverSettings.content = '<span class="text-white">' + slaForRecord(record)+"</span>";
 	popoverSettings.placement = 'top';
 
 	//----------------------
