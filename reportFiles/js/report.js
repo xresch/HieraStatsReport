@@ -60,13 +60,70 @@ var DATA = [];
 // list of all records of all DATA entries
 var RECORDS_ALL = [];
 
-// one record per datapoint, for easier filtering and charting
-var DATA_CFW_STYLE = [];
-
-
-ALL_ITEMS_FLAT = [];
+// one record per datapoint, for easier filtering and charting with CFW Renderers
+var RECORDS_ALL_DATAPOINTS = [];
 
 GLOBAL_COUNTER = 0;
+
+//================================================
+// ENUM: STATUS
+//================================================
+const RECORDSTATUS = {
+		Success: "Success",
+		Skipped: "Skipped",
+		Fail: "Fail",
+		None: "None",
+		
+}
+
+//================================================
+// ENUM: METRIC
+//================================================
+const RECORDSTATE =  [
+	"ok",
+	"nok",
+]
+
+//================================================
+// ENUM: METRIC
+//================================================
+const RECORDMETRIC =  [
+	"count",
+	"min",
+	"avg",
+	"max",
+	"stdev",
+	"p25",
+	"p50",
+	"p75",
+	"p90",
+	"p95",
+	"sla",
+]
+
+//================================================
+// ENUM: TYPE
+//================================================
+const RECORDTYPE = {
+	Group: 			{name: "Group"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Step: 			{name: "Step"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Wait: 			{name: "Wait"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Assert: 		{name: "Assert"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Exception: 		{name: "Exception"		, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Metric: 		{name: "Metric"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Count: 			{name: "Count"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Gauge: 			{name: "Gauge"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	User: 			{name: "User"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	MessageInfo: 	{name: "MessageInfo"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	MessageWarn: 	{name: "MessageWarn"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	MessageError: 	{name: "MessageError"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
+	Unknown: 		{name: "Unknown"		, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+}
+
+
+//================================================
+// ENUM: FIELDS
+//================================================
 const FIELDS_PROPERTIES = [
 	//"time",
 	"type",
@@ -221,61 +278,6 @@ const CUSTOMIZERS = {
 	"aborted": customizerStatsNumber,
 
 };
-
-
-const TYPE_STATS = {
-	Group: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	Step: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	Wait: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	Assert: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	Exception: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	Duration: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	Count: { 		All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	MessageInfo: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	MessageWarn: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	MessageError: { All: [], None: [], Success: [], Skipped: [], Fail: [] },
-	Unknown: 	  { All: [], None: [], Success: [], Skipped: [], Fail: [] }
-}
-
-
-const BG_COLORS = [
-	 "#d6e9c6",
-	 "#faebcc",
-	 "#ebccd1",
-	 "#ddd"
-];
-
-const BORDER_COLORS= [
-    "#3c763d",
-    "#8a6d3b",
-    "#a94442",
-    "#333"
-]
-const GLOBAL_EXCEPTION_ITEMS = [];
-
-const ItemStatus = {
-		Success: "Success",
-		Skipped: "Skipped",
-		Fail: "Fail",
-		None: "None",
-}
-
-const RECORDTYPE = {
-	Group: 			{name: "Group"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Step: 			{name: "Step"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Wait: 			{name: "Wait"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Assert: 		{name: "Assert"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Exception: 		{name: "Exception"		, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Metric: 		{name: "Metric"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Count: 			{name: "Count"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Gauge: 			{name: "Gauge"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	User: 			{name: "User"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	MessageInfo: 	{name: "MessageInfo"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	MessageWarn: 	{name: "MessageWarn"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	MessageError: 	{name: "MessageError"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Unknown: 		{name: "Unknown"		, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
-}
-
 
 /**************************************************************************************
  * Returns the SLA description for a specific record Name
@@ -511,23 +513,49 @@ function initialize(){
 	
 	//------------------------------------------
 	// Create CFW Style data
-	DATA_CFW_STYLE
-	for(let i in DATA){
-		let currentData = DATA[i];
+	RECORDS_ALL_DATAPOINTS = [];
+	for(let i in RECORDS_ALL){
+		let record = RECORDS_ALL[i];
+		let arrayTime = record.series.time;
+		let arraysOK = record.series.ok;
+		let arraysNOK = record.series.nok;
 		
-		console.log();
+		// clone everything except series
+		// do this here to not clone series every time
+		let clone = _.cloneDeep(record);
+		delete clone.series;
+		
+		for(let t in arrayTime){
+			
+			let timedClone  = _.cloneDeep(clone);
+			timedClone.time = arrayTime[t];
+			
+			for(let m in RECORDMETRIC){
+				let metric 		= RECORDMETRIC[m];
+				let valueOK 	= record.series.ok[metric][t];
+				let valueNOK 	= record.series.nok[metric][t];
+				timedClone["ok_"+metric] = valueOK;
+				timedClone["nok_"+metric] = valueNOK;
+			}
+			
+			RECORDS_ALL_DATAPOINTS.push(timedClone);
+			
+		}
+				
 	}
 	
+	
+		console.log(RECORDS_ALL_DATAPOINTS);		
 	//------------------------------------
 	// Calculate Statistics per Type
 	for(var type in RECORDTYPE){
 		
 		var currentStats = RECORDTYPE[type].stats;
 		var all 		= currentStats.All.length;
-		var success 	= currentStats[ItemStatus.Success].length;
-		var skipped 	= currentStats[ItemStatus.Skipped].length;
-		var fail 		= currentStats[ItemStatus.Fail].length;
-		var undef 		= currentStats[ItemStatus.None].length;
+		var success 	= currentStats[RECORDSTATUS.Success].length;
+		var skipped 	= currentStats[RECORDSTATUS.Skipped].length;
+		var fail 		= currentStats[RECORDSTATUS.Fail].length;
+		var undef 		= currentStats[RECORDSTATUS.None].length;
 		
 		currentStats.percentSuccess = ( (success / all) * 100).toFixed(1);
 		currentStats.percentSkipped =( (skipped / all) * 100).toFixed(1);
@@ -565,10 +593,10 @@ function initialWalkthrough(parent, currentItem){
 	}
 	
 	if(currentItem.status == undefined || currentItem.status == null){
-		currentItem.status = ItemStatus.None;
-	}else if(!(currentItem.status in ItemStatus)){
-		console.log("ItemStatus '"+currentItem.status+"' was not found, using 'Undefined'");
-		currentItem.status = ItemStatus.None;
+		currentItem.status = RECORDSTATUS.None;
+	}else if(!(currentItem.status in RECORDSTATUS)){
+		console.log("RECORDSTATUS '"+currentItem.status+"' was not found, using 'Undefined'");
+		currentItem.status = RECORDSTATUS.None;
 	}
 	
 	if(currentItem.duration == undefined || currentItem.duration == null){
@@ -583,18 +611,10 @@ function initialWalkthrough(parent, currentItem){
 	//------------------------------------
 	// Calculate Statistics per Item
 	if(isObjectWithData(currentItem)){
-		
-		ALL_ITEMS_FLAT.push(currentItem);
-		
-		TYPE_STATS[currentItem.type].All.push(currentItem);	
+
+		RECORDTYPE[currentItem.type].All.push(currentItem);	
 			
-		TYPE_STATS[currentItem.type][currentItem.status].push(currentItem);
-
-
-		if(currentItem.exceptionMessage != null
-		|| currentItem.exceptionStacktrace != null){
-			GLOBAL_EXCEPTION_ITEMS.push(currentItem);
-		}
+		RECORDTYPE[currentItem.type][currentItem.status].push(currentItem);
 		
 		currentItem.statusCount = { All: 1, Undefined: 0, Success: 0, Skipped: 0, Fail: 0 };
 		currentItem.statusCount[currentItem.status]++;
