@@ -595,8 +595,9 @@ public class HSRStatsEngine {
 			statsRecord.sla(sla);
 			if(sla != null) {
 				
-				if(!slaCollection.containsKey(firstRecord.name())) {
-					slaCollection.put(firstRecord.name(), sla);
+				String path = firstRecord.getPathRecord();
+				if(!slaCollection.containsKey(path)) {
+					slaCollection.put(path, sla);
 				}
 				
 				calculateSLA(statsRecord, sla);

@@ -3,10 +3,7 @@ package com.xresch.hsr.stats;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-
-import com.google.gson.JsonObject;
 
 /**************************************************************************************************************
  * This class holds one single raw record ready to be aggregated.
@@ -16,10 +13,15 @@ import com.google.gson.JsonObject;
  **************************************************************************************************************/
 public class HSRRecord {
 	
+	public static final String PATH_SEP = " > ";
+	public static final String PATH_SEP_TRIMMED = PATH_SEP.trim();
+	
 	private transient HSRRecord parent = null;
 	
 	private String test = "";
 	private String usecase = "";
+	
+	private String pathRecordCached = null;
 	
 	private List<String> pathlist = new ArrayList<>();
 	private HSRRecordType type = HSRRecordType.Unknown;
@@ -37,6 +39,8 @@ public class HSRRecord {
 	private String logString = null;
 	
 	private boolean identityChanged = true;
+
+
 		
 	/******************************************************************
 	 * 
@@ -537,14 +541,29 @@ public class HSRRecord {
 		return statsIdentifier;
 	}
 	
+
+	/******************************************************************
+	 * Returns the pathlist as a string.
+	 * 
+	 ******************************************************************/
+	public String getPath() {
+		return getPath(HSRRecord.PATH_SEP, "");
+	}
+	
 	/******************************************************************
 	 * Returns the pathlist as a string separated by the given separator.
 	 * 
 	 ******************************************************************/
-	public String getPath(String separator, String fallbackForNoPath) {
-		if(pathlist.isEmpty()) { return fallbackForNoPath; }
+	private String getPath(String separator, String fallbackForNoPath) {
 		
-		return String.join(separator, pathlist);
+		if(pathlist.isEmpty()) { return fallbackForNoPath; }
+				
+		ArrayList<String> noSeparators = new ArrayList<>();
+		for(String part : pathlist) {
+			noSeparators.add(part.replace(PATH_SEP_TRIMMED, "_"));
+		}
+		
+		return String.join(separator, noSeparators);
 		
 	}
 	
@@ -568,7 +587,7 @@ public class HSRRecord {
 			.append( startMillis ).append(" ")
 			.append( endTimeMillis ).append(" ")
 			.append( usecase.replaceAll(" ", "_") ).append(" ")
-			.append( getPath("/", "noPath").replaceAll(" ", "_") ).append(" ")
+			.append( getPath(PATH_SEP, "noPath").replaceAll(" ", "_") ).append(" ")
 			.append( name.replaceAll(" ", "_") ).append(" ")
 			.append( value ).append(" ")
 				;
@@ -579,42 +598,50 @@ public class HSRRecord {
 
 	/******************************************************************
 	 * Returns the full path of the record including pathlist:
-	 *   {test}.{usecase}.{path}.{metricName}
+	 *   {test} / {usecase} / {path} / {metricName}
 	 ******************************************************************/
 	public String getPathFull() {
 		
-		if(pathlist.isEmpty()) {
-			return  test.replaceAll(" ", "_")
-					+ "."
-					+ usecase.replaceAll(" ", "_")
-					+ "."
-					+ name.replaceAll(" ", "_")
-					;
+		
+		String pathFull =  test.replace(PATH_SEP_TRIMMED, "_")
+				+ PATH_SEP
+				+ usecase.replace(PATH_SEP_TRIMMED, "_")
+				+  PATH_SEP
+				+ name.replace(PATH_SEP_TRIMMED, "_")
+				+  PATH_SEP
+				;
+		
+		if(!pathlist.isEmpty()) {
+			pathFull += getPath(PATH_SEP, "noPath")
+					 +  PATH_SEP;
 		}
 		
-		return test.replaceAll(" ", "_")
-				+ "."
-				+ usecase.replaceAll(" ", "_")
-				+ "."
-				+ getPath(".", "noPath").replaceAll(" ", "_")
-				+ "." 
-				+ name.replaceAll(" ", "_");
+		
+		pathFull += name.replace(PATH_SEP_TRIMMED, "_");
+		
+		return pathFull;
 		
 	}
 	
 	/******************************************************************
 	 * Returns the metric path of the metric including pathlist:
-	 *   {path}.{metricName}
+	 *   {path} / {metricName}
 	 ******************************************************************/
 	public String getPathRecord() {
 		
-		if(pathlist.isEmpty()) {
-			return name.replaceAll(" ", "_")
-		   ;
+		if(pathRecordCached == null) {
+			if(pathlist.isEmpty()) {
+				return name.replace(PATH_SEP_TRIMMED, "_")
+			   ;
+			}
+			
+			pathRecordCached = getPath(PATH_SEP, "noPath")
+			 + PATH_SEP 
+			 + name.replace(PATH_SEP_TRIMMED, "_")
+			 ;
 		}
 		
-		return getPath(".", "noPath").replaceAll(" ", "_")
-		 + "." + name.replaceAll(" ", "_");
+		return pathRecordCached;
 		
 	}
 	

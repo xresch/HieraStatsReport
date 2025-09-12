@@ -2,7 +2,7 @@
 
 FILELIST=[];
 FILELIST.push("data.js");
-FILELIST.push("data2.js");
+//FILELIST.push("data2.js");
 
 FILELIST.push("properties.js");
 FILELIST.push("sla.js");

@@ -119,11 +119,6 @@ public class HSRExpression {
 	    	
 	    	T leftValue = left.determineValue();
 	    	T rightvalue = right.determineValue();
-	    	System.out.println("=======");
-	    	System.out.println("left: "+leftValue);
-	    	System.out.println("operator:"+operator);
-	    	System.out.println("right: "+rightvalue);
-	    	System.out.println("result:"+operator.evaluate(left.determineValue(), right.determineValue()));
 
 	        return operator.evaluate(left.determineValue(), right.determineValue());
 	    }

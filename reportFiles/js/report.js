@@ -257,7 +257,7 @@ function slaForName(recordname){
  *************************************************************************************/
 function customizerSLA(record, value, rendererName, fieldname){
 	
-
+	console.log(record);
 	//----------------------
 	// Check input
 	if(record.ok_sla == null){ return ''; }

@@ -77,7 +77,7 @@ public class HSRReporterOTel implements HSRReporter {
         
 
         
-        meter = openTelemetry.getMeter("gatlytron");
+        meter = openTelemetry.getMeter("hsr");
 
     }
     
@@ -90,7 +90,7 @@ public class HSRReporterOTel implements HSRReporter {
         for (HSRRecordStats record : records) {
         	String metricName = record.name().replaceAll("[^A-Za-z0-9_./\\-]", "_");
         	
-        	metricName = "gtron_"+metricName;
+        	metricName = "hsr_"+metricName;
 
         	if( ! metricsHolderMap.containsKey(metricName) ) {
         		metricsHolderMap.put(metricName, new OTelMetricsHolder(meter, metricName) );

@@ -24,7 +24,6 @@ public class HSRRecordStats {
 	
 	//private static final Logger logger = LoggerFactory.getLogger(GatlytronRecordStats.class);
 	
-		
 	private long time;
 	private HSRRecordType type;
 	private HSRRecordStatus status;
@@ -301,7 +300,7 @@ public class HSRRecordStats {
 		this.test = record.test().intern();
 		this.usecase = record.usecase().intern();
 		this.name = record.name().intern();
-		this.path = record.getPath(" / ", "").intern();
+		this.path = record.getPath().intern();
 		this.pathRecord = record.getPathRecord().intern();
 		this.pathFull = record.getPathFull().intern();
 		this.code = record.code().intern();
@@ -477,6 +476,7 @@ public class HSRRecordStats {
 		object.addProperty(RecordField.test.toString(), 	test);
 		object.addProperty(RecordField.usecase.toString(), 	usecase);
 		object.addProperty(RecordField.path.toString(), 		path);
+		object.addProperty("pathrecord", 						pathRecord);
 		object.addProperty(RecordField.name.toString(), 		name);
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
