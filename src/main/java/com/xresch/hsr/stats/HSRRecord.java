@@ -29,6 +29,7 @@ public class HSRRecord {
 	private long endTimeMillis = -1;
 	private HSRRecordStatus status = HSRRecordStatus.Success;
 	private String code = "";
+	private HSRSLA sla;
 	
 	
 	private BigDecimal value = null;
@@ -119,6 +120,24 @@ public class HSRRecord {
 		startTime(System.currentTimeMillis()); // now
 		value(BigDecimal.ONE); 
 				
+	}
+	
+	/********************************************************************
+	 * Creates a new record, take values from parent.
+	 * 
+	 * @param type the type of the record
+	 * @param parent the parent of this item
+	 * @param name the name of this record (e.g. Step name)
+	 *******************************************************************/
+	public HSRRecord(
+			  HSRRecordType type
+			, String recordName
+			, HSRSLA sla
+			){
+		
+		this(type, recordName);
+		sla(sla);
+	
 	}
 	
 	/********************************************************************
@@ -468,6 +487,21 @@ public class HSRRecord {
 	 ******************************************************************/
 	public HSRRecordType type() {
 		return type;
+	}
+	
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public HSRRecord sla(HSRSLA sla) {
+		this.sla = sla; 
+		return this;
+	}
+	
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public HSRSLA sla() {
+		return sla;
 	}
 
 	/***********************************************************************************

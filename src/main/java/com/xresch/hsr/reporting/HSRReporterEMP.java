@@ -13,10 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
-import com.xresch.hsr.stats.HSRRecordStats.RecordMetric;
+import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 
 /**************************************************************************************************************
  * This reporter takes the received records and sends them to an instance of the open source tool Engineered 
@@ -155,7 +156,7 @@ public class HSRReporterEMP implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords) {
 		// do nothing
 		
 	}
@@ -184,8 +185,8 @@ public class HSRReporterEMP implements HSRReporter {
 				
 		//-------------------------------
 		// Initialize Values
-		String category = categoryPrefix+record.getTest();
-		String entityName = record.getName();
+		String category = categoryPrefix+record.test();
+		String entityName = record.name();
 
 		
 		//-------------------------------
@@ -203,10 +204,10 @@ public class HSRReporterEMP implements HSRReporter {
 		
 		
 		String attrPrepared = ATTRIBUTES
-							.replace("$codePlaceholder$",  record.getCode() )
-							.replace("$typePlaceholder$",  record.getType().toString() )
-							.replace("$pathPlaceholder$",  record.getPath() )
-							.replace("$usecasePlaceholder$",  record.getUsecase().replace("\"", "\\\"") )
+							.replace("$codePlaceholder$",  record.code() )
+							.replace("$typePlaceholder$",  record.type().toString() )
+							.replace("$pathPlaceholder$",  record.path() )
+							.replace("$usecasePlaceholder$",  record.usecase().replace("\"", "\\\"") )
 							;
 		
 		String recordOK  = commonInfo + attrPrepared.replace("$statusPlaceholder$",  "ok"); 
@@ -215,7 +216,7 @@ public class HSRReporterEMP implements HSRReporter {
 		//-------------------------------
 		// Common information
 		
-		for(RecordMetric metric : RecordMetric.values()) {
+		for(HSRMetric metric : HSRMetric.values()) {
 			
 			BigDecimal valueOK = record.getValue(HSRRecordState.ok, metric);
 			BigDecimal valueNOK = record.getValue(HSRRecordState.nok, metric);

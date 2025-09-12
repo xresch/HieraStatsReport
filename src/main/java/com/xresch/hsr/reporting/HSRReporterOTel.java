@@ -7,8 +7,9 @@ import java.util.TreeMap;
 
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
-import com.xresch.hsr.stats.HSRRecordStats.RecordMetric;
+import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -87,7 +88,7 @@ public class HSRReporterOTel implements HSRReporter {
     public void reportRecords(ArrayList<HSRRecordStats> records) {
         
         for (HSRRecordStats record : records) {
-        	String metricName = record.getName().replaceAll("[^A-Za-z0-9_./\\-]", "_");
+        	String metricName = record.name().replaceAll("[^A-Za-z0-9_./\\-]", "_");
         	
         	metricName = "gtron_"+metricName;
 
@@ -108,7 +109,7 @@ public class HSRReporterOTel implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords) {
 		// do nothing
 		
 	}
@@ -164,7 +165,7 @@ public class HSRReporterOTel implements HSRReporter {
 	     ********************************************************/
 	    public void addValues(HSRRecordStats record) {
 			
-	    	for(RecordMetric metric : RecordMetric.values()) {
+	    	for(HSRMetric metric : HSRMetric.values()) {
 				
 	    		
 				DoubleGauge gauge = metricsMap.get(metric);
@@ -174,13 +175,13 @@ public class HSRReporterOTel implements HSRReporter {
 					 gauge.set(
 							   value.longValue()
 							 , Attributes.builder()
-									   .put(TEST, record.getTest())
-									   .put(USECASE, record.getUsecase())
-									   .put(PATH, record.getPath())
-									   .put(NAME, record.getName())
+									   .put(TEST, record.test())
+									   .put(USECASE, record.usecase())
+									   .put(PATH, record.path())
+									   .put(NAME, record.name())
 									   .put(METRIC, metric.toString())
-									   .put( CODE, record.getCode())
-									   .put(TYPE, record.getType().toString())
+									   .put( CODE, record.code())
+									   .put(TYPE, record.type().toString())
 									   .put(STATUS, HSRRecordState.ok.toString())
 									   .build()
 							);
@@ -191,13 +192,13 @@ public class HSRReporterOTel implements HSRReporter {
 					gauge.set(
 							   value.longValue()
 							 , Attributes.builder()
-								   .put(TEST, record.getTest())
-								   .put(USECASE, record.getUsecase())
-								   .put(PATH, record.getPath())
-								   .put(NAME, record.getName())
+								   .put(TEST, record.test())
+								   .put(USECASE, record.usecase())
+								   .put(PATH, record.path())
+								   .put(NAME, record.name())
 								   .put(METRIC, metric.toString())
-								   .put( CODE, record.getCode())
-								   .put(TYPE, record.getType().toString())
+								   .put( CODE, record.code())
+								   .put(TYPE, record.type().toString())
 								   .put(STATUS, HSRRecordState.nok.toString())
 								   .build()
 							);

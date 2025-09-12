@@ -14,12 +14,17 @@
 //this variable or not.
 var FILELIST;
 
+// Array of Objects that hold the statistical data 
 var DATA = [];
 
 // one record per datapoint, for easier filtering and charting
 var DATA_CFW_STYLE = [];
 
+// Array of Objects that hold properties set during the test. 
 var PROPERTIES = [];
+
+// Array of Objects that hold the SLA definitions for the records
+var SLA = [];
 
 ALL_ITEMS_FLAT = [];
 
@@ -54,6 +59,7 @@ const FIELDS_BASE_STATS = FIELDS_BASE_COUNTS.concat([
 	"ok_p75",
 	"ok_p90",
 	"ok_p95",
+	"ok_sla"
 ]);
 
 const FIELDS_BOXPLOT = [
@@ -122,6 +128,7 @@ const FIELDLABELS = {
 	"ok_p75": "P75",
 	"ok_p90": "P90",
 	"ok_p95": "P95",
+	"ok_sla": "SLA",
 	"nok_count": "Count(nok)",
 	"nok_min": "Min(nok)",
 	"nok_avg": "Avg(nok)",
@@ -132,6 +139,7 @@ const FIELDLABELS = {
 	"nok_p75": "P75(nok)",
 	"nok_p90": "P90(nok)",
 	"nok_p95": "P95(nok)",
+	"nok_sla": "SLA(nok)",
 	"success": "Success",
 	"failed": "Failed",
 	"skipped": "Skipped",
@@ -157,6 +165,7 @@ const CUSTOMIZERS = {
 	"ok_p75": customizerStatsNumber,
 	"ok_p90": customizerStatsNumber,
 	"ok_p95": customizerStatsNumber,
+	"ok_sla": customizerSLA,
 	"nok_count": customizerStatsNumber,
 	"nok_min": customizerStatsNumber,
 	"nok_avg": customizerStatsNumber,
@@ -167,6 +176,7 @@ const CUSTOMIZERS = {
 	"nok_p75": customizerStatsNumber,
 	"nok_p90": customizerStatsNumber,
 	"nok_p95": customizerStatsNumber,
+	"nok_sla": customizerSLA,
 	"success": customizerStatsNumber,
 	"failed": customizerStatsNumber,
 	"skipped": customizerStatsNumber,
@@ -230,6 +240,54 @@ const RECORDTYPE = {
 
 
 /**************************************************************************************
+ * Returns the SLA description for a specific record Name
+ *************************************************************************************/
+function slaForName(recordname){
+	for(i in SLA){
+		if(SLA[i].hasOwnProperty(recordname) ){
+			return SLA[i][recordname];
+		};
+	}
+	
+	return '';
+}
+	
+/**************************************************************************************
+ * The main customizer for statistical values.
+ *************************************************************************************/
+function customizerSLA(record, value, rendererName, fieldname){
+	
+
+	//----------------------
+	// Check input
+	if(record.ok_sla == null){ return ''; }
+	
+	//----------------------
+	// Popover
+	let popoverSettings = Object.assign({}, cfw_renderer_common_getPopoverDefaults());
+	popoverSettings.content = '<span class="text-white">' + slaForName(record.name)+"</span>";
+	popoverSettings.placement = 'top';
+
+	//----------------------
+	// Get Status
+	let status = null;
+	
+	if(record.nok_sla == 1){ 
+		return $('<span class="sla sla-ok w-100-cell">OK</span>')
+			.popover(popoverSettings); 
+	}
+	
+	else if(record.ok_sla == 1){ 
+		return $('<span class="sla sla-nok w-100-cell">NOK</span>')
+			.popover(popoverSettings); ; 
+	}
+
+	
+	return '';
+
+}
+
+/**************************************************************************************
  * The main customizer for statistical values.
  *************************************************************************************/
 function customizerStatsNumber(record, value, rendererName, fieldname){
@@ -263,8 +321,7 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 	let chartLink = $('<a href="javascript:void">');
 	chartLink.append(formatted);
 	chartLink.click(function(){
-		console.log(record);
-		console.log(seriesData);
+
 		//---------------------------
 		// Render Settings
 		var dataToRender = {
@@ -311,7 +368,7 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 		let resultDiv = $('<div>');
 		
 		resultDiv.append(renderedChart);
-			console.log(renderedChart);
+
 		let modalTitle = `Chart: ${record.name} - ${fieldname}`;
 		CFW.ui.showModalLarge(modalTitle, renderedChart, null, true);
 		
@@ -398,9 +455,7 @@ function initialize(){
 	//------------------------------------------
 	// Sort the Data
 	DATA = _.orderBy(DATA, ['test', 'usecase', 'groups', 'name']);
-	
-	console.log(DATA);
-	
+		
 	//------------------------------------------
 	// Walkthrough
 	// for(var i = 0; i < DATA.length; i++){
@@ -782,6 +837,48 @@ function drawProperties(target){
 
 /**************************************************************************************
  * 
+ *************************************************************************************/
+function drawSLA(target){
+	
+	target = $(target);
+	
+	for(i in SLA){
+		
+		//-----------------------------------
+		// title
+		let title = "SLA"
+		if(i >= 1){  title = "More SLA"; }
+		
+		if(i > 1){
+			for(k = 1; k < i; k++){
+				title = "Even " + title;
+			}
+		}
+		
+		target.append('<h2>' + title + '</h2>');
+		//-----------------------------------
+		// Render Data
+		let rendererSettings = {
+				data: SLA[i],
+				rendererSettings: {
+					table: {
+						filterable: true
+						, verticalize: true
+						, verticalizelabelize: false
+						, stickyheader: true
+						}
+				},
+			};
+				
+		let renderResult = CFW.render.getRenderer('table').render(rendererSettings);	
+		
+		target.append(renderResult);
+	}
+
+}
+
+/**************************************************************************************
+ * 
  * @param baseOptions the object that where the options should be added.
  * @param fieldArray array of fieldnames
  *************************************************************************************/
@@ -901,8 +998,8 @@ function drawTable(target, data, showFields, typeFilterArray){
 			idfield: null,
 			bgstylefield: null,
 			textstylefield: null,
-			titlefields: ['groups', 'name'],
-			titleformat: "{0} / {1}",
+			titlefields: ['path', 'name', 'ok_sla'],
+			titleformat: "{0} / {1} {2}",
 			visiblefields: showFields,
 			labels: FIELDLABELS,
 			customizers: CUSTOMIZERS,
@@ -956,14 +1053,14 @@ function drawTable(target, data, showFields, typeFilterArray){
 							renderdef: {
 								merge: false,
 								visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
-								customizers: {
+								customizers: Object.assign({}, CUSTOMIZERS, {
 									"Range": function(record, value){ return record_calc_range(record); },	
 									"IQR": function(record, value){ return record_calc_IQR(record); },
 									"Boxplot": function(record, value){
 										return $('<div class="vw-25">')
 													.append( record_format_boxplot(record) );
 									}
-								},
+								}),
 								rendererSettings: {
 									table: {filterable: false, narrow: true, stickyheader: true},
 								},
@@ -975,14 +1072,14 @@ function drawTable(target, data, showFields, typeFilterArray){
 							renderdef: {
 								merge: false,
 								visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
-								customizers: {
+								customizers: Object.assign({}, CUSTOMIZERS, {
 									"Range": function(record, value){ return record_calc_range(record); },	
 									"IQR": function(record, value){ return record_calc_IQR(record); },
 									"Boxplot": function(record, value){
 										return $('<div class="vw-25">')
 													.append( record_format_boxplot(record, minMin, maxMax) );
 									}
-								},
+								}),
 								rendererSettings: {
 									table: {filterable: false, narrow: true, stickyheader: true},
 								},
@@ -992,12 +1089,11 @@ function drawTable(target, data, showFields, typeFilterArray){
 						{	label: 'Panels',
 							name: 'panels',
 							renderdef: {
-								customizers: {}
 							}
 						},
 						{	label: 'Properties',
 							name: 'properties',
-							renderdef: {}
+							renderdef: { }
 						},
 						{	label: 'Cards',
 							name: 'cards',
@@ -1049,6 +1145,7 @@ function draw(args){
 		switch(args.view){
 			case "overview": 			drawOverviewPage(); break;
 			case "properties": 			drawProperties(target); break;
+			case "sla": 				drawSLA(target); break;
 				
 			case "tableAll": 			drawTable(target, DATA, FIELDS_BASE_STATS); break;
 			case "tableGSMCG": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;

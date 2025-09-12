@@ -30,7 +30,7 @@ import com.google.common.cache.CacheBuilder;
 
 /**************************************************************************************************************
  * 
- * @author Reto Scheiwiller, (c) Copyright 2019 
+ * @author Reto Scheiwiller, (c) Copyright 2025
  * @license EPL-License
  **************************************************************************************************************/
 public class HSRFiles {

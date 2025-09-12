@@ -2,8 +2,28 @@
  * Some CSS for the report... yes this comment is only here that there is a comment
  * and I can put the licensing information on it. ;-P
  *
- * © Reto Scheiwiller, 2017 - MIT License
+ * © Reto Scheiwiller, 2025 - EPL License
  **************************************************************************************/
+
+td .w-100-cell{
+	width: 100% !important;
+}
+
+.sla{
+    display: inline-block !important;
+	padding: 0rem 0.25rem;
+    text-align: center !important;
+	color: white;
+	font-weight: bold;
+}
+
+.sla-ok{
+    background-color: var(--cfw-green);
+}
+
+.sla-nok{
+    background-color: var(--cfw-red);
+}
 
 body{
 	padding-top: 70px;

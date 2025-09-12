@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
+import com.xresch.hsr.stats.HSRSLA;
 import com.xresch.hsr.stats.HSRStatsEngine;
 import com.xresch.hsr.utils.HSRFiles;
 import com.xresch.hsr.utils.HSRJson;
@@ -265,42 +266,84 @@ public class HSR {
 	
 	
 	/***********************************************************************************
-	 * Starts a new suite, sets it as the active group and returns it to be able to set 
+	 * Starts a new group, sets it as the active item and returns it to be able to set 
 	 * further details.
+	 * @param name the name for the record, should be unique in your test.
+	 * @return the created record 
 	 ***********************************************************************************/
-	public static HSRRecord startGroup(String name){
-				
-		return HSR.startItem(HSRRecordType.Group, name);
-
-	}
-
-	/***********************************************************************************
-	 * Starts a new step, sets it as the active group and returns it to be able to set 
-	 * further details.
-	 ***********************************************************************************/
-	public static HSRRecord start(String title){
-		
-		return startItem(HSRRecordType.Step, title);
+	public static HSRRecord startGroup(String name){		
+		return HSR.startItem(HSRRecordType.Group, name, null);
 	}
 	
 	/***********************************************************************************
-	 * Starts a new group, sets it as the active group and returns it to be able to set 
+	 * Starts a new group, sets it as the active item and returns it to be able to set 
 	 * further details.
+	 * @param name the name for the record, should be unique in your test.
+	 * @param sla the sla rule that should be evaluated for this record.
+	 * @return the created record 
 	 ***********************************************************************************/
-	public static HSRRecord startWait(String title){
-		
-		return startItem(HSRRecordType.Wait, title);
+	public static HSRRecord startGroup(String name, HSRSLA sla){		
+		return HSR.startItem(HSRRecordType.Group, name, sla);
+	}
+
+	/***********************************************************************************
+	 * Starts a new step, sets it as the active item and returns it to be able to set 
+	 * further details.
+	 * @param name the name for the record, should be unique in your test.
+	 * @return the created record 
+	 ***********************************************************************************/
+	public static HSRRecord start(String name){
+		return startItem(HSRRecordType.Step, name, null);
+	}
+	
+	/***********************************************************************************
+	 * Starts a new step, sets it as the active item and returns it to be able to set 
+	 * further details.
+	 * @param name the name for the record, should be unique in your test.
+	 * @param sla the sla rule that should be evaluated for this record.
+	 * @return the created record 
+	 ***********************************************************************************/
+	public static HSRRecord start(String name, HSRSLA sla){
+		return startItem(HSRRecordType.Step, name, sla);
+	}
+	
+
+	/***********************************************************************************
+	 * Starts a new wait, sets it as the active item and returns it to be able to set 
+	 * further details.
+	 * @param name the name for the record, should be unique in your test.
+	 * @return the created record 
+	 ***********************************************************************************/
+	public static HSRRecord startWait(String name){
+		return startItem(HSRRecordType.Wait, name, null);
 	}	
+	
+	/***********************************************************************************
+	 * Starts a new wait, sets it as the active group and returns it to be able to set 
+	 * further details.
+	 * @param name the name for the record, should be unique in your test.
+	 * @param sla the sla rule that should be evaluated for this record.
+	 * @return the created record 
+	 ***********************************************************************************/
+	public static HSRRecord startWait(String name, HSRSLA sla){
+		return startItem(HSRRecordType.Wait, name, sla);
+	}	
+		
 	
 	/***********************************************************************************
 	 * Starts a new item, sets it as the active group and returns it to be able to set 
 	 * further details.
+	 * 
+	 * @param type the type of record to start
+	 * @param name the name for the record, should be unique in your test.
+	 * @param sla the sla rule that should be evaluated for this record.
+	 * @return the created record 
 	 ***********************************************************************************/
-	private static HSRRecord startItem(HSRRecordType type, String name){
+	private static HSRRecord startItem(HSRRecordType type, String name, HSRSLA sla){
 		
 		HSRConfig.hooks.beforeStart(type, name);
 		
-			HSRRecord item = new HSRRecord(type, name);
+			HSRRecord item = new HSRRecord(type, name, sla);
 			item.test(testname);
 			item.usecase(currentUsecase.get());
 			
@@ -420,7 +463,28 @@ public class HSR {
 			return new HSRRecord(HSRRecordType.MessageInfo, activeItem.get(), "Prevent NullPointerException");
 		}
 		
-		
+	}
+	
+	/***********************************************************************************
+	 * Ends all items that are still open. 
+	 * This is useful to prevent anything from still being open before starting a new iteration.
+	 * It is recommended to close them with Status Aborted to not include wrong measurements
+	 * in the ok-values.
+	 * @param status for forced ends
+	 ***********************************************************************************/
+	public static void endAllOpen(HSRRecordStatus status){
+	
+		while(!openItems().isEmpty()){
+			
+			logger.warn(
+					"'"
+					+openItems().peek().name()
+					+ "' was ended forcfully with status "+status+"."
+					+" Check that you use HSR.end() everywhere where you start."
+				);
+			
+			end(status);
+		}
 	}
 
 	/***********************************************************************************
@@ -493,6 +557,7 @@ public class HSR {
 					.value(value)
 					;
 	}
+
 	
 	/***********************************************************************************
 	 * Add a metric to the report. Useful to report duration and other values you want

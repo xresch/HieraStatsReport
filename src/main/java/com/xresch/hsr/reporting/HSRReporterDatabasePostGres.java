@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
@@ -70,7 +71,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords) {
 		// TODO Auto-generated method stub
 		
 	}

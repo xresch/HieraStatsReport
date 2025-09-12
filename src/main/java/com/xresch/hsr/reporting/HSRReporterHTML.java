@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.utils.HSRReportUtils;
@@ -56,7 +57,12 @@ public class HSRReporterHTML implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties) {
+	public void reportSummary(
+			  ArrayList<HSRRecordStats> summaryRecords
+			, JsonArray summaryRecordsWithSeries
+			, TreeMap<String, String> properties
+			, JsonObject slaForRecords
+			){
 		//-----------------------------------
 		// Extract Base Report Files				  
     	InputStream in = HSRReporterHTML.class.getClassLoader().getResourceAsStream("com/xresch/hsr/files/reportFiles.zip.txt");
@@ -73,6 +79,11 @@ public class HSRReporterHTML implements HSRReporter {
 		// Add to properties.js
 		String jsProperties = "PROPERTIES = PROPERTIES.concat(\n" + HSR.JSON.toJSON(properties) + "\n);";
 		HSRReportUtils.writeStringToFile(directoryPath, "properties.js", jsProperties);
+		
+		//-----------------------------------
+		// Add to sla.js
+		String jsSLA = "SLA = SLA.concat(\n" + HSR.JSON.toJSON(slaForRecords) + "\n);";
+		HSRReportUtils.writeStringToFile(directoryPath, "sla.js", jsSLA);
 	}
 	
 

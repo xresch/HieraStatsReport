@@ -46,6 +46,8 @@ public class HSRRecordStats {
 	private static final String nok = HSRRecordState.nok.toString();
 	private static final String nok_ = nok+"_";
 	
+	private HSRSLA sla = null;
+	
 	/***********************************************************************
 	 * Lists of the names of the metrics 
 	 ***********************************************************************/
@@ -96,7 +98,7 @@ public class HSRRecordStats {
 	// Easiest way to test: Generate data in the database and use a DB tool to adjust the time column. 
 	// !#!#!#!#!# END OF IMPORTANCE !#!#!#!#!#
 
-	public enum RecordMetric {
+	public enum HSRMetric {
 		  count(true, "SUM(\"{type}_count\")")
 		, min(true, "MIN(\"{type}_min\")")
 		, avg(true, "AVG(\"{type}_avg\")")
@@ -107,6 +109,7 @@ public class HSRRecordStats {
 		, p75(true, "PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY \"{type}_p75\")")
 		, p90(true, "PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY \"{type}_p90\")")
 		, p95(true, "PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY \"{type}_p95\")") 
+		, sla(true, "ROUND(AVG(\"{type}_sla\"))")
 		, success(false, "SUM(\"success\")") 
 		, failed(false, "SUM(\"failed\")") 
 		, skipped(false, "SUM(\"skipped\")") 
@@ -120,7 +123,7 @@ public class HSRRecordStats {
 		private static ArrayList<String> valueNames = new ArrayList<>();
 		private static String sqlAggregationPart = "";
 		
-		private RecordMetric(boolean isOkNok, String sqlAggregationString){
+		private HSRMetric(boolean isOkNok, String sqlAggregationString){
 			this.isOkNok = isOkNok;
 			this.sqlAggregation = sqlAggregationString;
 			
@@ -130,7 +133,7 @@ public class HSRRecordStats {
 			
 			//------------------------------
 			// Create List of Names
-			for(RecordMetric metric : RecordMetric.values()) { 
+			for(HSRMetric metric : HSRMetric.values()) { 
 				metricNames.add(metric.toString());
 			}
 			
@@ -142,7 +145,7 @@ public class HSRRecordStats {
 			for(HSRRecordState state : HSRRecordState.values()) {
 				String okNok = state.toString();
 				
-				for(RecordMetric metric : RecordMetric.values()) { 
+				for(HSRMetric metric : HSRMetric.values()) { 
 
 					if(metric.isOkNok()) {
 						String valueName = okNok + "_" + metric.name();
@@ -157,7 +160,7 @@ public class HSRRecordStats {
 			}
 			
 			// Other values
-			for(RecordMetric metric : RecordMetric.values()) { 
+			for(HSRMetric metric : HSRMetric.values()) { 
 
 				if( !metric.isOkNok() ) {
 					String valueName = metric.name();
@@ -205,11 +208,11 @@ public class HSRRecordStats {
 	public static final String fieldNamesJoined = "\""+String.join("\",\"", fieldNames.toArray(new String[0]))+"\"";
 	
 	// list of metric names e.g. min, avg, max ...
-	public static final ArrayList<String> metricNames = RecordMetric.getMetricNames();
+	public static final ArrayList<String> metricNames = HSRMetric.getMetricNames();
 	public static final String metricNamesJoined = "\""+String.join("\",\"", metricNames.toArray(new String[0]))+"\"";
 	
 	// value names consist of type + "_" + metric, e.g. ok_min, ok_avg, ok_max ... nok_min, nok_avg, nok_max ...
-	public static final  ArrayList<String> valueNames = RecordMetric.getValueNames();
+	public static final  ArrayList<String> valueNames = HSRMetric.getValueNames();
 	public static final String valueNamesJoined = "\""+String.join("\",\"", valueNames.toArray(new String[0]))+"\"";
 	
 	
@@ -254,17 +257,7 @@ public class HSRRecordStats {
 													  			", ?".repeat( fieldNames.size() + valueNames.size() - 1 ) 
 													  +")";
 
-	static {
-		
-		//-----------------------------------------
-		// CSV Template
-//		for(String name : valueNames) {
-//			csvHeaderTemplate += ","+name;
-//		}
-		
-	}
 	
-
 	/***********************************************************************
 	 * Creates a clone of the statistic.
 	 * 
@@ -277,8 +270,8 @@ public class HSRRecordStats {
 		this.time = System.currentTimeMillis();
 		this.type = stats.type;
 		this.status = stats.status;
-		this.state = stats.status.state();
-		this.test = stats.test.intern();
+		this.state = stats.state;
+		this.test = stats.test;
 		this.usecase = stats.usecase;
 		this.name = stats.name;
 		this.path = stats.path;
@@ -287,6 +280,8 @@ public class HSRRecordStats {
 		this.code = stats.code;
 		this.granularity = stats.granularity;
 		this.statsIdentifier = stats.statsIdentifier;
+		this.sla = stats.sla;
+		
 		this.values = new HashMap<>(stats.values);
 	}
 	/***********************************************************************
@@ -357,21 +352,21 @@ public class HSRRecordStats {
 		// Add Values
 		HSRRecordState state = record.status().state();  
 		
-		targetForData.addValue(state, RecordMetric.count, count);
-		targetForData.addValue(state, RecordMetric.min, min);
-		targetForData.addValue(state, RecordMetric.max, max);
-		targetForData.addValue(state, RecordMetric.avg, avg);
-		targetForData.addValue(state, RecordMetric.stdev, stdev);
-		targetForData.addValue(state, RecordMetric.p25, p25);
-		targetForData.addValue(state, RecordMetric.p50, p50);
-		targetForData.addValue(state, RecordMetric.p75, p75);
-		targetForData.addValue(state, RecordMetric.p90, p90);
-		targetForData.addValue(state, RecordMetric.p95, p95);
+		targetForData.addValue(state, HSRMetric.count, count);
+		targetForData.addValue(state, HSRMetric.min, min);
+		targetForData.addValue(state, HSRMetric.max, max);
+		targetForData.addValue(state, HSRMetric.avg, avg);
+		targetForData.addValue(state, HSRMetric.stdev, stdev);
+		targetForData.addValue(state, HSRMetric.p25, p25);
+		targetForData.addValue(state, HSRMetric.p50, p50);
+		targetForData.addValue(state, HSRMetric.p75, p75);
+		targetForData.addValue(state, HSRMetric.p90, p90);
+		targetForData.addValue(state, HSRMetric.p95, p95);
 		
-		targetForData.addValue(state, RecordMetric.success, success);
-		targetForData.addValue(state, RecordMetric.failed, failed);
-		targetForData.addValue(state, RecordMetric.skipped, skipped);
-		targetForData.addValue(state, RecordMetric.aborted, aborted);
+		targetForData.addValue(state, HSRMetric.success, success);
+		targetForData.addValue(state, HSRMetric.failed, failed);
+		targetForData.addValue(state, HSRMetric.skipped, skipped);
+		targetForData.addValue(state, HSRMetric.aborted, aborted);
 
 	}	
 	
@@ -382,16 +377,25 @@ public class HSRRecordStats {
 	public void clearValues() {
 		values = new HashMap<>();
 	}
+	
 	/***********************************************************************
 	 * Sets or replaces the specified value.
 	 * 
 	 ***********************************************************************/
-	public void addValue(HSRRecordState state, RecordMetric metric, BigDecimal value) {
+	public void addValue(HSRRecordState state, HSRMetric metric, int value) {
+		addValue(state, metric, new BigDecimal(value));
+	}
+	
+	/***********************************************************************
+	 * Sets or replaces the specified value.
+	 * 
+	 ***********************************************************************/
+	public void addValue(HSRRecordState state, HSRMetric metric, BigDecimal value) {
 		
 		if(value == null) { return; }
 		
-		if(this.getType().isCount() 
-		&& metric != RecordMetric.count) {
+		if(this.type().isCount() 
+		&& metric != HSRMetric.count) {
 			return;
 		}
 		
@@ -480,7 +484,7 @@ public class HSRRecordStats {
 		//----------------------------
 		// OK-NOK Values
 		for(HSRRecordState state : HSRRecordState.values()) {
-			for(RecordMetric metric : RecordMetric.values()) {
+			for(HSRMetric metric : HSRMetric.values()) {
 				if(metric.isOkNok()) {
 					object.addProperty(state + "_" + metric, this.getValue(state,metric));
 				}
@@ -490,7 +494,7 @@ public class HSRRecordStats {
 		//----------------------------
 		// Non OK-NOK Values
 		for(HSRRecordState state : HSRRecordState.values()) {
-			for(RecordMetric metric : RecordMetric.values()) {
+			for(HSRMetric metric : HSRMetric.values()) {
 				if(!metric.isOkNok()) {
 					object.addProperty(metric.toString(), this.getValue(state,metric));
 				}
@@ -588,7 +592,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 							.replaceAll("\\{tableColumnNames\\}", sqlTableColumnNames)
 							.replaceAll("\\{originalTableName\\}", tablenameStats)
 							.replaceAll("\\{namesWithoutTimeOrGranularity\\}", fieldsNoTimeGranularity)
-							.replaceAll("\\{valuesAggregation\\}", RecordMetric.getSQLAggregationPart())
+							.replaceAll("\\{valuesAggregation\\}", HSRMetric.getSQLAggregationPart())
 							;
 		
 		return sqlAggregateTempStats;
@@ -623,7 +627,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 		valueList.add(granularity);
 				
 		for(HSRRecordState state : HSRRecordState.values()) {
-			for(RecordMetric metric : RecordMetric.values()) {
+			for(HSRMetric metric : HSRMetric.values()) {
 				valueList.add(this.getValue(state,metric));
 			}
 		}
@@ -652,7 +656,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	/***********************************************************************
 	 * Returns the time of this record.
 	 ***********************************************************************/
-	public long getTime() {
+	public long time() {
 		return time;
 	}
 	
@@ -660,57 +664,73 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 * Set the time of this record.
 	 * @param epochMillis
 	 ***********************************************************************/
-	public void setTime(long epochMillis) {
+	public void time(long epochMillis) {
 		this.time = epochMillis;
-	}
-	
-	
-	/***********************************************************************
-	 * Returns the type of this record.
-	 ***********************************************************************/
-	public HSRRecordType getType() {
-		return type;
-	}
-	
-	/***********************************************************************
-	 * Returns the type of this record.
-	 ***********************************************************************/
-	public HSRRecordType getState() {
-		return type;
 	}
 	
 	/***********************************************************************
 	 * Returns the code of the record.
 	 ***********************************************************************/
-	public String getCode() {
+	public HSRSLA sla() {
+		return sla;
+	}
+	
+	/***********************************************************************
+	 * Sets the sla of the record.
+	 ***********************************************************************/
+	public void sla(HSRSLA sla) {
+		this.sla = sla;
+	}
+	
+	
+	
+	/***********************************************************************
+	 * Returns the type of this record.
+	 ***********************************************************************/
+	public HSRRecordType type() {
+		return type;
+	}
+	
+	/***********************************************************************
+	 * Returns the type of this record.
+	 ***********************************************************************/
+	public HSRRecordType state() {
+		return type;
+	}
+	
+
+	/***********************************************************************
+	 * Returns the code of the record.
+	 ***********************************************************************/
+	public String code() {
 		return code;
 	}
 	
 	/***********************************************************************
 	 * Returns the path.
 	 ***********************************************************************/
-	public String getPath() {
+	public String path() {
 		return path;
 	}
 	
 	/***********************************************************************
 	 * Returns the name of the test.
 	 ***********************************************************************/
-	public String getTest() {
+	public String test() {
 		return test;
 	}
 	
 	/***********************************************************************
 	 * Returns the name of the usecase.
 	 ***********************************************************************/
-	public String getUsecase() {
+	public String usecase() {
 		return usecase;
 	}
 	
 	/***********************************************************************
 	 * Returns the name of the request, or null if this is a user record.
 	 ***********************************************************************/
-	public String getName() {
+	public String name() {
 		return name;
 	}
 	
@@ -718,7 +738,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 * Returns the path of the record including:
 	 *   {path}.{name}
 	 ******************************************************************/
-	public String getPathRecord() {
+	public String pathRecord() {
 		return pathRecord;
 	}
 	
@@ -727,14 +747,14 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 * and path:
 	 *   {test}.{usecase}.{path}.{name}
 	 ******************************************************************/
-	public String getPathFull() {
+	public String pathFull() {
 		return pathFull;
 	}
 	
 	/******************************************************************
 	 * Returns the stats identifier
 	 ******************************************************************/
-	public String getStatsIdentifier() {
+	public String statsIdentifier() {
 		return statsIdentifier;
 	}
 	
@@ -744,7 +764,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 * @param name of a value, e.g. "nok_count" or "ok_max"
 	 * @return the value for the given name
 	 ***********************************************************************/
-	public BigDecimal getValue(HSRRecordState state, RecordMetric metric) {
+	public BigDecimal getValue(HSRRecordState state, HSRMetric metric) {
 		if(metric.isOkNok) {
 			return values.get(state + "_" + metric);
 		}else {
@@ -792,7 +812,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 
 		if(status == null) { return false; }
 		
-		BigDecimal value = this.getValue(status, RecordMetric.count);
+		BigDecimal value = this.getValue(status, HSRMetric.count);
 		
 		return  (value != null && value.compareTo(BigDecimal.ZERO) != 0) ;
 

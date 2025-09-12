@@ -15,7 +15,10 @@ import com.xresch.hsr.reporting.HSRReporterCSV;
 import com.xresch.hsr.reporting.HSRReporterHTML;
 import com.xresch.hsr.reporting.HSRReporterJson;
 import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
+import com.xresch.hsr.stats.HSRExpression.Operator;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
+import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
+import com.xresch.hsr.stats.HSRSLA;
 
 import ch.qos.logback.classic.Level;
 
@@ -23,7 +26,15 @@ public class TestExampleLoadTestEmulation {
 
 	public static final String DIR_RESULTS = "./target";
 	public static final int REPORT_INTERVAL_SECONDS = 1;
-
+	
+	private static final HSRSLA SLA_P90_LTE_100MS = new HSRSLA(HSRMetric.p90, Operator.LTE, 100); 
+	
+	private static final HSRSLA SLA_P90_AND_AVG = new HSRSLA(HSRMetric.p90, Operator.LTE, 100)
+															.and(HSRMetric.avg, Operator.LTE, 50); 
+	
+	private static final HSRSLA SLA_AVG_OR_P90 = new HSRSLA(HSRMetric.avg, Operator.LTE, 50)
+														.or(HSRMetric.p90, Operator.LTE, 100); 
+	
 	/************************************************************************
 	 * 
 	 ************************************************************************/
@@ -31,7 +42,7 @@ public class TestExampleLoadTestEmulation {
 	static void config() {
 		//--------------------------
 		// Log Levels
-		HSRConfig.setLogLevelRoot(Level.ERROR);
+		HSRConfig.setLogLevelRoot(Level.WARN);
 		
 		//--------------------------
 		// Disabling System Usage Stats
@@ -89,8 +100,8 @@ public class TestExampleLoadTestEmulation {
 	@Test
 	void emulateLoadTest() throws InterruptedException {
 		
-		int multiplier = 10;
-		int users = 20 * multiplier;
+		int multiplier = 1;
+		int users = 10 * multiplier;
 		int rampUpMillis = 200;
 		int executionsPerUser = 5 * multiplier;
 		
@@ -129,7 +140,7 @@ public class TestExampleLoadTestEmulation {
 						//-------------------------------
 						// 
 						HSR.start("010_Login");
-							Thread.sleep(HSR.Random.integer(200, 500));
+							Thread.sleep(HSR.Random.integer(100, 300));
 						HSR.end();
 						
 						HSR.startGroup("MyGroup");
@@ -137,13 +148,13 @@ public class TestExampleLoadTestEmulation {
 								//-------------------------------
 								// 
 								HSR.start("020_Execute_Search");
-									Thread.sleep(HSR.Random.integer(300, 1000));
+									Thread.sleep(HSR.Random.integer(100, 5000));
 								HSR.end();
 								
 								//-------------------------------
 								// 
 								HSR.start("030_Click_Result");
-									Thread.sleep(HSR.Random.integer(100, 500));
+									Thread.sleep(HSR.Random.integer(100, 200));
 								HSR.end();
 								
 								//-------------------------------
@@ -189,7 +200,48 @@ public class TestExampleLoadTestEmulation {
 							int duration = multiplier * HSR.Random.integer(10, 1000);
 							HSR.addMetricRanged("TableLoadTime", new BigDecimal(duration), count, 50);
 						HSR.end(HSR.Random.fromArray(HSRRecordStatus.values()));
-					
+						
+						//-------------------------------
+						// 
+						HSR.startGroup("ServiceLevelAgreements");
+							
+							HSR.start("080_SLA_P90-NOK", SLA_P90_LTE_100MS);
+								Thread.sleep(HSR.Random.integer(80, 120));
+							HSR.end();
+							
+							HSR.start("085_SLA_P90-OK", SLA_P90_LTE_100MS);
+								Thread.sleep(HSR.Random.integer(50, 100));
+							HSR.end();
+							
+							HSR.start("090_SLA_P90_AND_AVG-NOK-P90", SLA_P90_AND_AVG);
+								Thread.sleep(HSR.Random.fromInts(10,10,10, 10, 10, 101));
+							HSR.end();
+							
+							HSR.start("100_SLA_P90_AND_AVG-NOK-AVG", SLA_P90_AND_AVG);
+								Thread.sleep(HSR.Random.fromInts(50,50,50, 50, 50, 90));
+							HSR.end();
+							
+							HSR.start("110_SLA_P90_AND_AVG-OK", SLA_P90_AND_AVG);
+								Thread.sleep(HSR.Random.fromInts(5, 10, 20, 30, 40, 90));
+							HSR.end();
+							
+							HSR.start("120_SLA_AVG_OR_P90-OK-ByAvg", SLA_AVG_OR_P90);
+								Thread.sleep(HSR.Random.fromInts(5, 10, 20, 30, 40, 110));
+							HSR.end();
+							
+							HSR.start("130_SLA_AVG_OR_P90-OK-ByP90", SLA_AVG_OR_P90);
+								Thread.sleep(HSR.Random.fromInts(60, 60, 60, 60, 60, 90));
+							HSR.end();
+							
+							HSR.start("140_SLA_AVG_OR_P90-NOK", SLA_AVG_OR_P90);
+								Thread.sleep(HSR.Random.fromInts(60, 60, 60, 60, 60, 110));
+							HSR.end();
+						HSR.end();
+							
+						//-------------------------------
+						// Make sure everything's closed
+						HSR.endAllOpen(HSRRecordStatus.Aborted);
+						
 					}
 				}catch(InterruptedException e) {
 					System.out.println("Ooops!");

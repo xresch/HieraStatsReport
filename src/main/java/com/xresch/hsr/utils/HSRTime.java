@@ -18,10 +18,9 @@ import java.util.concurrent.TimeUnit;
 
 /**************************************************************************************************************
  * 
- * Copyright Owner: Performetriks GmbH, Switzerland
  * License: EPL License
  * 
- * @author Reto Scheiwiller
+ * @author Reto Scheiwiller, Copyright 2025
  * 
  **************************************************************************************************************/
 public class HSRTime {

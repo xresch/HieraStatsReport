@@ -23,7 +23,7 @@ import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.reporting.HSRReporterDatabase;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
-import com.xresch.hsr.stats.HSRRecordStats.RecordMetric;
+import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
@@ -64,6 +64,10 @@ public class HSRStatsEngine {
 	private static boolean isFirstReport = true;
 	
 	private static final double MB = 1024.0 * 1024.0;
+	
+	// key is record name, will be added the first time the sla is encountered
+	// used to add it to reports
+	private static TreeMap<String, HSRSLA> slaCollection = new TreeMap<>();
 	
 	/***************************************************************************
 	 * Starts the reporting of the statistics.
@@ -113,7 +117,6 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	private static void startThreadSystemUsage() {
 		
-
 		threadSystemInfo = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -519,11 +522,11 @@ public class HSRStatsEngine {
 			HSRRecordStats statsRecord = new HSRRecordStats(firstRecord);
 			statsRecordList.add(statsRecord);
 			
-			statsRecord.addValue(HSRRecordState.ok, RecordMetric.success, 	success);
-			statsRecord.addValue(HSRRecordState.ok, RecordMetric.failed, 	failed);
-			statsRecord.addValue(HSRRecordState.ok, RecordMetric.skipped, 	skipped);
-			statsRecord.addValue(HSRRecordState.ok, RecordMetric.aborted, 	aborted);
-			statsRecord.addValue(HSRRecordState.ok, RecordMetric.none, 	aborted);
+			statsRecord.addValue(HSRRecordState.ok, HSRMetric.success, 	success);
+			statsRecord.addValue(HSRRecordState.ok, HSRMetric.failed, 	failed);
+			statsRecord.addValue(HSRRecordState.ok, HSRMetric.skipped, 	skipped);
+			statsRecord.addValue(HSRRecordState.ok, HSRMetric.aborted, 	aborted);
+			statsRecord.addValue(HSRRecordState.ok, HSRMetric.none, 	none);
 			
 			//---------------------------
 			// Calculate OK Stats
@@ -536,22 +539,22 @@ public class HSRStatsEngine {
 				if(firstRecord.type().isCount()) {
 					
 					if( ! firstRecord.type().isGauge() ) { 
-						statsRecord.addValue(HSRRecordState.ok, RecordMetric.count, ok_sum);
+						statsRecord.addValue(HSRRecordState.ok, HSRMetric.count, ok_sum);
 					} else { 
-						statsRecord.addValue(HSRRecordState.ok, RecordMetric.count, ok_avg);
+						statsRecord.addValue(HSRRecordState.ok, HSRMetric.count, ok_avg);
 					}
 					
 				}else {
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.count,		ok_count);
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.min,  		ok_values.get(0));
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.avg, 		ok_avg);
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.max, 		ok_values.get( ok_values.size()-1 ));
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.stdev, 	bigStdev(ok_values, ok_avg, false));
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p25, 		bigPercentile(25, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p50, 		bigPercentile(50, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p75, 		bigPercentile(75, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p90, 		bigPercentile(90, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, RecordMetric.p95, 		bigPercentile(95, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.count,		ok_count);
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.min,  		ok_values.get(0));
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.avg, 		ok_avg);
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.max, 		ok_values.get( ok_values.size()-1 ));
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.stdev, 	bigStdev(ok_values, ok_avg, false));
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p25, 		bigPercentile(25, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p50, 		bigPercentile(50, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p75, 		bigPercentile(75, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p90, 		bigPercentile(90, ok_values) );
+					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p95, 		bigPercentile(95, ok_values) );
 				}
 			}
 			
@@ -567,31 +570,46 @@ public class HSRStatsEngine {
 				
 				if(firstRecord.type().isCount()) {
 					if( ! firstRecord.type().isGauge() ) { 
-						statsRecord.addValue(HSRRecordState.nok, RecordMetric.count, nok_sum);
+						statsRecord.addValue(HSRRecordState.nok, HSRMetric.count, nok_sum);
 					} else { 
-						statsRecord.addValue(HSRRecordState.nok, RecordMetric.count, nok_avg);
+						statsRecord.addValue(HSRRecordState.nok, HSRMetric.count, nok_avg);
 					}
 				}else {
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.count, 	nok_count);
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.min,  	nok_values.get(0));
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.avg, 		nok_avg);
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.max, 		nok_values.get( nok_values.size()-1 ));
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.stdev, 	bigStdev(nok_values, nok_avg, false));
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p25, 		bigPercentile(25, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p50, 		bigPercentile(50, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p75, 		bigPercentile(75, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p90, 		bigPercentile(90, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, RecordMetric.p95, 		bigPercentile(95, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.count, 	nok_count);
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.min,  	nok_values.get(0));
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.avg, 		nok_avg);
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.max, 		nok_values.get( nok_values.size()-1 ));
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.stdev, 	bigStdev(nok_values, nok_avg, false));
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p25, 		bigPercentile(25, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p50, 		bigPercentile(50, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p75, 		bigPercentile(75, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p90, 		bigPercentile(90, nok_values) );
+					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p95, 		bigPercentile(95, nok_values) );
 				}
+
+			}
+			
+			//---------------------------
+			// Calculate SLA
+			HSRSLA sla = firstRecord.sla();
+			statsRecord.sla(sla);
+			if(sla != null) {
+				
+				if(!slaCollection.containsKey(firstRecord.name())) {
+					slaCollection.put(firstRecord.name(), sla);
+				}
+				
+				calculateSLA(statsRecord, sla);
 
 			}
 			
 		}
 		
+		
 		//-------------------------------
 		// Add To Grouped Stats
 		for(HSRRecordStats value : statsRecordList) {
-			String statsId = value.getStatsIdentifier();
+			String statsId = value.statsIdentifier();
 			
 			if( !groupedStats.containsKey(statsId) ) {
 				groupedStats.put(statsId,  new ArrayList<>());
@@ -614,7 +632,39 @@ public class HSRStatsEngine {
 		}
 		
 	}
+
+	/***************************************************************************
+	 * Calculates the SLA for the statsRecord.
+	 * 
+	 ***************************************************************************/
+	public static void calculateSLA(HSRRecordStats statsRecord, HSRSLA sla) {
+		boolean slaMet = sla.setStats(statsRecord)
+								 .evaluate();
 		
+		if(slaMet) {
+			statsRecord.addValue(HSRRecordState.ok, HSRMetric.sla, 1);
+			statsRecord.addValue(HSRRecordState.nok, HSRMetric.sla, 0);
+		}else {
+			statsRecord.addValue(HSRRecordState.ok, HSRMetric.sla, 0);
+			statsRecord.addValue(HSRRecordState.nok, HSRMetric.sla, 1);
+		}
+	}
+	
+	/***************************************************************************
+	 * Creates a JsonObject for the SLAs.
+	 * 
+	 ***************************************************************************/
+	public static JsonObject generateSLAObject() {
+		
+		JsonObject object = new JsonObject();
+		
+		for(Entry<String, HSRSLA> entry : slaCollection.entrySet()) {
+			object.addProperty(entry.getKey(), entry.getValue().toString());
+		}
+		
+		return object;
+	}
+	
 	/***************************************************************************
 	 * Aggregates the grouped statistics and makes one final report
 	 * 
@@ -646,13 +696,13 @@ public class HSRStatsEngine {
 			ArrayList<BigDecimal> timeArray = new ArrayList<>();
 			for(HSRRecordStats stats : currentGroupedStats) {
 				
-				timeArray.add( new BigDecimal(stats.getTime()) );
+				timeArray.add( new BigDecimal(stats.time()) );
 				
 				for(HSRRecordState state : HSRRecordState.values()) {
 										
 					//--------------------------------
 					// Add Array for Each Metric
-					for(RecordMetric recordMetric : RecordMetric.values()) { 
+					for(HSRMetric recordMetric : HSRMetric.values()) { 
 						
 						String metric = recordMetric.toString();
 						if( ! valuesTable.contains(state, metric) ) {
@@ -674,16 +724,16 @@ public class HSRStatsEngine {
 			//---------------------------
 			// Use first as base, Override
 			// all metrics.
-			HSRRecordStats first = currentGroupedStats.get(0).clone();
-			first.setTime(reportTime);
-			first.clearValues();
+			HSRRecordStats summaryStats = currentGroupedStats.get(0).clone();
+			summaryStats.time(reportTime);
+			summaryStats.clearValues();
 			
-			HSRRecordType type = first.getType();
+			HSRRecordType type = summaryStats.type();
 			for(HSRRecordState state : HSRRecordState.values()) {
 				
 				//--------------------------------
 				// Add Value for Each OK-NOK Metric
-				for(RecordMetric recordMetric : RecordMetric.values()) { 
+				for(HSRMetric recordMetric : HSRMetric.values()) { 
 					
 					if( ! recordMetric.isOkNok()) { continue; }
 					
@@ -692,7 +742,7 @@ public class HSRStatsEngine {
 						ArrayList<BigDecimal> metricValues = valuesTable.get(state, metric);
 						
 						if(metricValues == null || metricValues.isEmpty()) {
-							first.addValue(state, recordMetric, BigDecimal.ZERO);
+							summaryStats.addValue(state, recordMetric, BigDecimal.ZERO);
 						}else {
 							
 							BigDecimal value = null;
@@ -713,7 +763,7 @@ public class HSRStatsEngine {
 								
 							};
 							
-							first.addValue(state, recordMetric, value);
+							summaryStats.addValue(state, recordMetric, value);
 
 						}
 					}
@@ -722,7 +772,7 @@ public class HSRStatsEngine {
 			
 			//--------------------------------
 			// Add Value for Each non OK-NOK-Metric
-			for(RecordMetric recordMetric : RecordMetric.values()) { 
+			for(HSRMetric recordMetric : HSRMetric.values()) { 
 				
 				if( recordMetric.isOkNok()) { continue; }
 				
@@ -730,18 +780,25 @@ public class HSRStatsEngine {
 				ArrayList<BigDecimal> metricValues = valuesTable.get(HSRRecordState.ok, metric);
 
 				if(metricValues == null || metricValues.isEmpty()) {
-					first.addValue(HSRRecordState.ok, recordMetric, BigDecimal.ZERO);
+					summaryStats.addValue(HSRRecordState.ok, recordMetric, BigDecimal.ZERO);
 				}else {
 					BigDecimal value = HSR.Math.bigSum(metricValues, 0, true);
-					first.addValue(HSRRecordState.ok, recordMetric, value);
+					summaryStats.addValue(HSRRecordState.ok, recordMetric, value);
 				}
 				
 			}
 			
 			//---------------------------
+			// Calculate SLA
+			HSRSLA sla = summaryStats.sla();
+			if(sla != null) {
+				calculateSLA(summaryStats, sla);
+			}
+			
+			//---------------------------
 			// Keep Empty
-			finalRecords.add(first);
-			JsonObject recordObject = first.toJson();
+			finalRecords.add(summaryStats);
+			JsonObject recordObject = summaryStats.toJson();
 			
 			// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
 			JsonObject series = HSR.JSON.toJSONElement(valuesTable)
@@ -799,16 +856,8 @@ public class HSRStatsEngine {
 		){
 		
 		//-------------------------
-		// Filter Records
-//		ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
-//		for (HSRRecordStats record : finalStatsRecords.values()){
-//			
-//			if( HSRConfig.isKeepEmptyRecords()
-//			 || record.hasData() 
-//			 ){
-//				finalRecords.add(record);
-//			}
-//		}
+		// Lsit of SLAs
+		JsonObject slaForRecords = generateSLAObject();
 		
 		//-------------------------
 		// Send Clone of list to each Reporter
@@ -824,6 +873,7 @@ public class HSRStatsEngine {
 						  clone
 						, finalRecordsAarrayWithSeries.deepCopy()
 						, properties
+						, slaForRecords
 					);
 			}catch(Exception e) {
 				logger.error("Exception while reporting data.", e);
