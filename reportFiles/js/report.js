@@ -870,6 +870,153 @@ function drawOverviewPage(){
 }
 
 /**************************************************************************************
+ * Creates charts by fields
+ *************************************************************************************/
+function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions){
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = {
+		charttype: "area",
+		// How should the input data be handled groupbytitle|arrays 
+		datamode: 'groupbytitle',
+		xfield: "time",
+		yfield: metricsArray,
+		type: "line",
+		xtype: "time",
+		ytype: "linear",
+		stacked: false,
+		legend: true,
+		axes: true,
+		ymin: 0,
+		ymax: null,
+		pointradius: 1,
+		spangaps: false,
+		padding: '2px',
+		height: '50vh'
+	}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	//---------------------------
+	// Render Settings
+	var dataToRender = {
+		data: data,
+		titlefields: fieldsArray,
+		// visiblefields: ["name"],
+		labels: FIELDLABELS,
+		//customizers: CUSTOMIZERS,
+		rendererSettings:{
+			chart: finalChartOptions
+		}
+	};
+	
+	//--------------------------
+	// Render 
+	var renderer = CFW.render.getRenderer('chart');
+	var renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
+	
+	// ----------------------------
+	// Create Modal
+	target.append(renderedChart);
+	
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsDiskusage(target){
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.startsWith("Disk Usage"); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record.percent = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["percent"]
+		, { 
+			  multichart: true 
+			, multichartcolumns: 2
+			, height: "300px"
+		}
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsCPUUsage(target){
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.startsWith("CPU Usage"); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record.percent = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["percent"]
+		, { 
+			  multichart: false 
+		  }
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsNetworkIO(target){
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.startsWith("Network I/O"); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record["megabytesPerSec"] = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["megabytesPerSec"]
+		, { 
+			  multichart: true 
+			, multichartcolumns: 2
+			, height: "300px"
+		}
+	);
+}
+
+/**************************************************************************************
  * 
  *************************************************************************************/
 function drawProperties(target){
@@ -911,6 +1058,7 @@ function drawProperties(target){
 	}
 
 }
+
 
 /**************************************************************************************
  * 
@@ -1223,6 +1371,10 @@ function draw(args){
 			case "properties": 			drawProperties(target); break;
 			case "sla": 				drawSLA(target); break;
 				
+			case "chartsDiskusage": 	drawChartsDiskusage(target); break;
+			case "chartsCPUUsage": 		drawChartsCPUUsage(target); break;
+			case "chartsNetworkIO": 	drawChartsNetworkIO(target); break;
+			
 			case "tableAll": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS); break;
 			case "tableGSMCG": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
 			case "tableGSMC": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
