@@ -864,8 +864,7 @@ public class HSRStatsEngine {
 		// Send Clone of list to each Reporter
 		TreeMap<String,String> properties = HSRConfig.getProperties();
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
-			ArrayList<HSRRecordStats> clone = new ArrayList<>();
-			clone.addAll(finalRecords);
+			ArrayList<HSRRecordStats> clone = new ArrayList<>(finalRecords);
 
 			// wrap with try catch to not stop reporting to all reporters
 			try {
@@ -873,8 +872,8 @@ public class HSRStatsEngine {
 				reporter.reportSummary(
 						  clone
 						, finalRecordsAarrayWithSeries.deepCopy()
-						, properties
-						, slaForRecords
+						, new TreeMap<>(properties)
+						, slaForRecords.deepCopy()
 					);
 			}catch(Exception e) {
 				logger.error("Exception while reporting data.", e);

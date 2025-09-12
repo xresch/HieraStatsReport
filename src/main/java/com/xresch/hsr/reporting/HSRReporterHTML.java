@@ -63,6 +63,7 @@ public class HSRReporterHTML implements HSRReporter {
 			, TreeMap<String, String> properties
 			, JsonObject slaForRecords
 			){
+		
 		//-----------------------------------
 		// Extract Base Report Files				  
     	InputStream in = HSRReporterHTML.class.getClassLoader().getResourceAsStream("com/xresch/hsr/files/reportFiles.zip.txt");
@@ -70,20 +71,19 @@ public class HSRReporterHTML implements HSRReporter {
 
     	HSRReportUtils.extractZipFile(zipStream, directoryPath);
     			
+    	//-----------------------------------
+    	// Make Data Object
+    	JsonObject data = new JsonObject();
+    	data.addProperty("test", HSR.getTest());
+    	data.add("properties", HSR.JSON.toJSONElement(properties) );
+    	data.add("sla", slaForRecords);
+    	data.add("records", summaryRecordsWithSeries);
+    	
 		//-----------------------------------
 		// Add to data.js
-		String javascript = "DATA = DATA.concat(\n" + HSR.JSON.toJSON(summaryRecordsWithSeries) + "\n);";
+		String javascript = "DATA = DATA.concat(\n" + HSR.JSON.toJSON(data) + "\n);";
 		HSRReportUtils.writeStringToFile(directoryPath, "data.js", javascript);
 		
-		//-----------------------------------
-		// Add to properties.js
-		String jsProperties = "PROPERTIES = PROPERTIES.concat(\n" + HSR.JSON.toJSON(properties) + "\n);";
-		HSRReportUtils.writeStringToFile(directoryPath, "properties.js", jsProperties);
-		
-		//-----------------------------------
-		// Add to sla.js
-		String jsSLA = "SLA = SLA.concat(\n" + HSR.JSON.toJSON(slaForRecords) + "\n);";
-		HSRReportUtils.writeStringToFile(directoryPath, "sla.js", jsSLA);
 	}
 	
 

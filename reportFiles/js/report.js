@@ -14,17 +14,55 @@
 //this variable or not.
 var FILELIST;
 
-// Array of Objects that hold the statistical data 
+//================================================
+// DATA
+// ----
+// Array of Objects, each object holds the data for 
+// one test execution.
+// Example of an element inside the array:
+//{
+//	"test": "TestLoadAverage",
+//	"properties": {
+//		"[Custom] Environment": "TEST",
+//		"[HSR] debug": "false",	
+//		...
+//	},
+//	"sla": {
+//		"ServiceLevelAgreements \u003e 080_SLA_P90-NOK": "( ok_p90 \u003c\u003d 100 )",
+//		"ServiceLevelAgreements \u003e 085_SLA_P90-OK": "( ok_p90 \u003c\u003d 100 )",
+//		...
+//	},
+//	"records": [
+//		{
+//			"time": 1757680898638,
+//			"type": "Assert",
+//			"test": "TestExampleLoadTestEmulation",
+//			"usecase": "emulateLoadTest",
+//			"path": "MyGroup \u003e MySubGroup",
+//			"pathrecord": "MyGroup \u003e MySubGroup \u003e 060_Assert_ContainsA",
+//			"name": "060_Assert_ContainsA",
+//			"code": "",
+//			"granularity": 1,
+//			"ok_count": 36, "ok_min": null, "ok_avg": null, "ok_max": null, "ok_stdev": null, "ok_p25": null, "ok_p50": null, "ok_p75": null, "ok_p90": null, "ok_p95": null, "ok_sla": null,
+//			"nok_count": 14, "nok_min": null, "nok_avg": null, "nok_max": null, "nok_stdev": null, "nok_p25": null, "nok_p50": null, "nok_p75": null, "nok_p90": null, "nok_p95": null, "nok_sla": null,
+//			"success": null, "failed": null, "skipped": null, "aborted": null, "none": null,
+//			"series": {
+//				"time": [ 1757680877041, 1757680878230, 1757680879419]
+//				"ok":  { "count": [1, 2, 3], "min": [0, 2, 4], "avg": [0, 2, 4] ... },
+//				"nok": { "count": [1, 2, 3], "min": [0, 2, 4], "avg": [0, 2, 4] ... }
+//			}
+//		}
+//	]
+//}
+//================================================
 var DATA = [];
+
+// list of all records of all DATA entries
+var RECORDS_ALL = [];
 
 // one record per datapoint, for easier filtering and charting
 var DATA_CFW_STYLE = [];
 
-// Array of Objects that hold properties set during the test. 
-var PROPERTIES = [];
-
-// Array of Objects that hold the SLA definitions for the records
-var SLA = [];
 
 ALL_ITEMS_FLAT = [];
 
@@ -243,9 +281,12 @@ const RECORDTYPE = {
  * Returns the SLA description for a specific record Name
  *************************************************************************************/
 function slaForRecord(record){
-	for(i in SLA){
-		if(SLA[i].hasOwnProperty(record.pathrecord) ){
-			return SLA[i][record.pathrecord];
+	
+	for(i in DATA){
+		let sla = DATA[i].sla;
+
+		if(sla.hasOwnProperty(record.pathrecord) ){
+			return sla[record.pathrecord];
 		};
 	}
 	
@@ -257,7 +298,6 @@ function slaForRecord(record){
  *************************************************************************************/
 function customizerSLA(record, value, rendererName, fieldname){
 	
-	console.log(record);
 	//----------------------
 	// Check input
 	if(record.ok_sla == null){ return ''; }
@@ -318,7 +358,7 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 	
 	//----------------------
 	// Create Link
-	let chartLink = $('<a href="javascript:void">');
+	let chartLink = $('<a href="javascript:void(0)">');
 	chartLink.append(formatted);
 	chartLink.click(function(){
 
@@ -461,6 +501,22 @@ function initialize(){
 	// for(var i = 0; i < DATA.length; i++){
 		// initialWalkthrough(null, DATA[i]);
 	// }
+	
+	//------------------------------------------
+	// Create CFW Style data
+	RECORDS_ALL = [];
+	for(let i in DATA){
+		RECORDS_ALL = RECORDS_ALL.concat(DATA[i].records);
+	}	
+	
+	//------------------------------------------
+	// Create CFW Style data
+	DATA_CFW_STYLE
+	for(let i in DATA){
+		let currentData = DATA[i];
+		
+		console.log();
+	}
 	
 	//------------------------------------
 	// Calculate Statistics per Type
@@ -800,7 +856,7 @@ function drawProperties(target){
 	
 	target = $(target);
 	
-	for(i in PROPERTIES){
+	for(i in DATA){
 		
 		//-----------------------------------
 		// title
@@ -814,10 +870,11 @@ function drawProperties(target){
 		}
 		
 		target.append('<h2>' + title + '</h2>');
+		
 		//-----------------------------------
 		// Render Data
 		let rendererSettings = {
-				data: PROPERTIES[i],
+				data: DATA[i].properties,
 				rendererSettings: {
 					table: {
 						filterable: true
@@ -842,7 +899,7 @@ function drawSLA(target){
 	
 	target = $(target);
 	
-	for(i in SLA){
+	for(i in DATA){
 		
 		//-----------------------------------
 		// title
@@ -859,7 +916,7 @@ function drawSLA(target){
 		//-----------------------------------
 		// Render Data
 		let rendererSettings = {
-				data: SLA[i],
+				data: DATA[i].sla,
 				rendererSettings: {
 					table: {
 						filterable: true
@@ -918,7 +975,6 @@ function drawTable(target, data, showFields, typeFilterArray){
 	var parent = $(target);
 	parent.html('');
 	
-
 	//======================================
 	// Filter Data
 	let filterID = "";
@@ -1147,20 +1203,20 @@ function draw(args){
 			case "properties": 			drawProperties(target); break;
 			case "sla": 				drawSLA(target); break;
 				
-			case "tableAll": 			drawTable(target, DATA, FIELDS_BASE_STATS); break;
-			case "tableGSMCG": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
-			case "tableGSMC": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
-			case "tableGSM": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step", "Metric"]); break;
-			case "tableGroupsSteps": 	drawTable(target, DATA, FIELDS_BASE_STATS, ["Group", "Step"]); break;
-			case "tableCountGauges": 	drawTable(target, DATA, FIELDS_BASE_STATS, ["Count", "Gauge"]); break;
-			case "tableGroups": 		drawTable(target, DATA, FIELDS_BASE_STATS, ["Group"]); break;
-			case "tableSteps": 			drawTable(target, DATA, FIELDS_BASE_STATS, ["Step"]); break;
-			case "tableMetrics": 		drawTable(target, DATA, FIELDS_BASE_STATS, ["Metric"]); break;
-			case "tableCounts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Count"]); break;
-			case "tableGauges": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Gauge"]); break;
-			case "tableAsserts": 		drawTable(target, DATA, FIELDS_BASE_COUNTS, ["Assert"]); break;
-			case "tableMessages": 		drawTable(target, DATA, FIELDS_BASE_COUNT, ["Message"]); break;
-			case "tableExceptions": 	drawTable(target, DATA, FIELDS_BASE_COUNT, ["Exception"]); break;
+			case "tableAll": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS); break;
+			case "tableGSMCG": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
+			case "tableGSMC": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
+			case "tableGSM": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric"]); break;
+			case "tableGroupsSteps": 	drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step"]); break;
+			case "tableCountGauges": 	drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Count", "Gauge"]); break;
+			case "tableGroups": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group"]); break;
+			case "tableSteps": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Step"]); break;
+			case "tableMetrics": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Metric"]); break;
+			case "tableCounts": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Count"]); break;
+			case "tableGauges": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Gauge"]); break;
+			case "tableAsserts": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Assert"]); break;
+			case "tableMessages": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Message"]); break;
+			case "tableExceptions": 	drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;
 			
 			case "csv": 				drawCSV(); break;
 			case "json": 				drawJSON(); break;

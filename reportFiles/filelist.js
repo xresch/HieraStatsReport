@@ -1,8 +1,6 @@
-// Example: FILELIST = ["data.js", "properties.js", "sla.js"];
+// Example: FILELIST = ["data.js", "data2.js", "dataN.js", "custom.js"];
 
 FILELIST=[];
 FILELIST.push("data.js");
 //FILELIST.push("data2.js");
 
-FILELIST.push("properties.js");
-FILELIST.push("sla.js");

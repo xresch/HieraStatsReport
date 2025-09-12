@@ -1,3 +1,0 @@
-PROPERTIES = PROPERTIES.concat(
-{"[Custom] Environment":"TEST","[Custom] Testdata Rows":"120","[HSR] databaseAgeOut":"false","[HSR] debug":"false","[HSR] enableStatsCPU":"true","[HSR] enableStatsDisk":"true","[HSR] enableStatsHostMemory":"true","[HSR] enableStatsProcessMemory":"true","[HSR] executionID":"c0a124eb-5984-4342-a80a-453687d18117","[HSR] rawDataToSysout":"false","[HSR] rawdataLogPath":"null","[HSR] reportingInterval":"1 sec","[HSR] timeStartMillis":"1757679223618","[HSR] timeStartTimestamp":"2025-09-12T14:13:43.618"}
-);
