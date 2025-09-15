@@ -870,6 +870,109 @@ function drawOverviewPage(){
 }
 
 /**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawManualPage(target){
+	
+	target = $(target);
+	target.html('');
+	
+	target.append(`
+		<h2>Manual</h2>
+		<p>This page will give you a short introduction about this report and how to work with it.</p>
+		
+		<h3>State OK and NOT OK</h3>
+		<p>Every time a value is reported it has one of the following two states: </p>
+		<ul>
+			<li><b>OK:&nbsp;</b> The value is considered OK to be included in the statistic. </li>
+			<li><b>NOK:&nbsp;</b> The value is considered NOT OK to be included in the statistic. </li>
+		</ul>
+		
+		<p>This distinction is made to get proper measurements of duration values, excluding skipped, failed or aborted transactions.</p>
+		
+		
+		<h3>Status</h3>
+		<p>Every time a value is reported it has one of the following statuses.
+		A status defines by default the state of the value. </p>
+		<ul>
+			<li><b>SUCCESS:&nbsp;</b> (Default) The status of the value is successful(State: OK). </li>
+			<li><b>FAILED:&nbsp;</b> The status of the value is failed(State: NOK, as things have not been executed as expected). </li>
+			<li><b>SKIPPED:&nbsp;</b> The status of the value is skipped(State: NOK, as what should have been measured is skipped). </li>
+			<li><b>ABORTED:&nbsp;</b> The status of the value is aborted(State: NOK, as what should have been measured has been stopped somewhere in between). </li>
+			<li><b>NONE:&nbsp;</b> If the status was set to NONE (State: OK, as we consider it successful). </li>
+		</ul>
+		
+		<h3>Types</h3>
+		<p>Every metric has one of the following types. These types are defined while reporting values for metrics.</p>
+		<ul>
+			<li><b>Group:&nbsp;</b> The type Group is used to wrap and include measurements of any other type. </li>
+			<li><b>Step:&nbsp;</b> The type Step is used to measure the time of a step in the test. A step can contain any other type.</li>
+			<li><b>Wait:&nbsp;</b> The type Wait is used to measure a waiting time during your the test.</li>
+			<li><b>Assert:&nbsp;</b> The type Assert is used to report results of assertions. The results are in the fields "Count" and "Count(nok)".</li>
+			<li><b>Exception:&nbsp;</b> The type Exception is used to report an exception. The "name" of the metric will contain the exception message and an a truncated stack trace.</li>
+			<li><b>Metric:&nbsp;</b> The type Metric is used to report custom metrics that should calculate statistical values(min, avg, max ...). Typically used for duration and not for counts.</li>
+			<li><b>Count:&nbsp;</b> The type Count is used to report count values. Count values are always aggregated as a sum. </li>
+			<li><b>Gauge:&nbsp;</b> The type Gauge is used to report gauge values. Gauge values are always aggregated as an average. </li>
+			<li><b>User:&nbsp;</b> The type User is used to report the number started, active and stopped users during a test. This type is used and created internally by the testing framwork. </li>
+			<li><b>MessageInfo:&nbsp;</b> The type MessageInfo is used to report custom info messages. The message will be put in the "name" field. Often nested into groups and steps.</li>
+			<li><b>MessageWarn:&nbsp;</b> The type MessageWarn is used to report custom warning messages. The message will be put in the "name" field. Often nested into groups and steps.</li>
+			<li><b>MessageError:&nbsp;</b> The type MessageError is used to report custom error messages without exception stack traces. The message will be put in the "name" field. Often nested into groups and steps.</li>
+			<li><b>Unknown:&nbsp;</b> The type Unknown is applied when there is an unexpected type. You should actually never encounter this one.</li>
+		</ul>
+		<p><b>Note:</b> Theoretically, every type can contain every other type when building a hierarchy. Commonly, the types that contain other elements are Group, Step and Wait.</p>
+		
+		<h3>Metrics</h3>
+		<p>Following are the metrics you can encounter in various sections of this report nad its exports: </p>
+		<ul>
+			<li><b>Time:&nbsp;</b> The time of the metric. </li>
+			<li><b>Type:&nbsp;</b> The type of the record. </li>
+			<li><b>Test:&nbsp;</b> The name of the test that was executed. </li>
+			<li><b>Usecase:&nbsp;</b> The name of the usecase in the test. </li>
+			<li><b>Path:&nbsp;</b> The path of the metric, basically the hierarchy from left to right. </li>
+			<li><b>Name:&nbsp;</b> The name of the metric or record. </li>
+			<li><b>Code:&nbsp;</b> The custom status code.  </li>
+			<li><b>Granularity:&nbsp;</b> The time interval in seconds the measurements have been aggregated on and reported with.</li>
+			
+			<li><b>Count:&nbsp;</b> Either contains the metric's number of values, an actual count(Type: Count), or the value of a gauge(Type: Gauge). </li>
+			<li><b>Min:&nbsp;</b> The minimum of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>Avg:&nbsp;</b> The average of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>Max:&nbsp;</b> The maximum of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>Stdev:&nbsp;</b> The standard deviation of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>P25:&nbsp;</b> The 25th percentile of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>P50:&nbsp;</b> The 50th percentile of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>P75:&nbsp;</b> The 75th percentile of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>P90:&nbsp;</b> The 90th percentile of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>P95:&nbsp;</b> The 95th percentile of the metric's values that are considered OK to be included in the statistics. </li>
+			<li><b>SLA:&nbsp;</b> Contains the values for the evaluation of Service Level Agreements(SLA). 
+									Either 1 for true if the SLA was met, or 0 for false if the SLA was not met. Will be shown on the UI as OK and Not OK. </li>
+			
+			<li><b>Count(nok):&nbsp;</b> The metric's number of NOT OK values. </li>
+			<li><b>Min(nok):&nbsp;</b> The minimum of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>Avg(nok):&nbsp;</b> The average of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>Max(nok):&nbsp;</b> The maximum of the metric's values that are considered NOT OK and are excluded from the statistics.</li>
+			<li><b>Stdev(nok):&nbsp;</b> The standard deviation of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>P25(nok):&nbsp;</b> The 25th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>P50(nok):&nbsp;</b> The 50th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>P75(nok):&nbsp;</b> The 75th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>P90(nok):&nbsp;</b> The 90th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>P95(nok):&nbsp;</b> The 95th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. </li>
+			<li><b>SLA(nok):&nbsp;</b> Contains the values for the evaluation of Service Level Agreements(SLA). 
+									Either 1 for true if the SLA was NOT met, or 0 for false if the SLA was met. Will be shown on the UI as OK and Not OK. </li>
+			
+			<li><b>success:&nbsp;</b> The number of values for the metric that were reported with the status SUCCESS. </li>
+			<li><b>failed:&nbsp;</b> The number of values for the metric that were reported with the status FAILED. </li>
+			<li><b>skipped:&nbsp;</b> The number of values for the metric that were reported with the status SKIPPED. </li>
+			<li><b>aborted:&nbsp;</b> The number of values for the metric that were reported with the status ABORTED. </li>
+			<li><b>none:&nbsp;</b> The number of values for the metric that were reported with the status NONE. </li>
+			<li><b>Range:&nbsp;</b> The range of the values, equals to maximum - minimum. </li>
+			<li><b>IQR:&nbsp;</b> The Inter Quartile Range(IQR) of the values, equals to P75 - P25.  </li>
+			
+		</ul>
+	`);
+
+}
+
+/**************************************************************************************
  * Creates charts by fields
  *************************************************************************************/
 function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions){
@@ -925,7 +1028,7 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsDiskusage(target){
+function drawChartsDiskusage(target, height){
 	
 	//---------------------
 	// Filter
@@ -949,7 +1052,7 @@ function drawChartsDiskusage(target){
 		, { 
 			  multichart: true 
 			, multichartcolumns: 2
-			, height: "300px"
+			, height: height
 		}
 	);
 }
@@ -957,7 +1060,7 @@ function drawChartsDiskusage(target){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsCPUUsage(target){
+function drawChartsCPUUsage(target, height){
 	
 	//---------------------
 	// Filter
@@ -980,6 +1083,7 @@ function drawChartsCPUUsage(target){
 		, ["percent"]
 		, { 
 			  multichart: false 
+			  , height: height
 		  }
 	);
 }
@@ -987,11 +1091,13 @@ function drawChartsCPUUsage(target){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsNetworkIO(target){
+function drawChartsNetworkIORecv(target, height){
+	
+	target.append("<h3>Network I/O MB Received<h3>");
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
-		return record.name.startsWith("Network I/O"); 
+		return record.name.match(/^Network I\/O.*\[MB recv\/sec\].*/g); 
 	});
 	
 	//---------------------
@@ -1009,9 +1115,83 @@ function drawChartsNetworkIO(target){
 		, ["name"]
 		, ["megabytesPerSec"]
 		, { 
-			  multichart: true 
+			  charttype: 'bar'
+			, height: height
+			, stacked: true
+		}
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsNetworkIOSent(target, height){
+	
+	target.append("<h3>Network I/O MB Sent<h3>");
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.match(/^Network I\/O.*\[MB sent\/sec\].*/g); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record["megabytesPerSec"] = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["megabytesPerSec"]
+		, { 
+			  charttype: 'bar'
+			, height: height
+			, stacked: true
+		}
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsMemoryUsage(target){
+	drawChartsProcessMemory(target, "50vh");
+}
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsProcessMemory(target, height){
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.match(/^Process Memory.*\[MB\]/g); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record["MB"] = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["MB"]
+		, { 
+			  charttype: 'line'
+			, ytype: 'logarithmic'
+			, height: height
+			, multichart: false 
 			, multichartcolumns: 2
-			, height: "300px"
 		}
 	);
 }
@@ -1367,13 +1547,17 @@ function draw(args){
 	window.setTimeout( 
 	function(){
 		switch(args.view){
-			case "overview": 			drawOverviewPage(); break;
+			case "overview": 			drawOverviewPage(target); break;
+			case "manual": 				drawManualPage(target); break;
 			case "properties": 			drawProperties(target); break;
 			case "sla": 				drawSLA(target); break;
 				
-			case "chartsDiskusage": 	drawChartsDiskusage(target); break;
-			case "chartsCPUUsage": 		drawChartsCPUUsage(target); break;
-			case "chartsNetworkIO": 	drawChartsNetworkIO(target); break;
+			case "chartsCPUUsage": 		drawChartsCPUUsage(target, "50vh"); break;
+			case "chartsMemoryUsage": 	drawChartsMemoryUsage(target); break;
+			case "chartsDiskusage": 	drawChartsDiskusage(target,"25vh"); break;
+			case "chartsNetworkIO": 	drawChartsNetworkIORecv(target,"50vh"); 
+										drawChartsNetworkIOSent(target,"50vh"); 
+										break;
 			
 			case "tableAll": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS); break;
 			case "tableGSMCG": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;

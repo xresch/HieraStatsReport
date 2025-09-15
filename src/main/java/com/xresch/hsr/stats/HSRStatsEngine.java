@@ -469,6 +469,7 @@ public class HSRStatsEngine {
 		
 		//----------------------------------------
 		// Iterate Groups
+		long timeMillis = System.currentTimeMillis(); // make sure every record has the exact time, needed for proper stacked charts
 		for(Entry<String, ArrayList<HSRRecord>> entry : groupedRecordsCurrent.entrySet()) {
 			
 			ArrayList<HSRRecord> records = entry.getValue();
@@ -520,6 +521,7 @@ public class HSRStatsEngine {
 			HSRRecord firstRecord = records.get(0);
 			
 			HSRRecordStats statsRecord = new HSRRecordStats(firstRecord);
+			statsRecord.time(timeMillis);
 			statsRecordList.add(statsRecord);
 			
 			statsRecord.addValue(HSRRecordState.ok, HSRMetric.success, 	success);
