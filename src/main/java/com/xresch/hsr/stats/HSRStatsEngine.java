@@ -694,6 +694,10 @@ public class HSRStatsEngine {
 			//---------------------------
 			// Make a Matrix of all values by state and metric
 			Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTable = HashBasedTable.create();
+			// Make a copy of the table to keep the original sorting.
+			// Below HSR.Math.* calls will sort the arrays
+			Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTableKeepOrder = HashBasedTable.create(valuesTable);
+			
 			ArrayList<BigDecimal> timeArray = new ArrayList<>();
 			for(HSRRecordStats stats : currentGroupedStats) {
 				
@@ -708,15 +712,19 @@ public class HSRStatsEngine {
 						String metric = recordMetric.toString();
 						if( ! valuesTable.contains(state, metric) ) {
 							valuesTable.put(state, metric, new ArrayList<>());
+							valuesTableKeepOrder.put(state, metric, new ArrayList<>());
 						}
 						
 						BigDecimal value = stats.getValue(state, recordMetric);
 						
 						if(value != null) {
 							valuesTable.get(state, metric).add(value);
+							valuesTableKeepOrder.get(state, metric).add(value);
 						}else {
 							// use zero instead of null to reduce file size
+							// plus nulls would be removed by stats calculation, we don't want that
 							valuesTable.get(state, metric).add(BigDecimal.ZERO);
+							valuesTableKeepOrder.get(state, metric).add(BigDecimal.ZERO);
 						}
 					}
 				}
@@ -741,7 +749,7 @@ public class HSRStatsEngine {
 					String metric = recordMetric.toString();
 					if(  valuesTable.contains(state, metric) ) {
 						ArrayList<BigDecimal> metricValues = valuesTable.get(state, metric);
-						
+												
 						if(metricValues == null || metricValues.isEmpty()) {
 							summaryStats.addValue(state, recordMetric, BigDecimal.ZERO);
 						}else {
@@ -802,7 +810,7 @@ public class HSRStatsEngine {
 			JsonObject recordObject = summaryStats.toJson();
 			
 			// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
-			JsonObject series = HSR.JSON.toJSONElement(valuesTable)
+			JsonObject series = HSR.JSON.toJSONElement(valuesTableKeepOrder)
 										.getAsJsonObject()
 										.get("backingMap")
 										.getAsJsonObject()

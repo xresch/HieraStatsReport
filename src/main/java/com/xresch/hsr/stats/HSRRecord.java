@@ -92,7 +92,7 @@ public class HSRRecord {
 	public enum HSRRecordStatus { 
 			  Success(HSRRecordState.ok)
 			, Failed(HSRRecordState.nok)
-			, Skipped(HSRRecordState.ok)
+			, Skipped(HSRRecordState.nok)
 			, Aborted(HSRRecordState.nok)
 			, None(HSRRecordState.ok) // used for assert, messages ...
 			;
