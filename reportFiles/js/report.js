@@ -63,7 +63,7 @@ var RECORDS_ALL = [];
 // one record per datapoint, for easier filtering and charting with CFW Renderers
 var RECORDS_ALL_DATAPOINTS = [];
 
-GLOBAL_COUNTER = 0;
+var TEST_NAMES = [];
 
 //================================================
 // ENUM: STATUS
@@ -127,7 +127,7 @@ const RECORDTYPE = {
 const FIELDS_PROPERTIES = [
 	//"time",
 	"type",
-	"test",
+	//"test", // test excluded, needs to much space
 	"usecase",
 	"path",
 	"name",
@@ -246,9 +246,10 @@ const FIELDLABELS = {
 
 const CUSTOMIZERS = {
 						
-	'name': function(record, value) { 
-		return '<span class="maxvw-30 maxvw-30 word-wrap-prewrap word-break-word">'+value+'</span>';
-	},
+	'test': customizerTextValues,
+	'usecase': customizerTextValues,
+	'path': customizerTextValues,
+	'name': customizerTextValues,
 	
 	"ok_count": customizerStatsNumber,
 	"ok_min": customizerStatsNumber,
@@ -261,6 +262,7 @@ const CUSTOMIZERS = {
 	"ok_p90": customizerStatsNumber,
 	"ok_p95": customizerStatsNumber,
 	"ok_sla": customizerSLA,
+	
 	"nok_count": customizerStatsNumber,
 	"nok_min": customizerStatsNumber,
 	"nok_avg": customizerStatsNumber,
@@ -272,10 +274,12 @@ const CUSTOMIZERS = {
 	"nok_p90": customizerStatsNumber,
 	"nok_p95": customizerStatsNumber,
 	"nok_sla": customizerSLA,
+	
 	"success": customizerStatsNumber,
 	"failed": customizerStatsNumber,
 	"skipped": customizerStatsNumber,
 	"aborted": customizerStatsNumber,
+	"none": customizerStatsNumber,
 
 };
 
@@ -329,6 +333,13 @@ function customizerSLA(record, value, rendererName, fieldname){
 
 }
 
+/**************************************************************************************
+ * The main customizer for statistical values.
+ *************************************************************************************/
+function customizerTextValues(record, value, rendererName, fieldname){
+	return '<div class="maxvw-20 maxvw-20 word-wrap-prewrap word-break-word pr-2">'+value+'</div>';
+}
+	
 /**************************************************************************************
  * The main customizer for statistical values.
  *************************************************************************************/
@@ -419,6 +430,107 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 	return chartLink;
 }
 
+	
+/**************************************************************************************
+ * The main customizer for statistical values.
+ *************************************************************************************/
+function customizerSparkchartCount(record, value, rendererName, fieldname){
+	
+	//----------------------
+	// Check input
+	//if(value == null){ return ''; }
+	
+	//---------------------
+
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
+		return r.statsid == record.statsid; 
+	});
+		
+	//---------------------------
+	// Render Settings
+	let dataToRender = {
+		data: datapoints,
+		titlefields: ["name"],
+		visiblefields: ["name"],
+		labels: FIELDLABELS,
+		customizers: CUSTOMIZERS,
+		rendererSettings:{
+			chart: {
+				charttype: "sparkline",
+				// How should the input data be handled groupbytitle|arrays 
+				datamode: 'groupbytitle',
+				xfield: "time",
+				yfield: ["ok_count", "nok_count"],
+				colors: ["limegreen", "red"],
+				stacked: false,
+				padding: '2px',
+				height: '100px',
+			}
+		}
+	};
+		
+	//--------------------------
+	// Render 
+	let renderer = CFW.render.getRenderer('chart');
+	
+	let renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
+	let wrapper = $("<div class='vw-15'>");	
+	wrapper.append(renderedChart);
+	
+	return wrapper;
+}
+
+
+/**************************************************************************************
+ * The main customizer for statistical values.
+ *************************************************************************************/
+function customizerSparkchartStats(record, value, rendererName, fieldname, metricsArray){
+	
+	//----------------------
+	// Check input
+	if(record.type == RECORDTYPE[record.type].isCount){ return ''; }
+	
+	//---------------------
+
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
+		return r.statsid == record.statsid; 
+	});
+		
+	//---------------------------
+	// Render Settings
+	let dataToRender = {
+		data: datapoints,
+		titlefields: ["name"],
+		visiblefields: ["name"],
+		labels: FIELDLABELS,
+		customizers: CUSTOMIZERS,
+		rendererSettings:{
+			chart: {
+				charttype: "sparkline",
+				// How should the input data be handled groupbytitle|arrays 
+				datamode: 'groupbytitle',
+				xfield: "time",
+				yfield: metricsArray,
+				stacked: false,
+				padding: '2px',
+				height: '100px',
+			}
+		}
+	};
+		
+	//--------------------------
+	// Render 
+	let renderer = CFW.render.getRenderer('chart');
+	
+	let renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
+	let wrapper = $("<div class='vw-15'>");	
+	wrapper.append(renderedChart);
+	
+	return wrapper;
+}
+
 /**************************************************************************************
  * The first method called, it starts to load the data from the data files.
  *************************************************************************************/
@@ -454,9 +566,9 @@ function loadDataScript(scriptIndex){
 	
 	if(scriptIndex < FILELIST.length){
 		
-		var head = document.getElementsByTagName('head')[0];
+		let head = document.getElementsByTagName('head')[0];
 		
-		var script = document.createElement('script');
+		let script = document.createElement('script');
 		
 		console.log("Load data file >> "+FILELIST[scriptIndex]);
 		script.src = FILELIST[scriptIndex];
@@ -516,6 +628,8 @@ function initialize(){
 	RECORDS_ALL_DATAPOINTS = [];
 	for(let i in RECORDS_ALL){
 		let record = RECORDS_ALL[i];
+		record.statsid = getStatsIDHash(record);
+		
 		let arrayTime = record.series.time;
 		let arraysOK = record.series.ok;
 		let arraysNOK = record.series.nok;
@@ -550,12 +664,12 @@ function initialize(){
 	// Calculate Statistics per Type
 	for(var type in RECORDTYPE){
 		
-		var currentStats = RECORDTYPE[type].stats;
-		var all 		= currentStats.All.length;
-		var success 	= currentStats[RECORDSTATUS.Success].length;
-		var skipped 	= currentStats[RECORDSTATUS.Skipped].length;
-		var fail 		= currentStats[RECORDSTATUS.Fail].length;
-		var undef 		= currentStats[RECORDSTATUS.None].length;
+		let currentStats = RECORDTYPE[type].stats;
+		let all 		= currentStats.All.length;
+		let success 	= currentStats[RECORDSTATUS.Success].length;
+		let skipped 	= currentStats[RECORDSTATUS.Skipped].length;
+		let fail 		= currentStats[RECORDSTATUS.Fail].length;
+		let undef 		= currentStats[RECORDSTATUS.None].length;
 		
 		currentStats.percentSuccess = ( (success / all) * 100).toFixed(1);
 		currentStats.percentSkipped =( (skipped / all) * 100).toFixed(1);
@@ -619,12 +733,12 @@ function initialWalkthrough(parent, currentItem){
 		currentItem.statusCount = { All: 1, Undefined: 0, Success: 0, Skipped: 0, Fail: 0 };
 		currentItem.statusCount[currentItem.status]++;
 		
-		var children = currentItem.children;
+		let children = currentItem.children;
 		if(isArrayWithData(children)){
-			var childrenCount = currentItem.children.length;
-			for(var i = 0; i < childrenCount; i++){
+			let childrenCount = currentItem.children.length;
+			for(let i = 0; i < childrenCount; i++){
 				
-				var currentChild = children[i];
+				let currentChild = children[i];
 				initialWalkthrough(currentItem, currentChild);
 				
 				currentItem.statusCount.All += currentChild.statusCount.All;
@@ -647,13 +761,27 @@ function initialWalkthrough(parent, currentItem){
 }
 
 /**************************************************************************************
+ * Creates the stats ID for the record.
+ *************************************************************************************/
+function getStatsIDHash(record){
+	return CFW.utils.hash(
+		  record.type 
+		+ record.test 
+		+ record.usecase
+		+ record.path
+		+ record.name
+		+ record.code
+	);
+}
+
+/**************************************************************************************
  * 
  *************************************************************************************/
 function dedupArray(arrayToDedup){
 	
-	var dedupped = [];
+	let dedupped = [];
 	
-	for(var key in arrayToDedup){
+	for(let key in arrayToDedup){
 		
 		if(dedupped.indexOf(arrayToDedup[key]) == -1){
 			dedupped.push(arrayToDedup[key]);
@@ -1447,6 +1575,60 @@ function drawTable(target, data, showFields, typeFilterArray){
 								rendererSettings: {
 									table: {filterable: false, narrow: true, stickyheader: true},
 									
+								},
+							}
+						},
+						
+						{	
+							label: 'Table with Charts: Count, Min, Avg, Max',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								visiblefields: FIELDS_BASE_COUNT.concat("ok_min", "ok_avg", "ok_max", "Counts", "Stats"),
+								customizers: Object.assign({}, CUSTOMIZERS, {
+									"Counts": customizerSparkchartCount,
+									"Stats": function(record, value, rendererName, fieldname){
+											return customizerSparkchartStats(record, value, rendererName, fieldname, ["ok_min", "ok_avg", "ok_max"]);
+									}
+								}),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
+						
+						{	
+							label: 'Table with Charts: Count, Min, P50, P90',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								visiblefields: FIELDS_BASE_COUNT.concat("ok_min", "ok_p50", "ok_p90", "Counts", "Stats"),
+								customizers: Object.assign({}, CUSTOMIZERS, {
+									"Counts": customizerSparkchartCount,
+									"Stats": function(record, value, rendererName, fieldname){
+											return customizerSparkchartStats(record, value, rendererName, fieldname, ["ok_min", "ok_p50", "ok_p90"]);
+									}
+								}),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
+						
+						{	
+							label: 'Table with Charts: Count, P25, P50, P75',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								visiblefields: FIELDS_BASE_COUNT.concat("ok_p25", "ok_p50", "ok_p75", "Counts", "Stats"),
+								customizers: Object.assign({}, CUSTOMIZERS, {
+									"Counts": customizerSparkchartCount,
+									"Stats": function(record, value, rendererName, fieldname){
+											return customizerSparkchartStats(record, value, rendererName, fieldname, ["ok_p25", "ok_p50", "ok_p75"]);
+									}
+								}),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
 								},
 							}
 						},
