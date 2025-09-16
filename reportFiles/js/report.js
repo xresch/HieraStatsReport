@@ -383,7 +383,6 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 			//bgstylefield: options.bgstylefield,
 			//textstylefield: options.textstylefield,
 			//titleformat: options.titleFormat,
-			visiblefields: ["name"],
 			labels: FIELDLABELS,
 			customizers: CUSTOMIZERS,
 			rendererSettings:{
@@ -452,7 +451,6 @@ function customizerSparkchartCount(record, value, rendererName, fieldname){
 	let dataToRender = {
 		data: datapoints,
 		titlefields: ["name"],
-		visiblefields: ["name"],
 		labels: FIELDLABELS,
 		customizers: CUSTOMIZERS,
 		rendererSettings:{
@@ -481,15 +479,67 @@ function customizerSparkchartCount(record, value, rendererName, fieldname){
 	return wrapper;
 }
 
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function customizerStatusBartSLA(record, value, rendererName, fieldname){
+	
+	//----------------------
+	// Check input
+	//if(value == null){ return ''; }
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
+		return r.statsid == record.statsid; 
+	});
+	
+	//---------------------
+	// Add color
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(r){
+		r.textcolor = "cfw-white";
+		if(r.ok_sla == 1){
+			r.bgcolor = "cfw-green";
+		}else{
+			r.bgcolor = "cfw-red";
+		}
+		
+	})
+	//---------------------------
+	// Render Settings
+	let dataToRender = {
+		data: datapoints,
+		bgstylefield: "bgcolor",
+		textstylefield: "textcolor",
+		titlefields: ["name"],
+		visiblefields: ["name"],
+		labels: FIELDLABELS,
+		customizers: CUSTOMIZERS,
+		rendererSettings:{
+			statusbar: {
+				height: '25px',
+			}
+		}
+	};
+
+	//--------------------------
+	// Render 
+	let renderedChart = CFW.render.getRenderer('statusbar').render(dataToRender);	
+	let wrapper = $("<div class='vw-15'>");	
+	wrapper.append(renderedChart);
+	
+	return wrapper;
+}
+
 
 /**************************************************************************************
- * The main customizer for statistical values.
+ * 
  *************************************************************************************/
 function customizerSparkchartStats(record, value, rendererName, fieldname, metricsArray){
 	
 	//----------------------
 	// Check input
-	if(record.type == RECORDTYPE[record.type].isCount){ return ''; }
+	if(RECORDTYPE[record.type].isCount){ return ''; }
 	
 	//---------------------
 
@@ -678,7 +728,7 @@ function initialize(){
 					
 	}
 		
-	draw({view: "tableAll"});
+	initialDraw({view: "tableAll"});
 }
 
 /**************************************************************************************
@@ -1009,7 +1059,14 @@ function drawManualPage(target){
 		<h2>Manual</h2>
 		<p>This page will give you a short introduction about this report and how to work with it.</p>
 		
-		<h3>State OK and NOT OK</h3>
+		<h5>General Tips</h5>
+		<ul>
+			<li><b>Filter:&nbsp;</b> The filter field allows you to also filter with wildcards(*) and regular expressions. 
+			It filters on the HTML contents of each row. You can use all javascript regex features, for example "^(?!.*System Usage.*).*" will filter for all rows that do not contains "System Usage".</li>
+		</ul>
+		
+		
+		<h5>State OK and NOT OK</h5>
 		<p>Every time a value is reported it has one of the following two states: </p>
 		<ul>
 			<li><b>OK:&nbsp;</b> The value is considered OK to be included in the statistic. </li>
@@ -1019,7 +1076,7 @@ function drawManualPage(target){
 		<p>This distinction is made to get proper measurements of duration values, excluding skipped, failed or aborted transactions.</p>
 		
 		
-		<h3>Status</h3>
+		<h5>Status</h5>
 		<p>Every time a value is reported it has one of the following statuses.
 		A status defines by default the state of the value. </p>
 		<ul>
@@ -1030,7 +1087,7 @@ function drawManualPage(target){
 			<li><b>NONE:&nbsp;</b> If the status was set to NONE (State: OK, as we consider it successful). </li>
 		</ul>
 		
-		<h3>Types</h3>
+		<h5>Types</h5>
 		<p>Every metric has one of the following types. These types are defined while reporting values for metrics.</p>
 		<ul>
 			<li><b>Group:&nbsp;</b> The type Group is used to wrap and include measurements of any other type. </li>
@@ -1049,7 +1106,7 @@ function drawManualPage(target){
 		</ul>
 		<p><b>Note:</b> Theoretically, every type can contain every other type when building a hierarchy. Commonly, the types that contain other elements are Group, Step and Wait.</p>
 		
-		<h3>Metrics</h3>
+		<h5>Metrics</h5>
 		<p>Following are the metrics you can encounter in various sections of this report nad its exports: </p>
 		<ul>
 			<li><b>Time:&nbsp;</b> The time of the metric. </li>
@@ -1158,6 +1215,8 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
  *************************************************************************************/
 function drawChartsDiskusage(target, height){
 	
+	target.append("<h5>Disk Usage [%]<h5>");
+	
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1190,6 +1249,8 @@ function drawChartsDiskusage(target, height){
  *************************************************************************************/
 function drawChartsCPUUsage(target, height){
 	
+	target.append("<h5>CPU Usage [%]<h5>");
+	
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1221,7 +1282,7 @@ function drawChartsCPUUsage(target, height){
  *************************************************************************************/
 function drawChartsNetworkIORecv(target, height){
 	
-	target.append("<h3>Network I/O MB Received<h3>");
+	target.append("<h5>Network I/O Received [MB/sec]<h5>");
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1255,7 +1316,7 @@ function drawChartsNetworkIORecv(target, height){
  *************************************************************************************/
 function drawChartsNetworkIOSent(target, height){
 	
-	target.append("<h3>Network I/O MB Sent<h3>");
+	target.append("<h5>Network I/O Sent [MB/sec]<h5>");
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1294,6 +1355,8 @@ function drawChartsMemoryUsage(target){
  * 
  *************************************************************************************/
 function drawChartsProcessMemory(target, height){
+	
+	target.append("<h5>Process Memory Usage<h5>");
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1527,6 +1590,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 	// Render Data
 
 	var rendererSettings = {
+			data: data,
 			idfield: null,
 			bgstylefield: null,
 			textstylefield: null,
@@ -1536,7 +1600,6 @@ function drawTable(target, data, showFields, typeFilterArray){
 			labels: FIELDLABELS,
 			customizers: CUSTOMIZERS,
 			actions: actionButtons,
-			data: data,
 			rendererSettings: {
 				csv:{
 					csvcustomizers: {
@@ -1580,7 +1643,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 						},
 						
 						{	
-							label: 'Table with Charts: Count, Min, Avg, Max',
+							label: 'Charts: Count, Min, Avg, Max',
 							name: 'table',
 							renderdef: {
 								merge: false,
@@ -1598,7 +1661,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 						},
 						
 						{	
-							label: 'Table with Charts: Count, Min, P50, P90',
+							label: 'Charts: Count, Min, P50, P90',
 							name: 'table',
 							renderdef: {
 								merge: false,
@@ -1616,7 +1679,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 						},
 						
 						{	
-							label: 'Table with Charts: Count, P25, P50, P75',
+							label: 'Charts: Count, P25, P50, P75',
 							name: 'table',
 							renderdef: {
 								merge: false,
@@ -1634,7 +1697,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 						},
 						
 						{	
-							label: 'Boxplots',
+							label: 'Charts: Boxplots',
 							name: 'table',
 							renderdef: {
 								merge: false,
@@ -1653,7 +1716,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 							}
 						},
 						{	
-							label: 'Boxplots Relative',
+							label: 'Charts: Boxplots Relative',
 							name: 'table',
 							renderdef: {
 								merge: false,
@@ -1671,6 +1734,24 @@ function drawTable(target, data, showFields, typeFilterArray){
 								},
 							}
 						},
+						
+						{	
+							label: 'Analysis: SLA',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								data: _.filter(data, function(o){ return o.ok_sla != null; } ),
+								visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "Rule", "ok_sla", "status_over_time"),
+								customizers: Object.assign({}, CUSTOMIZERS, {
+									  "Rule": function(record){ return slaForRecord(record); }
+									, "status_over_time": customizerStatusBartSLA
+								}),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
+						
 						
 						{	label: 'Panels',
 							name: 'panels',
@@ -1708,27 +1789,44 @@ function drawTable(target, data, showFields, typeFilterArray){
 			},
 		};
 			
-	var renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);	
+	let renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);	
 	
 	parent.append(renderResult);
 	
 }
 
-
-/**************************************************************************************
- * Main Entry method
+/*************************************************************************************
+ * Main Drawing method
  *************************************************************************************/
-function draw(args){
+function initialDraw(options){
+	
+	let lastOptions = CFW.cache.retrieveValueForPage("last-draw-options", "mydashboards");
+	
+	console.l
+	if( lastOptions == 'undefined'
+	|| CFW.utils.isNullOrEmpty(lastOptions) ){
+		draw(options);
+	}else{
+		draw(JSON.parse(lastOptions) );
+	}
+}
+
+/*************************************************************************************
+ * Main Drawing method
+ *************************************************************************************/
+function draw(options){
+	
+	
+	CFW.cache.storeValueForPage("last-draw-options", JSON.stringify(options) );
 	
 	cleanup();
-	
 	let target = $('#content');
 	
 	CFW.ui.toggleLoader(true);
 	
 	window.setTimeout( 
 	function(){
-		switch(args.view){
+		switch(options.view){
 			case "overview": 			drawOverviewPage(target); break;
 			case "manual": 				drawManualPage(target); break;
 			case "properties": 			drawProperties(target); break;
