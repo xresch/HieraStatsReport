@@ -35,6 +35,8 @@ public class TestExampleLoadTestEmulation {
 	private static final HSRSLA SLA_AVG_OR_P90 = new HSRSLA(HSRMetric.avg, Operator.LTE, 50)
 														.or(HSRMetric.p90, Operator.LTE, 100); 
 	
+	private static final HSRSLA SLA_FAILRATE_LT_10 = new HSRSLA(HSRMetric.failrate, Operator.LT, 10); 
+	
 	/************************************************************************
 	 * 
 	 ************************************************************************/
@@ -100,7 +102,7 @@ public class TestExampleLoadTestEmulation {
 	@Test
 	void emulateLoadTest() throws InterruptedException {
 		
-		int multiplier = 1;
+		int multiplier = 3;
 		int users = 10 * multiplier;
 		int rampUpMillis = 200;
 		int executionsPerUser = 5 * multiplier;
@@ -236,7 +238,21 @@ public class TestExampleLoadTestEmulation {
 							HSR.start("140_SLA_AVG_OR_P90-NOK", SLA_AVG_OR_P90);
 								Thread.sleep(HSR.Random.fromInts(60, 60, 60, 60, 60, 110));
 							HSR.end();
-						HSR.end();
+							
+							HSR.start("150_SLA_FAILS_LT_10-OK", SLA_FAILRATE_LT_10);
+								Thread.sleep(HSR.Random.fromInts(60, 60, 60, 60, 60, 110));
+							HSR.end( (HSR.Random.integer(0, 100) > 5) ? true : false );
+							
+							HSR.start("160_SLA_FAILS_LT_10-NOK", SLA_FAILRATE_LT_10);
+								Thread.sleep(HSR.Random.fromInts(60, 60, 60, 60, 60, 110));
+							HSR.end( (HSR.Random.integer(0, 100) > 20) ? true : false );
+						
+						HSR.end( ); // Group SLA
+						
+						//-------------------------------
+						// Keep it open to test HSR. endAllOpen()
+						HSR.start("999 The Unending Item");
+							Thread.sleep(HSR.Random.integer(15, 115));
 							
 						//-------------------------------
 						// Make sure everything's closed

@@ -663,7 +663,7 @@ public class HSRStatsEngine {
 			statsRecord.setValue(HSRRecordState.ok, HSRMetric.failrate, HSR.Math.BIG_100);
 		}else {
 			BigDecimal total = ok_count.add(nok_count);
-			BigDecimal failRate = failed.multiply(HSR.Math.BIG_100).divide(total, 2, RoundingMode.HALF_UP);
+			BigDecimal failRate = failed.multiply(HSR.Math.BIG_100).divide(total, 1, RoundingMode.HALF_UP);
 			statsRecord.setValue(HSRRecordState.ok, HSRMetric.failrate, failRate);
 		}
 	}
@@ -833,7 +833,7 @@ public class HSRStatsEngine {
 			}
 			
 			//---------------------------
-			// Calculate SLA
+			// Calculate Failure Rate
 			calculateFailrate(summaryStats
 					  , summaryStats.getValue(HSRRecordState.ok, HSRMetric.count)
 					  , summaryStats.getValue(HSRRecordState.nok, HSRMetric.count)

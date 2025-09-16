@@ -87,19 +87,26 @@ const RECORDSTATE =  [
 //================================================
 // ENUM: METRIC
 //================================================
-const RECORDMETRIC =  [
-	"count",
-	"min",
-	"avg",
-	"max",
-	"stdev",
-	"p25",
-	"p50",
-	"p75",
-	"p90",
-	"p95",
-	"sla",
-]
+const RECORDMETRIC =  {
+	"count": 		{ isOkNok: true }
+	, "min": 		{ isOkNok: true }
+	, "avg": 		{ isOkNok: true }
+	, "max": 		{ isOkNok: true }
+	, "stdev": 		{ isOkNok: true }
+	, "p25": 		{ isOkNok: true }
+	, "p50": 		{ isOkNok: true }
+	, "p75": 		{ isOkNok: true }
+	, "p90": 		{ isOkNok: true }
+	, "p95": 		{ isOkNok: true }
+	, "p99": 		{ isOkNok: true }
+	, "sla": 		{ isOkNok: true }
+	, "success": 	{ isOkNok: false }
+	, "failed": 	{ isOkNok: false }
+	, "skipped": 	{ isOkNok: false }
+	, "aborted": 	{ isOkNok: false }
+	, "none": 		{ isOkNok: false }
+	, "failrate": 	{ isOkNok: false }
+}
 
 //================================================
 // ENUM: TYPE
@@ -149,11 +156,11 @@ const FIELDS_BASE_STATS = FIELDS_BASE_COUNTS.concat([
 	"ok_avg",
 	"ok_max",
 	"ok_stdev",
-	"ok_p25",
+	//"ok_p25",
 	"ok_p50",
-	"ok_p75",
+	//"ok_p75",
 	"ok_p90",
-	"ok_p95",
+	"failrate",
 	"ok_sla"
 ]);
 
@@ -205,81 +212,91 @@ const FIELDS_STATUS = [
 ];
 
 const FIELDLABELS = {
-	"time": "Time",
-	"type": "Type",
-	"test": "Test",
-	"usecase": "Usecase",
-	"path": "Path",
-	"name": "Name",
-	"code": "Code",
-	"granularity": "Granularity",
-	"ok_count": "Count",
-	"ok_min": "Min",
-	"ok_avg": "Avg",
-	"ok_max": "Max",
-	"ok_stdev": "Stdev",
-	"ok_p25": "P25",
-	"ok_p50": "P50",
-	"ok_p75": "P75",
-	"ok_p90": "P90",
-	"ok_p95": "P95",
-	"ok_sla": "SLA",
-	"nok_count": "Count(nok)",
-	"nok_min": "Min(nok)",
-	"nok_avg": "Avg(nok)",
-	"nok_max": "Max(nok)",
-	"nok_stdev": "Stdev(nok)",
-	"nok_p25": "P25(nok)",
-	"nok_p50": "P50(nok)",
-	"nok_p75": "P75(nok)",
-	"nok_p90": "P90(nok)",
-	"nok_p95": "P95(nok)",
-	"nok_sla": "SLA(nok)",
-	"success": "Success",
-	"failed": "Failed",
-	"skipped": "Skipped",
-	"aborted": "Aborted",
-	"none": "None",
-	"Range": "Range",
-	"IQR": "IQR"
+	  "time": "Time"
+	, "type": "Type"
+	, "test": "Test"
+	, "usecase": "Usecase"
+	, "path": "Path"
+	, "name": "Name"
+	, "code": "Code"
+	, "granularity": "Granularity"
+	, "ok_count": "Count"
+	, "ok_min": "Min"
+	, "ok_avg": "Avg"
+	, "ok_max": "Max"
+	, "ok_stdev": "Stdev"
+	, "ok_p25": "P25"
+	, "ok_p50": "P50"
+	, "ok_p75": "P75"
+	, "ok_p90": "P90"
+	, "ok_p95": "P95"
+	, "ok_sla": "SLA"
+	, "nok_count": "Count(nok)"
+	, "nok_min": "Min(nok)"
+	, "nok_avg": "Avg(nok)"
+	, "nok_max": "Max(nok)"
+	, "nok_stdev": "Stdev(nok)"
+	, "nok_p25": "P25(nok)"
+	, "nok_p50": "P50(nok)"
+	, "nok_p75": "P75(nok)"
+	, "nok_p90": "P90(nok)"
+	, "nok_p95": "P95(nok)"
+	, "nok_sla": "SLA(nok)"
+	, "success": "Success"
+	, "failed": "Failed"
+	, "skipped": "Skipped"
+	, "aborted": "Aborted"
+	, "none": "None"
+	, "failrate": "Fails[%]"
+	
+	// calculated and added in javascript 
+	, "Range": "Range"
+	, "IQR": "IQR"
+	, "total_count": "Count(total)"
 }
 
 const CUSTOMIZERS = {
 						
-	'test': customizerTextValues,
-	'usecase': customizerTextValues,
-	'path': customizerTextValues,
-	'name': customizerTextValues,
+	  'test': customizerTextValues
+	, 'usecase': customizerTextValues
+	, 'path': customizerTextValues
+	, 'name': customizerTextValues
 	
-	"ok_count": customizerStatsNumber,
-	"ok_min": customizerStatsNumber,
-	"ok_avg": customizerStatsNumber,
-	"ok_max": customizerStatsNumber,
-	"ok_stdev": customizerStatsNumber,
-	"ok_p25": customizerStatsNumber,
-	"ok_p50": customizerStatsNumber,
-	"ok_p75": customizerStatsNumber,
-	"ok_p90": customizerStatsNumber,
-	"ok_p95": customizerStatsNumber,
-	"ok_sla": customizerSLA,
+	, "ok_count": customizerStatsNumber
+	, "ok_min": customizerStatsNumber
+	, "ok_avg": customizerStatsNumber
+	, "ok_max": customizerStatsNumber
+	, "ok_stdev": customizerStatsNumber
+	, "ok_p25": customizerStatsNumber
+	, "ok_p50": customizerStatsNumber
+	, "ok_p75": customizerStatsNumber
+	, "ok_p90": customizerStatsNumber
+	, "ok_p95": customizerStatsNumber
+	, "ok_sla": customizerSLA
 	
-	"nok_count": customizerStatsNumber,
-	"nok_min": customizerStatsNumber,
-	"nok_avg": customizerStatsNumber,
-	"nok_max": customizerStatsNumber,
-	"nok_stdev": customizerStatsNumber,
-	"nok_p25": customizerStatsNumber,
-	"nok_p50": customizerStatsNumber,
-	"nok_p75": customizerStatsNumber,
-	"nok_p90": customizerStatsNumber,
-	"nok_p95": customizerStatsNumber,
-	"nok_sla": customizerSLA,
+	, "nok_count": customizerStatsNumber
+	, "nok_min": customizerStatsNumber
+	, "nok_avg": customizerStatsNumber
+	, "nok_max": customizerStatsNumber
+	, "nok_stdev": customizerStatsNumber
+	, "nok_p25": customizerStatsNumber
+	, "nok_p50": customizerStatsNumber
+	, "nok_p75": customizerStatsNumber
+	, "nok_p90": customizerStatsNumber
+	, "nok_p95": customizerStatsNumber
+	, "nok_sla": customizerSLA
 	
-	"success": customizerStatsNumber,
-	"failed": customizerStatsNumber,
-	"skipped": customizerStatsNumber,
-	"aborted": customizerStatsNumber,
-	"none": customizerStatsNumber,
+	, "success": customizerStatsNumber
+	, "failed": customizerStatsNumber
+	, "skipped": customizerStatsNumber
+	, "aborted": customizerStatsNumber
+	, "none": customizerStatsNumber
+	, "failrate": customizerStatsNumber
+	
+	// calculated and added in javascript 
+	, "Range": CFW.customizer.number
+	, "IQR": CFW.customizer.number
+	, "total_count": CFW.customizer.number
 
 };
 
@@ -297,6 +314,17 @@ function slaForRecord(record){
 	}
 	
 	return '';
+}
+
+/**************************************************************************************
+ * Returns cloned datapoints for a record.
+ *************************************************************************************/
+function datapointsForRecord(record){
+	return _.cloneDeep(
+		_.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
+			return r.statsid == record.statsid; 
+		})
+	);
 }
 	
 /**************************************************************************************
@@ -318,12 +346,12 @@ function customizerSLA(record, value, rendererName, fieldname){
 	// Get Status
 	let status = null;
 	
-	if(record.nok_sla == 1){ 
+	if(record.ok_sla == 1){ 
 		return $('<span class="sla sla-ok w-100-cell">OK</span>')
 			.popover(popoverSettings); 
 	}
 	
-	else if(record.ok_sla == 1){ 
+	else if(record.nok_sla == 1){ 
 		return $('<span class="sla sla-nok w-100-cell">NOK</span>')
 			.popover(popoverSettings); ; 
 	}
@@ -349,25 +377,34 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 	// Check input
 	if(value == null){ return ''; }
 	
+
 	//----------------------
 	// Format Value
 	let formatted = CFW.customizer.number(record, value, rendererName, fieldname);
 	
+	if(fieldname == 'failrate'){
+		formatted = $(formatted).append(" %");
+	}
+	
+	//---------------------
+	// Filter
+	let datapoints = datapointsForRecord(record);
+	
 	//----------------------
 	// Get Series data
-	let seriesData = {};
+/*	let seriesData = {};
 	let metricName = fieldname.replace("nok_", "")
 							  .replace("ok_", "");
 	
-	seriesData.name = record.name;
-		seriesData.metricName = metricName;
+ 	seriesData.name = record.name;
+	seriesData.metricName = metricName;
 	if(!fieldname.startsWith("nok") ){
 		seriesData.time = record.series.time;
 		seriesData[metricName] = record.series.ok[metricName];
 	}else{
 		seriesData.time = record.series.time;
 		seriesData[metricName] = record.series.nok[metricName];
-	}
+	} */
 	
 	//----------------------
 	// Create Link
@@ -378,20 +415,26 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 		//---------------------------
 		// Render Settings
 		var dataToRender = {
-			data: seriesData,
+			data: datapoints,
 			titlefields: ["name"],
+			visiblefields: FIELDS_PROPERTIES.concat(fieldname),
 			//bgstylefield: options.bgstylefield,
 			//textstylefield: options.textstylefield,
 			//titleformat: options.titleFormat,
 			labels: FIELDLABELS,
-			customizers: CUSTOMIZERS,
+			//customizers: CUSTOMIZERS,
 			rendererSettings:{
-				chart: {
+				  dataviewer:{
+					download: true,
+					sortable: true,
+					renderers: CFW.render.createDataviewerDefaults()
+				}
+				, chart: {
 					charttype: "area",
 					// How should the input data be handled groupbytitle|arrays 
-					datamode: 'arrays',
+					datamode: 'groupbytitle',
 					xfield: "time",
-					yfield: metricName,
+					yfield: fieldname,
 					type: "line",
 					xtype: "time",
 					ytype: "linear",
@@ -410,19 +453,21 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 		};
 		
 		//--------------------------
-		// Render Widget
-		var renderer = CFW.render.getRenderer('chart');
+		// Render 
+		let renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
 		
-		var renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
+		dataToRender
+		let renderedViewer = CFW.render.getRenderer('dataviewer').render(dataToRender);	
 		
 		// ----------------------------
 		// Create Modal
 		let resultDiv = $('<div>');
 		
 		resultDiv.append(renderedChart);
+		resultDiv.append(renderedViewer);
 
 		let modalTitle = `Chart: ${record.name} - ${fieldname}`;
-		CFW.ui.showModalLarge(modalTitle, renderedChart, null, true);
+		CFW.ui.showModalLarge(modalTitle, resultDiv, null, true);
 		
 	});
 	
@@ -440,11 +485,8 @@ function customizerSparkchartCount(record, value, rendererName, fieldname){
 	//if(value == null){ return ''; }
 	
 	//---------------------
-
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
-		return r.statsid == record.statsid; 
-	});
+	let datapoints = datapointsForRecord(record);
 		
 	//---------------------------
 	// Render Settings
@@ -490,13 +532,11 @@ function customizerStatusBartSLA(record, value, rendererName, fieldname){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
-		return r.statsid == record.statsid; 
-	});
+	let datapoints = datapointsForRecord(record);
 	
 	//---------------------
 	// Add color
-	datapoints = _.forEach(_.cloneDeep(datapoints), function(r){
+	datapoints = _.forEach(datapoints, function(r){
 		r.textcolor = "cfw-white";
 		if(r.ok_sla == 1){
 			r.bgcolor = "cfw-green";
@@ -535,18 +575,30 @@ function customizerStatusBartSLA(record, value, rendererName, fieldname){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function customizerSparkchartStats(record, value, rendererName, fieldname, metricsArray){
+function customizerSparkchartStats(record, value, rendererName, fieldname, metricsArray, chartSettings){
+	
+	  //----------------------
+	 // Check input
+	 let defaultSettings = {
+		charttype: "sparkline",
+		// How should the input data be handled groupbytitle|arrays 
+		datamode: 'groupbytitle',
+		xfield: "time",
+		yfield: metricsArray,
+		stacked: false,
+		padding: '2px',
+		height: '100px',
+	};
+	
+	let finalSettings = Object.assign({}, defaultSettings, chartSettings);
 	
 	//----------------------
 	// Check input
 	if(RECORDTYPE[record.type].isCount){ return ''; }
 	
 	//---------------------
-
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
-		return r.statsid == record.statsid; 
-	});
+	let datapoints = datapointsForRecord(record);
 		
 	//---------------------------
 	// Render Settings
@@ -557,16 +609,7 @@ function customizerSparkchartStats(record, value, rendererName, fieldname, metri
 		labels: FIELDLABELS,
 		customizers: CUSTOMIZERS,
 		rendererSettings:{
-			chart: {
-				charttype: "sparkline",
-				// How should the input data be handled groupbytitle|arrays 
-				datamode: 'groupbytitle',
-				xfield: "time",
-				yfield: metricsArray,
-				stacked: false,
-				padding: '2px',
-				height: '100px',
-			}
+			chart: finalSettings
 		}
 	};
 		
@@ -580,6 +623,7 @@ function customizerSparkchartStats(record, value, rendererName, fieldname, metri
 	
 	return wrapper;
 }
+
 
 /**************************************************************************************
  * The first method called, it starts to load the data from the data files.
@@ -678,7 +722,9 @@ function initialize(){
 	RECORDS_ALL_DATAPOINTS = [];
 	for(let i in RECORDS_ALL){
 		let record = RECORDS_ALL[i];
+		
 		record.statsid = getStatsIDHash(record);
+		record.total_count = record.ok_count + record.nok_count;
 		
 		let arrayTime = record.series.time;
 		let arraysOK = record.series.ok;
@@ -694,14 +740,22 @@ function initialize(){
 			let timedClone  = _.cloneDeep(clone);
 			timedClone.time = arrayTime[t];
 			
-			for(let m in RECORDMETRIC){
-				let metric 		= RECORDMETRIC[m];
-				let valueOK 	= record.series.ok[metric][t];
-				let valueNOK 	= record.series.nok[metric][t];
-				timedClone["ok_"+metric] = valueOK;
-				timedClone["nok_"+metric] = valueNOK;
+			//-----------------------------
+			// Add values
+			for(let name in RECORDMETRIC){
+				let metric 	= RECORDMETRIC[name];
+				
+				if(metric.isOkNok){
+					let valueOK 	= record.series.ok[name][t];
+					let valueNOK 	= record.series.nok[name][t];
+					timedClone["ok_"+name] = valueOK;
+					timedClone["nok_"+name] = valueNOK;
+				}else{
+					timedClone[name] = record.series.ok[name][t];
+				}
+		
 			}
-			
+						
 			RECORDS_ALL_DATAPOINTS.push(timedClone);
 			
 		}
@@ -1146,11 +1200,12 @@ function drawManualPage(target){
 			<li><b>SLA(nok):&nbsp;</b> Contains the values for the evaluation of Service Level Agreements(SLA). 
 									Either 1 for true if the SLA was NOT met, or 0 for false if the SLA was met. Will be shown on the UI as OK and Not OK. </li>
 			
-			<li><b>success:&nbsp;</b> The number of values for the metric that were reported with the status SUCCESS. </li>
-			<li><b>failed:&nbsp;</b> The number of values for the metric that were reported with the status FAILED. </li>
-			<li><b>skipped:&nbsp;</b> The number of values for the metric that were reported with the status SKIPPED. </li>
-			<li><b>aborted:&nbsp;</b> The number of values for the metric that were reported with the status ABORTED. </li>
-			<li><b>none:&nbsp;</b> The number of values for the metric that were reported with the status NONE. </li>
+			<li><b>Success:&nbsp;</b> The number of values for the metric that were reported with the status SUCCESS. </li>
+			<li><b>Failed:&nbsp;</b> The number of values for the metric that were reported with the status FAILED. </li>
+			<li><b>Skipped:&nbsp;</b> The number of values for the metric that were reported with the status SKIPPED. </li>
+			<li><b>Aborted:&nbsp;</b> The number of values for the metric that were reported with the status ABORTED. </li>
+			<li><b>None:&nbsp;</b> The number of values for the metric that were reported with the status NONE. </li>
+			<li><b>Failure Rate:&nbsp;</b> Percentage of failure, calculated as: (failed * 100) / (ok_count + nok_count) </li>
 			<li><b>Range:&nbsp;</b> The range of the values, equals to maximum - minimum. </li>
 			<li><b>IQR:&nbsp;</b> The Inter Quartile Range(IQR) of the values, equals to P75 - P25.  </li>
 			
@@ -1749,6 +1804,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 							name: 'table',
 							renderdef: {
 								merge: false,
+								data: _.filter(data, function(o){ return o.ok_p50 != null &&  o.ok_p50 > 0; } ),
 								visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
 								customizers: Object.assign({}, CUSTOMIZERS, {
 									"Range": function(record, value){ return record_calc_range(record); },	
@@ -1768,6 +1824,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 							name: 'table',
 							renderdef: {
 								merge: false,
+								data: _.filter(data, function(o){ return o.ok_p50 != null &&  o.ok_p50 > 0; } ),
 								visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
 								customizers: Object.assign({}, CUSTOMIZERS, {
 									"Range": function(record, value){ return record_calc_range(record); },	
@@ -1789,10 +1846,31 @@ function drawTable(target, data, showFields, typeFilterArray){
 							renderdef: {
 								merge: false,
 								data: _.filter(data, function(o){ return o.ok_sla != null; } ),
-								visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "Rule", "ok_sla", "status_over_time"),
+								visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "failrate", "Rule", "ok_sla", "status_over_time"),
 								customizers: Object.assign({}, CUSTOMIZERS, {
 									  "Rule": function(record){ return slaForRecord(record); }
 									, "status_over_time": customizerStatusBartSLA
+								}),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
+						
+						{	
+							label: 'Analysis: Failure Rate',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								data: _.filter(data, function(o){ return o.failrate != null &&  o.failrate > 0; } ),
+								visiblefields: FIELDS_BASE_COUNTS.concat("total_count", "failed", "ok_sla", "failrate", "failure_over_time"),
+								customizers: Object.assign({}, CUSTOMIZERS, {
+									"failure_over_time": function(record, value, rendererName, fieldname){
+											return customizerSparkchartStats(record, value, rendererName, fieldname
+																			, ["failrate"]
+																			, { colors: ["red"], ymin: 0, ymax: 100 }
+																		);
+									}
 								}),
 								rendererSettings: {
 									table: {filterable: false, narrow: true, stickyheader: true},

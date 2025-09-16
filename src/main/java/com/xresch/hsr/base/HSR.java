@@ -476,12 +476,14 @@ public class HSR {
 	
 		while(!openItems().isEmpty()){
 			
-			logger.warn(
-					"'"
+			String message = "'"
 					+openItems().peek().name()
 					+ "' was ended forcfully with status "+status+"."
-					+" Check that you use HSR.end() everywhere where you start."
-				);
+					+" Check that you use HSR.end() everywhere where you start.";
+			
+			addWarnMessage(message);
+						
+			logger.warn(message);
 			
 			end(status);
 		}
