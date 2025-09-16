@@ -505,11 +505,11 @@ public class HSRStatsEngine {
 					}
 					
 					switch(record.status()) {
-					case Success: 	success = success.add(BigDecimal.ONE);  break;
-					case Failed: 	failed = failed.add(BigDecimal.ONE);  break;
-					case Skipped: 	skipped = skipped.add(BigDecimal.ONE);  break;
-					case Aborted: 	aborted = aborted.add(BigDecimal.ONE);  break;
-					case None: 		none = none.add(BigDecimal.ONE);  break;
+						case Success: 	success = success.add(BigDecimal.ONE);  break;
+						case Failed: 	failed = failed.add(BigDecimal.ONE);  break;
+						case Skipped: 	skipped = skipped.add(BigDecimal.ONE);  break;
+						case Aborted: 	aborted = aborted.add(BigDecimal.ONE);  break;
+						case None: 		none = none.add(BigDecimal.ONE);  break;
 					default: /* ignore others */ break;
 					}
 				}
@@ -524,39 +524,47 @@ public class HSRStatsEngine {
 			statsRecord.time(timeMillis);
 			statsRecordList.add(statsRecord);
 			
-			statsRecord.addValue(HSRRecordState.ok, HSRMetric.success, 	success);
-			statsRecord.addValue(HSRRecordState.ok, HSRMetric.failed, 	failed);
-			statsRecord.addValue(HSRRecordState.ok, HSRMetric.skipped, 	skipped);
-			statsRecord.addValue(HSRRecordState.ok, HSRMetric.aborted, 	aborted);
-			statsRecord.addValue(HSRRecordState.ok, HSRMetric.none, 	none);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.success, 	success);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.failed, 	failed);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.skipped, 	skipped);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.aborted, 	aborted);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.none, 	none);
+			
+			//---------------------------
+			// Calculate failure Rate
+			BigDecimal ok_count 	= new BigDecimal(ok_values.size());
+			BigDecimal nok_count 	= new BigDecimal(nok_values.size());
+
+			calculateFailrate(statsRecord, ok_count, nok_count, failed);
 			
 			//---------------------------
 			// Calculate OK Stats
 			if( ! ok_values.isEmpty()) {
 				// sort, needed for calculating the stats
 				ok_values.sort(null);
-				BigDecimal ok_count 	= new BigDecimal(ok_values.size());
+				
 				BigDecimal ok_avg 		= ok_sum.divide(ok_count, RoundingMode.HALF_UP);
 				
 				if(firstRecord.type().isCount()) {
 					
 					if( ! firstRecord.type().isGauge() ) { 
-						statsRecord.addValue(HSRRecordState.ok, HSRMetric.count, ok_sum);
+						statsRecord.setValue(HSRRecordState.ok, HSRMetric.count, ok_sum);
 					} else { 
-						statsRecord.addValue(HSRRecordState.ok, HSRMetric.count, ok_avg);
+						statsRecord.setValue(HSRRecordState.ok, HSRMetric.count, ok_avg);
 					}
 					
 				}else {
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.count,		ok_count);
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.min,  		ok_values.get(0));
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.avg, 		ok_avg);
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.max, 		ok_values.get( ok_values.size()-1 ));
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.stdev, 	bigStdev(ok_values, ok_avg, false));
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p25, 		bigPercentile(25, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p50, 		bigPercentile(50, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p75, 		bigPercentile(75, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p90, 		bigPercentile(90, ok_values) );
-					statsRecord.addValue(HSRRecordState.ok, HSRMetric.p95, 		bigPercentile(95, ok_values) );
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.count,		ok_count);
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.min,  		ok_values.get(0));
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.avg, 		ok_avg);
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.max, 		ok_values.get( ok_values.size()-1 ));
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.stdev, 	bigStdev(ok_values, ok_avg, false));
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.p25, 		bigPercentile(25, ok_values) );
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.p50, 		bigPercentile(50, ok_values) );
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.p75, 		bigPercentile(75, ok_values) );
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.p90, 		bigPercentile(90, ok_values) );
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.p95, 		bigPercentile(95, ok_values) );
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.p99, 		bigPercentile(99, ok_values) );
 				}
 			}
 			
@@ -567,26 +575,26 @@ public class HSRStatsEngine {
 				// sort, needed for calculating the stats
 				nok_values.sort(null);
 				
-				BigDecimal nok_count 	= new BigDecimal(nok_values.size());
 				BigDecimal nok_avg 		= nok_sum.divide(nok_count, RoundingMode.HALF_UP);
 				
 				if(firstRecord.type().isCount()) {
 					if( ! firstRecord.type().isGauge() ) { 
-						statsRecord.addValue(HSRRecordState.nok, HSRMetric.count, nok_sum);
+						statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, nok_sum);
 					} else { 
-						statsRecord.addValue(HSRRecordState.nok, HSRMetric.count, nok_avg);
+						statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, nok_avg);
 					}
 				}else {
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.count, 	nok_count);
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.min,  	nok_values.get(0));
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.avg, 		nok_avg);
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.max, 		nok_values.get( nok_values.size()-1 ));
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.stdev, 	bigStdev(nok_values, nok_avg, false));
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p25, 		bigPercentile(25, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p50, 		bigPercentile(50, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p75, 		bigPercentile(75, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p90, 		bigPercentile(90, nok_values) );
-					statsRecord.addValue(HSRRecordState.nok, HSRMetric.p95, 		bigPercentile(95, nok_values) );
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, 	nok_count);
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.min,  	nok_values.get(0));
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.avg, 		nok_avg);
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.max, 		nok_values.get( nok_values.size()-1 ));
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.stdev, 	bigStdev(nok_values, nok_avg, false));
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.p25, 		bigPercentile(25, nok_values) );
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.p50, 		bigPercentile(50, nok_values) );
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.p75, 		bigPercentile(75, nok_values) );
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.p90, 		bigPercentile(90, nok_values) );
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.p95, 		bigPercentile(95, nok_values) );
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.p99, 		bigPercentile(99, nok_values) );
 				}
 
 			}
@@ -636,6 +644,30 @@ public class HSRStatsEngine {
 		
 	}
 
+	
+	/***************************************************************************
+	 * Calculates and adds the failure rate to the Stats Record.
+	 * 
+	 * Note: This method could theoretically be added to HSRRecordStats, but
+	 * is kept like this for better performance.
+	 ***************************************************************************/
+	private static void calculateFailrate(
+			  HSRRecordStats statsRecord
+			, BigDecimal ok_count
+			, BigDecimal nok_count
+			, BigDecimal failed
+			){
+		if(failed == null || failed.compareTo(BigDecimal.ZERO) == 0) {
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.failrate, BigDecimal.ZERO);
+		}else if(ok_count == null || ok_count.compareTo(BigDecimal.ZERO) == 0) {
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.failrate, HSR.Math.BIG_100);
+		}else {
+			BigDecimal total = ok_count.add(nok_count);
+			BigDecimal failRate = failed.multiply(HSR.Math.BIG_100).divide(total, 2, RoundingMode.HALF_UP);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.failrate, failRate);
+		}
+	}
+
 	/***************************************************************************
 	 * Calculates the SLA for the statsRecord.
 	 * 
@@ -645,11 +677,11 @@ public class HSRStatsEngine {
 								 .evaluate();
 		
 		if(slaMet) {
-			statsRecord.addValue(HSRRecordState.ok, HSRMetric.sla, 1);
-			statsRecord.addValue(HSRRecordState.nok, HSRMetric.sla, 0);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.sla, 1);
+			statsRecord.setValue(HSRRecordState.nok, HSRMetric.sla, 0);
 		}else {
-			statsRecord.addValue(HSRRecordState.ok, HSRMetric.sla, 0);
-			statsRecord.addValue(HSRRecordState.nok, HSRMetric.sla, 1);
+			statsRecord.setValue(HSRRecordState.ok, HSRMetric.sla, 0);
+			statsRecord.setValue(HSRRecordState.nok, HSRMetric.sla, 1);
 		}
 	}
 	
@@ -753,7 +785,7 @@ public class HSRStatsEngine {
 						ArrayList<BigDecimal> metricValues = valuesTable.get(state, metric);
 												
 						if(metricValues == null || metricValues.isEmpty()) {
-							summaryStats.addValue(state, recordMetric, BigDecimal.ZERO);
+							summaryStats.setValue(state, recordMetric, BigDecimal.ZERO);
 						}else {
 							
 							BigDecimal value = null;
@@ -770,11 +802,12 @@ public class HSRStatsEngine {
 								case p75	->		value = HSR.Math.bigPercentile(75, metricValues);	
 								case p90	->		value = HSR.Math.bigPercentile(90, metricValues);	
 								case p95	->		value = HSR.Math.bigPercentile(95, metricValues);	
+								case p99	->		value = HSR.Math.bigPercentile(99, metricValues);	
 								case stdev	->		value = HSR.Math.bigStdev(metricValues, false, 2);
-								
+								default -> { /*do nothing */ }
 							};
 							
-							summaryStats.addValue(state, recordMetric, value);
+							summaryStats.setValue(state, recordMetric, value);
 
 						}
 					}
@@ -782,7 +815,7 @@ public class HSRStatsEngine {
 			}
 			
 			//--------------------------------
-			// Add Value for Each non OK-NOK-Metric
+			// Add Value for Each NON okNok-Metric
 			for(HSRMetric recordMetric : HSRMetric.values()) { 
 				
 				if( recordMetric.isOkNok()) { continue; }
@@ -791,13 +824,21 @@ public class HSRStatsEngine {
 				ArrayList<BigDecimal> metricValues = valuesTable.get(HSRRecordState.ok, metric);
 
 				if(metricValues == null || metricValues.isEmpty()) {
-					summaryStats.addValue(HSRRecordState.ok, recordMetric, BigDecimal.ZERO);
+					summaryStats.setValue(HSRRecordState.ok, recordMetric, BigDecimal.ZERO);
 				}else {
 					BigDecimal value = HSR.Math.bigSum(metricValues, 0, true);
-					summaryStats.addValue(HSRRecordState.ok, recordMetric, value);
+					summaryStats.setValue(HSRRecordState.ok, recordMetric, value);
 				}
 				
 			}
+			
+			//---------------------------
+			// Calculate SLA
+			calculateFailrate(summaryStats
+					  , summaryStats.getValue(HSRRecordState.ok, HSRMetric.count)
+					  , summaryStats.getValue(HSRRecordState.nok, HSRMetric.count)
+					  , summaryStats.getValue(HSRRecordState.ok, HSRMetric.failed)
+				);
 			
 			//---------------------------
 			// Calculate SLA

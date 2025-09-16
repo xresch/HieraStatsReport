@@ -1059,14 +1059,16 @@ function drawManualPage(target){
 		<h2>Manual</h2>
 		<p>This page will give you a short introduction about this report and how to work with it.</p>
 		
-		<h5>General Tips</h5>
+		<h3>General Tips</h3>
 		<ul>
 			<li><b>Filter:&nbsp;</b> The filter field allows you to also filter with wildcards(*) and regular expressions. 
 			It filters on the HTML contents of each row. You can use all javascript regex features, for example "^(?!.*System Usage.*).*" will filter for all rows that do not contains "System Usage".</li>
+			<li><b>Chart Zoom:&nbsp;</b> Click and drag on a chart to zoom into a specific range of the chart to see it more detailed. </li>
+			<li><b>Chart Double-Click:&nbsp;</b> Double click a chart to get a popup with every series in a single chart. </li>
 		</ul>
 		
 		
-		<h5>State OK and NOT OK</h5>
+		<h3>State OK and NOT OK</h3>
 		<p>Every time a value is reported it has one of the following two states: </p>
 		<ul>
 			<li><b>OK:&nbsp;</b> The value is considered OK to be included in the statistic. </li>
@@ -1076,7 +1078,7 @@ function drawManualPage(target){
 		<p>This distinction is made to get proper measurements of duration values, excluding skipped, failed or aborted transactions.</p>
 		
 		
-		<h5>Status</h5>
+		<h3>Status</h3>
 		<p>Every time a value is reported it has one of the following statuses.
 		A status defines by default the state of the value. </p>
 		<ul>
@@ -1087,7 +1089,7 @@ function drawManualPage(target){
 			<li><b>NONE:&nbsp;</b> If the status was set to NONE (State: OK, as we consider it successful). </li>
 		</ul>
 		
-		<h5>Types</h5>
+		<h3>Types</h3>
 		<p>Every metric has one of the following types. These types are defined while reporting values for metrics.</p>
 		<ul>
 			<li><b>Group:&nbsp;</b> The type Group is used to wrap and include measurements of any other type. </li>
@@ -1106,7 +1108,7 @@ function drawManualPage(target){
 		</ul>
 		<p><b>Note:</b> Theoretically, every type can contain every other type when building a hierarchy. Commonly, the types that contain other elements are Group, Step and Wait.</p>
 		
-		<h5>Metrics</h5>
+		<h3>Metrics</h3>
 		<p>Following are the metrics you can encounter in various sections of this report nad its exports: </p>
 		<ul>
 			<li><b>Time:&nbsp;</b> The time of the metric. </li>
@@ -1153,6 +1155,52 @@ function drawManualPage(target){
 			<li><b>IQR:&nbsp;</b> The Inter Quartile Range(IQR) of the values, equals to P75 - P25.  </li>
 			
 		</ul>
+		
+		<h3>The Analysis of Percentile Values</h3>
+		<p>
+			Many people, including many performance engineers, can be confused when and how to use percentile values for analysis or not.
+			Some load testing tools provide 99th percentile values as a standard metric, which in most cases is not useful and should not be used.
+		</p>
+		<p>
+			Percentiles can be good to filter out outliers that might heavily impact average and maximum values.
+			But to be relevant, percentile values need a certain amount of datapoints. Below is a table that
+			shows an overview for the 90th percentile.
+		</p>
+		<p>
+			In load testing, the 90th percentile is most commonly used for evaluating response times while ignoring outliers.
+			It allows for up to 10% of the measurements to be outliers. For performance engineering, 200 datapoints is considered
+			a good base to start using 90th percentile for evaluations, preferably more.
+			<br> 95th percentile allows for 5 outliers in 100 measurements, is therefore twice as sensitive as the 90th. 
+		</p>
+		
+		<h4>Percentile - Use in Performance Engineering</h4>
+		<ul>
+			<li><b>50th Percentile (median):&nbsp;</b> Typical user experience</li>
+			<li><b>25th, 50th, 75th Percentile:&nbsp;</b> Used to create boxplots to analyse distribution.</li>
+			<li><b>90th Percentile:&nbsp;</b> Good for general performance</li>
+			<li><b>95th Percentile:&nbsp;</b> Sometimes used in SLAs</li>
+			<li><b>99th Percentile:&nbsp;</b> Used in measurements in high-performance systems.</li>
+			<li><b>99.9th Percentile:&nbsp;</b> Used in ultra-low-latency environments (e.g. trading systems)</li>
+		</ul>
+		
+		<h4>90th Percentile vs Datapoints</h4>
+		
+		<table class="table table-sm table-hover table-striped">
+			<thead>
+				<tr><th><b>Data Points</b></th><th><b>90th Percentile Position</b></th><th><b>Notes</b></th></tr>
+			</thead>
+			<tbody>
+				<tr><td>10</td>		<td>9th value</td>		<td>Very coarse, easily skewed by outliers</td></tr>
+				<tr><td>50</td>		<td>45th value</td>		<td>Still noisy, but usable for rough estimates</td></tr>
+				<tr><td>100</td>	<td>90th value</td>		<td>Acceptable for basic analysis</td></tr>
+				<tr><td>200</td>	<td>180th value</td>	<td>Acceptable for performance analysis</td></tr>
+				<tr><td>500</td>	<td>450th value</td>	<td>More stable, good for performance analysis</td></tr>
+				<tr><td>1000</td>	<td>900th value</td>	<td>Reliable for most engineering use cases</td></tr>
+				<tr><td>5000+</td>	<td>4500th value</td>	<td>Ideal for latency and SLA tracking</td></tr>
+			</tbody>
+		</table>
+		
+
 	`);
 
 }

@@ -108,12 +108,14 @@ public class HSRRecordStats {
 		, p75(true, "PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY \"{type}_p75\")")
 		, p90(true, "PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY \"{type}_p90\")")
 		, p95(true, "PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY \"{type}_p95\")") 
+		, p99(true, "PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY \"{type}_p99\")") 
 		, sla(true, "ROUND(AVG(\"{type}_sla\"))")
 		, success(false, "SUM(\"success\")") 
 		, failed(false, "SUM(\"failed\")") 
 		, skipped(false, "SUM(\"skipped\")") 
 		, aborted(false, "SUM(\"aborted\")") 
 		, none(false, "SUM(\"aborted\")") 
+		, failrate(false, "AVG(\"failrate\")")
 		;
 		
 		private boolean isOkNok = true;
@@ -308,66 +310,6 @@ public class HSRRecordStats {
 		this.statsIdentifier = record.getStatsIdentifier().intern();
 
 	}
-	/***********************************************************************
-	 * Creates a record containing request statistics.
-	 * 
-	 * @param statsRecordList the list to which the stats record should be added too.
-	 * @param record one of the records of the 
-	 ***********************************************************************/
-	public HSRRecordStats(
-							  LinkedHashMap<HSRRecordStats, HSRRecordStats> statsRecordList
-							, HSRRecord record
-						    , long timeMillis
-							, BigDecimal count 
-							, BigDecimal avg 
-							, BigDecimal min 		
-							, BigDecimal max 			
-							, BigDecimal stdev 	
-							, BigDecimal p25 		
-							, BigDecimal p50 		
-							, BigDecimal p75 		
-							, BigDecimal p90 	
-							, BigDecimal p95 		
-							, BigDecimal success 		
-							, BigDecimal failed 		
-							, BigDecimal skipped 		
-							, BigDecimal aborted 		
-						){	
-		
-		//-----------------------------------
-		// Parse Message
-		this(record);
-
-		//-----------------------------------
-		// Get Target Record
-		HSRRecordStats targetForData = statsRecordList.get(this);
-		
-		if(targetForData == null) {
-			targetForData = this;
-			statsRecordList.put(this, this);
-		}
-		
-		//-----------------------------------
-		// Add Values
-		HSRRecordState state = record.status().state();  
-		
-		targetForData.addValue(state, HSRMetric.count, count);
-		targetForData.addValue(state, HSRMetric.min, min);
-		targetForData.addValue(state, HSRMetric.max, max);
-		targetForData.addValue(state, HSRMetric.avg, avg);
-		targetForData.addValue(state, HSRMetric.stdev, stdev);
-		targetForData.addValue(state, HSRMetric.p25, p25);
-		targetForData.addValue(state, HSRMetric.p50, p50);
-		targetForData.addValue(state, HSRMetric.p75, p75);
-		targetForData.addValue(state, HSRMetric.p90, p90);
-		targetForData.addValue(state, HSRMetric.p95, p95);
-		
-		targetForData.addValue(state, HSRMetric.success, success);
-		targetForData.addValue(state, HSRMetric.failed, failed);
-		targetForData.addValue(state, HSRMetric.skipped, skipped);
-		targetForData.addValue(state, HSRMetric.aborted, aborted);
-
-	}	
 	
 	/***********************************************************************
 	 * Clears all number values while keeping other details.
@@ -381,18 +323,19 @@ public class HSRRecordStats {
 	 * Sets or replaces the specified value.
 	 * 
 	 ***********************************************************************/
-	public void addValue(HSRRecordState state, HSRMetric metric, int value) {
-		addValue(state, metric, new BigDecimal(value));
+	public void setValue(HSRRecordState state, HSRMetric metric, int value) {
+		setValue(state, metric, new BigDecimal(value));
 	}
 	
 	/***********************************************************************
 	 * Sets or replaces the specified value.
 	 * 
 	 ***********************************************************************/
-	public void addValue(HSRRecordState state, HSRMetric metric, BigDecimal value) {
+	public void setValue(HSRRecordState state, HSRMetric metric, BigDecimal value) {
 		
 		if(value == null) { return; }
 		
+		// If the type is a Count, do not add any other metrics except count
 		if(this.type().isCount() 
 		&& metric != HSRMetric.count) {
 			return;
@@ -402,12 +345,13 @@ public class HSRRecordStats {
 		if(metric.isOkNok()) {
 			values.put(state +"_"+metric, value);
 		}else {
-			if( ! values.containsKey(metricString) ) {
-				values.put(metricString, value);
-			}else {
-				BigDecimal currentValue = values.get(metricString);
-				values.put(metricString, value.add(currentValue));
-			}
+			values.put(metricString, value);
+//			if( ! values.containsKey(metricString) ) {
+//				
+//			}else {
+//				BigDecimal currentValue = values.get(metricString);
+//				values.put(metricString, value.add(currentValue));
+//			}
 		}
 
 	}
