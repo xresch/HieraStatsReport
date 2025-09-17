@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
+import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.utils.HSRReportUtils;
 
@@ -74,7 +75,11 @@ public class HSRReporterHTML implements HSRReporter {
     	//-----------------------------------
     	// Make Data Object
     	JsonObject data = new JsonObject();
+    	
     	data.addProperty("test", HSR.getTest());
+    	data.addProperty("starttime", HSRConfig.STARTTIME_MILLIS);
+		data.addProperty("endtime", System.currentTimeMillis());
+		
     	data.add("properties", HSR.JSON.toJSONElement(properties) );
     	data.add("sla", slaForRecords);
     	data.add("records", summaryRecordsWithSeries);

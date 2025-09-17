@@ -8,7 +8,7 @@ THIS PROJECT JUST STARTED AND IS UNDER CONSTRUCTION! :D
 	- Average in the summary is the average of all previous averages.
 	- 90th percentile in the summary is the 90th-perc of all previous 90-percs.
 	
-* **Report Interval**: The report interval has a good impact on the accuracy of the statistical metrics. The bigger your report interval the more accurate the metrics. It is recommended to have an interval of at least 15 seconds.   
+* **Report Interval**: The report interval has a good impact on the accuracy of the statistical metrics. The bigger your report interval the more accurate the metrics. It is recommended to have an interval of at least 15 seconds. It also defines the number of datapoints you will have in charts in reports.
 
 * **SLA vs Status:** If SLA is met or not met does not influence if a request is considered successful or failed. This is true the other way around, the status does not automatically influence the SLA. The SLA can be set to check the failure rate.
 

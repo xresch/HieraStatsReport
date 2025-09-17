@@ -1375,6 +1375,7 @@ function drawChartsCPUUsage(target, height){
 		, ["percent"]
 		, { 
 			  multichart: false 
+			  , ymax: 100
 			  , height: height
 		  }
 	);
@@ -1452,14 +1453,17 @@ function drawChartsNetworkIOSent(target, height){
  * 
  *************************************************************************************/
 function drawChartsMemoryUsage(target){
-	drawChartsProcessMemory(target, "50vh");
+	drawChartsProcessMemoryMB(target, "30vh");
+	drawChartsProcessMemoryPercent(target, "30vh");
+	drawChartsHostMemory(target, "30vh");
 }
+
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsProcessMemory(target, height){
+function drawChartsProcessMemoryMB(target, height){
 	
-	target.append("<h5>Process Memory Usage<h5>");
+	target.append("<h5>Process Memory Usage [MB]<h5>");
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1484,6 +1488,80 @@ function drawChartsProcessMemory(target, height){
 			  charttype: 'line'
 			, ytype: 'logarithmic'
 			, height: height
+			, multichart: false 
+			, multichartcolumns: 2
+		}
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsProcessMemoryPercent(target, height){
+	
+	target.append("<h5>Process Memory Usage [%]<h5>");
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.match(/^Process Memory.*\[%\]/g); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record["percent"] = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["percent"]
+		, { 
+			  charttype: 'area'
+			, ytype: 'linear'
+			, height: height
+			, ymax: 100
+			, multichart: false 
+			, multichartcolumns: 2
+		}
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsHostMemory(target, height){
+	
+	target.append("<h5>Host Memory Usage<h5>");
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.match(/^Host Memory.*/g); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record["percent"] = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["percent"]
+		, { 
+			  charttype: 'area'
+			, ytype: 'linear'
+			, height: height
+			, ymax: 100
 			, multichart: false 
 			, multichartcolumns: 2
 		}
@@ -1926,9 +2004,18 @@ function drawTable(target, data, showFields, typeFilterArray){
  *************************************************************************************/
 function initialDraw(options){
 	
+	//------------------------
+	// Set Test as Title
+	if(DATA.length != 0){
+		let first = DATA[0];
+		$('#report-title').text("Report: "+ first.test);
+		$('head title').text("Report: "+ first.test);
+	}
+
+	//------------------------
+	// Load Last View
 	let lastOptions = CFW.cache.retrieveValueForPage("last-draw-options", "mydashboards");
 	
-	console.l
 	if( lastOptions == 'undefined'
 	|| CFW.utils.isNullOrEmpty(lastOptions) ){
 		draw(options);

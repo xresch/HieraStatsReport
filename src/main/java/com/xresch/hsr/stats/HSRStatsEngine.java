@@ -851,7 +851,7 @@ public class HSRStatsEngine {
 			// Keep Empty
 			finalRecords.add(summaryStats);
 			JsonObject recordObject = summaryStats.toJson();
-			
+
 			// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
 			JsonObject series = HSR.JSON.toJSONElement(valuesTableKeepOrder)
 										.getAsJsonObject()
@@ -865,6 +865,12 @@ public class HSRStatsEngine {
 			
 					
 		}
+		
+		//-------------------------------
+		// Add Endtime to Properties
+		long endtime = System.currentTimeMillis();
+		HSRConfig.addProperty("[HSR] timeEndMillis", "" + endtime);
+		HSRConfig.addProperty("[HSR] timeEndTimestamp", "" + HSR.Time.formatMillisAsTimestamp(endtime) );
 		
 		//-------------------------------
 		// Report Stats
