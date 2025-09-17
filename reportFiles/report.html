@@ -42,15 +42,15 @@
 					
 					<li><a href="#" class="dropdown-item" onclick="draw({view: 'manual'})">Manual</a></li>
 					
+					<li><a href="#" class="dropdown-item" onclick="draw({view: 'summary'})">Summary</a></li>
+					
 					<li class="dropdown">
 						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
 							General 
 						<span class="caret"></span></a>
 						<ul class="dropdown-menu dropdown-submenu">
-							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'overview'})">Overview</a></li>
 							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'properties'})">Properties</a></li>
 							 <li><a href="#" class="dropdown-item" onclick="draw({view: 'sla'})">SLA</a></li>
-					
 						</ul>
 					</li>
 					
@@ -60,6 +60,7 @@
 							Charts 
 						<span class="caret"></span></a>
 						<ul class="dropdown-menu dropdown-submenu">
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'chartsUsers'})">Users</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'chartsCPUUsage'})">CPU Usage</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'chartsMemoryUsage'})">Memory Usage</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'chartsDiskusage'})">Disk Usage</a></li>
@@ -86,6 +87,8 @@
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableAsserts'})">Asserts</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableMessages'})">Messages</a></li>
 							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableExceptions'})">Exceptions</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableUsers'})">User</a></li>
+							<li><a href="#" class="dropdown-item" onclick="draw({view: 'tableSystem'})">System</a></li>
 						</ul>
 					</li>
 					

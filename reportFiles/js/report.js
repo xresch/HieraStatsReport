@@ -112,19 +112,20 @@ const RECORDMETRIC =  {
 // ENUM: TYPE
 //================================================
 const RECORDTYPE = {
-	Group: 			{name: "Group"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Step: 			{name: "Step"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Wait: 			{name: "Wait"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Assert: 		{name: "Assert"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Exception: 		{name: "Exception"		, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Metric: 		{name: "Metric"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Count: 			{name: "Count"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Gauge: 			{name: "Gauge"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	User: 			{name: "User"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	MessageInfo: 	{name: "MessageInfo"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	MessageWarn: 	{name: "MessageWarn"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	MessageError: 	{name: "MessageError"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } },
-	Unknown: 		{name: "Unknown"		, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	  Group: 		{name: "Group"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Step: 		{name: "Step"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Wait: 		{name: "Wait"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Assert: 		{name: "Assert"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Exception: 	{name: "Exception"		, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Metric: 		{name: "Metric"			, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Count: 		{name: "Count"			, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Gauge: 		{name: "Gauge"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, System: 		{name: "System"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, User: 		{name: "User"			, isCount: true, isGauge: true		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, MessageInfo: 	{name: "MessageInfo"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, MessageWarn: 	{name: "MessageWarn"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, MessageError: {name: "MessageError"	, isCount: true, isGauge: false		, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
+	, Unknown: 		{name: "Unknown"		, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
 }
 
 //================================================
@@ -1124,14 +1125,6 @@ function record_format_boxplot(record, minMin, maxMax){
 	return CFW.format.boxplot(values, color, false);
 }
 
-/**************************************************************************************
- * 
- *************************************************************************************/
-function drawOverviewPage(){
-	
-	var content = $("#content")
-
-}
 
 /**************************************************************************************
  * 
@@ -1299,6 +1292,11 @@ function drawManualPage(target){
 function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions){
 	
 	//---------------------------
+	// Sort to make series properly 
+	// overlaying in area charts
+	data = _.sortBy(data, metricsArray);
+		
+	//---------------------------
 	// Render Settings
 	let defaultChartOptions = {
 		charttype: "area",
@@ -1322,6 +1320,7 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
 	
 	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
 	
+
 	//---------------------------
 	// Render Settings
 	var dataToRender = {
@@ -1346,12 +1345,65 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
 	
 }
 
+
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsDiskusage(target, height){
+function drawChartsUsers(target, chartOptions, userFilter){
+	
+	target.append("<h5>Users "+(userFilter ?? '')+"<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			    multichart: true 
+			  , height: '30vh'
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.type == "User" 
+			&& ( userFilter == null 
+			  || record.name == userFilter); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record.users = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["users"]
+		, finalChartOptions
+	);
+}
+
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsDiskusage(target, chartOptions){
+	
 	
 	target.append("<h5>Disk Usage [%]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			  multichart: true 
+			, multichartcolumns: 2
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
 	
 	//---------------------
 	// Filter
@@ -1372,20 +1424,25 @@ function drawChartsDiskusage(target, height){
 		, datapoints
 		, ["name"]
 		, ["percent"]
-		, { 
-			  multichart: true 
-			, multichartcolumns: 2
-			, height: height
-		}
+		, finalChartOptions
 	);
 }
 
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsCPUUsage(target, height){
+function drawChartsCPUUsage(target, chartOptions){
 	
 	target.append("<h5>CPU Usage [%]<h5>");
+	
+		
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 ymax: 100
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
 	
 	//---------------------
 	// Filter
@@ -1406,20 +1463,26 @@ function drawChartsCPUUsage(target, height){
 		, datapoints
 		, ["name"]
 		, ["percent"]
-		, { 
-			  multichart: false 
-			  , ymax: 100
-			  , height: height
-		  }
+		, finalChartOptions
 	);
 }
 
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsNetworkIORecv(target, height){
+function drawChartsNetworkIORecv(target, chartOptions){
 	
 	target.append("<h5>Network I/O Received [MB/sec]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'area'
+			, stacked: true
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1434,26 +1497,32 @@ function drawChartsNetworkIORecv(target, height){
 	
 	//---------------------
 	// Draw
-	
 	drawChartByFields(
 		  target
 		, datapoints
 		, ["name"]
 		, ["megabytesPerSec"]
-		, { 
-			  charttype: 'bar'
-			, height: height
-			, stacked: true
-		}
+		, finalChartOptions
 	);
 }
 
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsNetworkIOSent(target, height){
+function drawChartsNetworkIOSent(target, chartOptions){
 	
 	target.append("<h5>Network I/O Sent [MB/sec]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'area'
+			, stacked: true
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1474,11 +1543,7 @@ function drawChartsNetworkIOSent(target, height){
 		, datapoints
 		, ["name"]
 		, ["megabytesPerSec"]
-		, { 
-			  charttype: 'bar'
-			, height: height
-			, stacked: true
-		}
+		, finalChartOptions
 	);
 }
 
@@ -1486,17 +1551,29 @@ function drawChartsNetworkIOSent(target, height){
  * 
  *************************************************************************************/
 function drawChartsMemoryUsage(target){
-	drawChartsProcessMemoryMB(target, "30vh");
-	drawChartsProcessMemoryPercent(target, "30vh");
-	drawChartsHostMemory(target, "30vh");
+	drawChartsProcessMemoryMB(target, {height: "30vh"} );
+	drawChartsProcessMemoryPercent(target, {height: "30vh"} );
+	drawChartsHostMemory(target, {height: "30vh"} );
 }
 
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsProcessMemoryMB(target, height){
+function drawChartsProcessMemoryMB(target, chartOptions){
 	
 	target.append("<h5>Process Memory Usage [MB]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			  charttype: 'area'
+			, ytype: 'logarithmic'
+			, multichart: false 
+			, multichartcolumns: 2
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1517,22 +1594,29 @@ function drawChartsProcessMemoryMB(target, height){
 		, datapoints
 		, ["name"]
 		, ["MB"]
-		, { 
-			  charttype: 'line'
-			, ytype: 'logarithmic'
-			, height: height
-			, multichart: false 
-			, multichartcolumns: 2
-		}
+		, finalChartOptions
 	);
 }
 
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsProcessMemoryPercent(target, height){
+function drawChartsProcessMemoryPercent(target, chartOptions){
 	
 	target.append("<h5>Process Memory Usage [%]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			  charttype: 'area'
+			, ytype: 'linear'
+			, ymax: 100
+			, multichart: false 
+			, multichartcolumns: 2
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1553,23 +1637,29 @@ function drawChartsProcessMemoryPercent(target, height){
 		, datapoints
 		, ["name"]
 		, ["percent"]
-		, { 
-			  charttype: 'area'
-			, ytype: 'linear'
-			, height: height
-			, ymax: 100
-			, multichart: false 
-			, multichartcolumns: 2
-		}
+		, finalChartOptions
 	);
 }
 
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsHostMemory(target, height){
+function drawChartsHostMemory(target, chartOptions){
 	
-	target.append("<h5>Host Memory Usage<h5>");
+	target.append("<h5>Host Memory Usage [%]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			  charttype: 'area'
+			, ytype: 'linear'
+			, ymax: 100
+			, multichart: false 
+			, multichartcolumns: 2
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
@@ -1590,14 +1680,7 @@ function drawChartsHostMemory(target, height){
 		, datapoints
 		, ["name"]
 		, ["percent"]
-		, { 
-			  charttype: 'area'
-			, ytype: 'linear'
-			, height: height
-			, ymax: 100
-			, multichart: false 
-			, multichartcolumns: 2
-		}
+		, finalChartOptions
 	);
 }
 
@@ -1871,6 +1954,204 @@ function addFieldSortOptions(baseOptions, fieldArray) {
 	return baseOptions;
 }
 
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawSummaryPage(target){
+
+
+	//--------------------------
+	// Stats 
+	let clonedRecord = _.forEach(_.cloneDeep(RECORDS_ALL), function(r){
+		
+		r.count = r.ok_count + r.nok_count;
+		
+		if		(r.type == "MessageInfo"){ r.info = r.ok_count; }
+		else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
+		else if (r.type == "MessageError"){ r.error = r.ok_count; }
+	});
+
+
+	//--------------------------
+	// Result 
+	let resultDiv = $('<div class="container minvw-90">');
+	resultDiv.append('<h2>Report Summary<h>');
+
+	//==================================================================
+	// FIRST ROW - PIE CHARTS
+	//==================================================================
+	let row = $('<div class ="row">');
+		//--------------------------
+		// Chart: Counts
+		let chartCounts = $('<div class="col-3">');
+		chartCounts.append('<h5>Counts OK vs NOK<h5>');
+		drawChartByFields(
+			  chartCounts
+			, clonedRecord
+			, []
+			, ["ok_count","nok_count"]
+			, { 
+				  charttype: 'doughnut' 
+				, height: "20vh"
+				, colors: ["limegreen", "red"]
+			}
+		);
+		
+		row.append(chartCounts);
+		
+		//--------------------------
+		// Chart: SLA
+		let chartSLA = $('<div class="col-3">');
+		chartSLA.append('<h5>SLA OK vs NOK<h5>');
+		drawChartByFields(
+			  chartSLA
+			, _.filter(clonedRecord, function(o){ return o.ok_sla != null; } )
+			, []
+			, ["ok_sla","nok_sla"]
+			, { 
+				  charttype: 'doughnut' 
+				, height: "20vh"
+				, colors: ["limegreen", "red"]
+			}
+		);
+		
+		row.append(chartSLA);
+		
+		//--------------------------
+		// Chart: Statuses
+		let chartStatuses = $('<div class="col-3">');
+		chartStatuses.append('<h5>Statuses<h5>');
+		drawChartByFields(
+			  chartStatuses
+			, clonedRecord
+			, []
+			, ["success","skipped", "aborted", "failed", "none"]
+			, { 
+				  charttype: 'doughnut' 
+				, height: "20vh"
+				, colors: ["limegreen", "yellow", "orange", "red", "gray"]
+			}
+		);
+		
+		row.append(chartStatuses);
+		
+		//--------------------------
+		// Chart: Statuses
+		let chartMessages = $('<div class="col-3">');
+		chartMessages.append('<h5>Messages<h5>');
+		drawChartByFields(
+			  chartMessages
+			, clonedRecord
+			, []
+			, ["info","warn", "error"]
+			, { 
+				  charttype: 'doughnut' 
+				, height: "20vh"
+				, colors: ["cfw-cyan", "orange", "red"]
+			}
+		);
+		
+		row.append(chartMessages);
+		
+	resultDiv.append(row);
+
+	//==================================================================
+	// SECOND ROW - SYSTEM RESOURCES
+	//==================================================================
+	let chartOptions = { height: "25vh", showlegend: false, multichart: false};
+	row = $('<div class ="row pt-5">');
+		//--------------------------
+		// CPU Usage
+		let cpuUsage = $('<div class="col-3">');
+		drawChartsCPUUsage(cpuUsage, chartOptions);
+		row.append(cpuUsage);
+		
+		//--------------------------
+		// Host Memory Usage
+		let hostMemoryUsage = $('<div class="col-3">');
+		drawChartsHostMemory(hostMemoryUsage, chartOptions);
+		row.append(hostMemoryUsage);
+		
+		//--------------------------
+		// Process Memory Usage %
+		let processMemoryUsagePercent = $('<div class="col-3">');
+		drawChartsProcessMemoryPercent(processMemoryUsagePercent, chartOptions);
+		row.append(processMemoryUsagePercent);
+		
+		//--------------------------
+		// Process Memory Usage MB
+		let processMemoryUsageMB = $('<div class="col-3">');
+		drawChartsProcessMemoryMB(processMemoryUsageMB, chartOptions);
+		row.append(processMemoryUsageMB);
+
+	resultDiv.append(row);
+	
+	//==================================================================
+	// THIRD ROW - SYSTEM RESOURCES
+	//==================================================================
+	row = $('<div class ="row pt-5">');
+			
+		//--------------------------
+		// Network I/O Recv
+		let processNetIORecv = $('<div class="col-3">');
+		drawChartsNetworkIORecv(processNetIORecv, chartOptions);
+		row.append(processNetIORecv);
+		
+		//--------------------------
+		// Network I/O Sent
+		let processNetIOSent = $('<div class="col-3">');
+		drawChartsNetworkIOSent(processNetIOSent, chartOptions);
+		row.append(processNetIOSent);
+		
+		//--------------------------
+		// Disk
+		let diskUsage = $('<div class="col-3">');
+		drawChartsDiskusage(diskUsage, chartOptions);
+		row.append(diskUsage);		
+		
+		
+	resultDiv.append(row);
+	
+	//==================================================================
+	// FORTH ROW - USERS
+	//==================================================================
+	row = $('<div class ="row pt-5">');
+			
+		//--------------------------
+		// Users Active
+		let usersActive = $('<div class="col-3">');
+		drawChartsUsers(usersActive, chartOptions, "Active");
+		row.append(usersActive);
+		
+		//--------------------------
+		// Users Started
+		let usersStarted = $('<div class="col-3">');
+		drawChartsUsers(usersStarted, chartOptions, "Started");
+		row.append(usersStarted);
+		
+		//--------------------------
+		// Users Stopped
+		let usersStopped = $('<div class="col-3">');
+		drawChartsUsers(usersStopped, chartOptions, "Stopped");
+		row.append(usersStopped);
+		
+	resultDiv.append(row);
+	
+
+	//----------------------------
+	// Create Table
+	resultDiv.append('<h3>Statistics<h3>');
+	drawTable(resultDiv
+			, _.filter(clonedRecord, function(r){ return r.type != 'System'; } )
+			, FIELDS_BASE_STATS
+			);
+
+	
+	//----------------------------
+	// Add to Target
+	target.append(resultDiv);
+	
+}
 
 /**************************************************************************************
  * 
@@ -1986,7 +2267,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 					download: true,
 					sortable: true,
 					sortoptions: addFieldSortOptions(
-							  {"Test, Usecase, Groups, Name": [["test", "usecase", "groups", "name"], ["asc","asc","asc","asc"] ]}
+							  {"Test, Usecase, Groups, Name": [[ "pathrecord", "usecase", "test",], ["asc","asc","asc"] ]}
 							, showFields.concat(FIELDS_STATUS)
 						) ,
 					renderers: [
@@ -2199,7 +2480,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 /*************************************************************************************
  * Main Drawing method
  *************************************************************************************/
-function initialDraw(options){
+function initialDraw(){
 	
 	//------------------------
 	// Set Test as Title
@@ -2211,11 +2492,11 @@ function initialDraw(options){
 
 	//------------------------
 	// Load Last View
-	let lastOptions = CFW.cache.retrieveValueForPage("last-draw-options", "mydashboards");
+	let lastOptions = CFW.cache.retrieveValueForPage("last-draw-options", null);
 	
-	if( lastOptions == 'undefined'
+	if( lastOptions == null
 	|| CFW.utils.isNullOrEmpty(lastOptions) ){
-		draw(options);
+		draw({view: "summary"});
 	}else{
 		draw(JSON.parse(lastOptions) );
 	}
@@ -2237,16 +2518,17 @@ function draw(options){
 	window.setTimeout( 
 	function(){
 		switch(options.view){
-			case "overview": 			drawOverviewPage(target); break;
+			case "summary": 			drawSummaryPage(target); break;
 			case "manual": 				drawManualPage(target); break;
 			case "properties": 			drawProperties(target); break;
 			case "sla": 				drawSLA(target); break;
 				
-			case "chartsCPUUsage": 		drawChartsCPUUsage(target, "50vh"); break;
+			case "chartsUsers": 		drawChartsUsers(target, {height: "30vh"} ); break;
+			case "chartsCPUUsage": 		drawChartsCPUUsage(target, {height: "50vh"} ); break;
 			case "chartsMemoryUsage": 	drawChartsMemoryUsage(target); break;
-			case "chartsDiskusage": 	drawChartsDiskusage(target,"25vh"); break;
-			case "chartsNetworkIO": 	drawChartsNetworkIORecv(target,"50vh"); 
-										drawChartsNetworkIOSent(target,"50vh"); 
+			case "chartsDiskusage": 	drawChartsDiskusage(target, { height: "25vh" } ); break;
+			case "chartsNetworkIO": 	drawChartsNetworkIORecv(target, { height:"50vh" } ); 
+										drawChartsNetworkIOSent(target, { height:"50vh" } ); 
 										break;
 			
 			case "tableAll": 			target.append('<h2>Table: All Types</h2>');
@@ -2289,8 +2571,14 @@ function draw(options){
 										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Message"]); break;
 										
 			case "tableExceptions": 	target.append('<h2>Table: Exceptions</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;
-			
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;	
+										
+			case "tableUsers": 	target.append('<h2>Table: Users</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["User"]); break;
+										
+			case "tableSystem": 	target.append('<h2>Table: System</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["System"]); break;
+										
 			case "csv": 				drawCSV(); break;
 			case "json": 				drawJSON(); break;
 		}

@@ -1276,13 +1276,14 @@ function cfw_renderer_chart_createDatasetsGroupedByTitleFields(renderDef, settin
 			
 			//----------------------------
 			// Add Values
-			var value = currentRecord[yfieldname];
+			let value = currentRecord[yfieldname];
 			datasets[label].originalData.push(currentRecord);
 			
 			if(settings.xfield == null){
 				datasets[label].data.push(value);
 				datasets[label].cfwSum += isNaN(value) ? 0 : parseFloat(value);
 				datasets[label].cfwCount += 1;
+				
 			}else{
 				
 				if(currentRecord[settings.xfield] != null){
@@ -1291,8 +1292,10 @@ function cfw_renderer_chart_createDatasetsGroupedByTitleFields(renderDef, settin
 						y: value
 					});
 				}
+				value = (value != null) ? value : 0;
 				datasets[label].cfwSum += isNaN(value) ? 0 : parseFloat(value);
 				datasets[label].cfwCount += 1;
+								console.log("======")
 			}
 		}
 	}
@@ -1315,7 +1318,7 @@ function cfw_renderer_chart_createDatasetsFromDatapoints(renderDef, settings) {
 		for(var i = 0; i < renderDef.data.length; i++){
 	
 			var currentRecord = renderDef.data[i];
-			
+
 			//----------------------------
 			// Create Label & Dataset
 			var label = renderDef.getTitleString(currentRecord) + " / "+yfieldname;
@@ -1339,6 +1342,7 @@ function cfw_renderer_chart_createDatasetsFromDatapoints(renderDef, settings) {
 				
 				datasets[label].cfwSum += isNaN(y) ? 0 : parseFloat(y);
 				datasets[label].cfwCount += 1;
+
 			}
 				
 		}
