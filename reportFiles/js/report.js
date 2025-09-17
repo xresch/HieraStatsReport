@@ -127,6 +127,11 @@ const RECORDTYPE = {
 	Unknown: 		{name: "Unknown"		, isCount: false, isGauge: false	, stats: { 	All: [], None: [], Success: [], Skipped: [], Fail: [] } }
 }
 
+//================================================
+// COLORS CHART
+//================================================
+const COLOR_CHART_MIN_P50_P90 = ["rgb(76, 138, 197)", "rgb(255, 226, 87)", "rgb(186, 69, 198)"];
+const COLOR_CHART_P25_P50_P75 = ["rgb(255, 124, 87)", "rgb(223, 76, 156)", "rgb(255, 190, 87)"];
 
 //================================================
 // ENUM: FIELDS
@@ -163,6 +168,25 @@ const FIELDS_BASE_STATS = FIELDS_BASE_COUNTS.concat([
 	"failrate",
 	"ok_sla"
 ]);
+
+const FIELDS_RECORD_DETAILS = [
+	"time",
+	"name",
+	"code",
+	"ok_count",
+	"nok_count",
+	"ok_min",
+	"ok_avg",
+	"ok_max",
+	"ok_stdev",
+	"ok_p25",
+	"ok_p50",
+	"ok_p75",
+	"ok_p90",
+	"ok_p99",
+	"failrate",
+	"ok_sla"
+];
 
 const FIELDS_BOXPLOT = [
 	"usecase",
@@ -230,6 +254,7 @@ const FIELDLABELS = {
 	, "ok_p75": "P75"
 	, "ok_p90": "P90"
 	, "ok_p95": "P95"
+	, "ok_p99": "P99"
 	, "ok_sla": "SLA"
 	, "nok_count": "Count(nok)"
 	, "nok_min": "Min(nok)"
@@ -241,6 +266,7 @@ const FIELDLABELS = {
 	, "nok_p75": "P75(nok)"
 	, "nok_p90": "P90(nok)"
 	, "nok_p95": "P95(nok)"
+	, "nok_p99": "P99(nok)"
 	, "nok_sla": "SLA(nok)"
 	, "success": "Success"
 	, "failed": "Failed"
@@ -257,7 +283,8 @@ const FIELDLABELS = {
 
 const CUSTOMIZERS = {
 						
-	  'test': customizerTextValues
+	  'time': function(record, value){ return CFW.format.epochToTimestamp(value); }
+	, 'test': customizerTextValues
 	, 'usecase': customizerTextValues
 	, 'path': customizerTextValues
 	, 'name': customizerTextValues
@@ -272,6 +299,7 @@ const CUSTOMIZERS = {
 	, "ok_p75": customizerStatsNumber
 	, "ok_p90": customizerStatsNumber
 	, "ok_p95": customizerStatsNumber
+	, "ok_p99": customizerStatsNumber
 	, "ok_sla": customizerSLA
 	
 	, "nok_count": customizerStatsNumber
@@ -284,6 +312,7 @@ const CUSTOMIZERS = {
 	, "nok_p75": customizerStatsNumber
 	, "nok_p90": customizerStatsNumber
 	, "nok_p95": customizerStatsNumber
+	, "nok_p99": customizerStatsNumber
 	, "nok_sla": customizerSLA
 	
 	, "success": customizerStatsNumber
@@ -317,12 +346,31 @@ function slaForRecord(record){
 }
 
 /**************************************************************************************
+ * Returns the record for a statsid.
+ *************************************************************************************/
+function recordForStatsID(statsid){
+	return _.cloneDeep(
+		_.filter(RECORDS_ALL, function(r) { 		
+			return r.statsid == statsid; 
+		})[0]
+	);
+}
+
+/**************************************************************************************
  * Returns cloned datapoints for a record.
  *************************************************************************************/
 function datapointsForRecord(record){
+	return datapointsForStatsID(record.statsid);
+}
+
+
+/**************************************************************************************
+ * Returns cloned datapoints for a statsid.
+ *************************************************************************************/
+function datapointsForStatsID(statsid){
 	return _.cloneDeep(
 		_.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
-			return r.statsid == record.statsid; 
+			return r.statsid == statsid; 
 		})
 	);
 }
@@ -385,33 +433,17 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 	if(fieldname == 'failrate'){
 		formatted = $(formatted).append(" %");
 	}
-	
-	//---------------------
-	// Filter
-	let datapoints = datapointsForRecord(record);
-	
-	//----------------------
-	// Get Series data
-/*	let seriesData = {};
-	let metricName = fieldname.replace("nok_", "")
-							  .replace("ok_", "");
-	
- 	seriesData.name = record.name;
-	seriesData.metricName = metricName;
-	if(!fieldname.startsWith("nok") ){
-		seriesData.time = record.series.time;
-		seriesData[metricName] = record.series.ok[metricName];
-	}else{
-		seriesData.time = record.series.time;
-		seriesData[metricName] = record.series.nok[metricName];
-	} */
-	
+
 	//----------------------
 	// Create Link
 	let chartLink = $('<a href="javascript:void(0)">');
 	chartLink.append(formatted);
 	chartLink.click(function(){
-
+		
+		//---------------------
+		// Filter
+		let datapoints = datapointsForRecord(record);
+		
 		//---------------------------
 		// Render Settings
 		var dataToRender = {
@@ -552,7 +584,7 @@ function customizerStatusBartSLA(record, value, rendererName, fieldname){
 		bgstylefield: "bgcolor",
 		textstylefield: "textcolor",
 		titlefields: ["name"],
-		visiblefields: ["name"],
+		visiblefields: FIELDS_RECORD_DETAILS,
 		labels: FIELDLABELS,
 		customizers: CUSTOMIZERS,
 		rendererSettings:{
@@ -1119,8 +1151,9 @@ function drawManualPage(target){
 			It filters on the HTML contents of each row. You can use all javascript regex features, for example "^(?!.*System Usage.*).*" will filter for all rows that do not contains "System Usage".</li>
 			<li><b>Chart Zoom:&nbsp;</b> Click and drag on a chart to zoom into a specific range of the chart to see it more detailed. </li>
 			<li><b>Chart Double-Click:&nbsp;</b> Double click a chart to get a popup with every series in a single chart. </li>
+			<li><b>Boxplot Colors:&nbsp;</b> The boxplot is colored by the position of the P50(median) inside of the Inter-Quartile-Range(IQR: P75-P25). The closer it gets to P75, the more red it turns.</li>
 		</ul>
-		
+
 		
 		<h3>State OK and NOT OK</h3>
 		<p>Every time a value is reported it has one of the following two states: </p>
@@ -1655,6 +1688,164 @@ function drawSLA(target){
 }
 
 /**************************************************************************************
+ * Shows the details of the record in a modal panel
+ * @param record
+ *************************************************************************************/
+function showRecordDetails(statsid){
+	
+	//----------------------
+	// Check input
+	if(statsid == null){ return ''; }
+		
+	//---------------------
+	// Filter
+	let datapoints = datapointsForStatsID(statsid);
+	let record = recordForStatsID(statsid);
+	console.log(record);
+	
+	if(datapoints == null || datapoints.length == 0){
+		CFW.ui.showModalLarge(modalTitle, "<span>No data found to display.</span>", null, true);
+	}
+	
+	let isCount = RECORDTYPE[record.type].isCount;
+	let hasSLA = ( record.ok_sla != null );
+	//--------------------------
+	// Result DIV 
+	let resultDiv = $('<div>');
+	
+	//--------------------------
+	// Chart: Counts
+	let chartCounts = $('<div class="row">');
+	drawChartByFields(
+		  chartCounts
+		, datapoints
+		, []
+		, ["ok_count","nok_count"]
+		, { 
+			  charttype: 'bar' 
+			, height: "30vh"
+			, stacked: true
+			, colors: ["limegreen", "red"]
+		}
+	);;
+	
+	resultDiv.append('<h3>Counts OK vs NOK<h3>');
+	resultDiv.append(chartCounts);
+	
+	//--------------------------
+	// Chart: Failure Rate
+	let chartFailrate = $('<div class="row">');
+	drawChartByFields(
+		  chartFailrate
+		, datapoints
+		, []
+		, ["failrate"]
+		, { 
+			  charttype: 'bar' 
+			, height: "30vh"
+			, ymax: 100
+			, colors: ["red"]
+		}
+	);;
+	
+	resultDiv.append('<h3>Failure Rate [%]<h3>');
+	resultDiv.append(chartFailrate);
+
+	//--------------------------
+	// Chart Min / Avg / Max
+	if(!isCount){
+		let chartMinAvgMax = $('<div class="row">');
+		drawChartByFields(
+			  chartMinAvgMax
+			, datapoints
+			, []
+			, ["ok_min","ok_avg", "ok_max"]
+			, { 
+				  charttype: 'area' 
+				, height: "30vh"
+			}
+		);
+
+	
+		resultDiv.append('<h3>Min / Avg / Max<h3>');
+		resultDiv.append(chartMinAvgMax);
+	}
+	//--------------------------
+	// Chart Min / P50 / P90
+	if(!isCount){
+		let chartMinP50P90 = $('<div class="row">');
+		drawChartByFields(
+			  chartMinP50P90
+			, datapoints
+			, []
+			, ["ok_min","ok_p50", "ok_p90"]
+			, { 
+				  charttype: 'area' 
+				, height: "30vh"
+				, colors: COLOR_CHART_MIN_P50_P90
+			}
+		);
+		
+		resultDiv.append('<h3>Min / P50 / P90<h3>');
+		resultDiv.append(chartMinP50P90);
+	}	
+	
+	//--------------------------
+	// SLA
+	if(hasSLA){
+		let sla = customizerStatusBartSLA(record)
+						.removeClass('vw-15')
+						.addClass('w-100');
+						
+		resultDiv.append('<h3>SLA over Time<h3>');
+		resultDiv.append(sla);
+	}
+	
+	//--------------------------
+	// Boxplot
+	if(!isCount){
+		let boxplot = record_format_boxplot(record);
+		
+		resultDiv.append('<h3>Boxplot<h3>');
+		resultDiv.append(boxplot);
+	}
+	
+	
+		
+	//----------------------------
+	// Create Table
+	var dataToRender = {
+		data: datapoints,
+		titlefields: ["pathrecord"],
+		visiblefields: FIELDS_RECORD_DETAILS,
+		//bgstylefield: options.bgstylefield,
+		//textstylefield: options.textstylefield,
+		//titleformat: options.titleFormat,
+		labels: FIELDLABELS,
+		customizers: CUSTOMIZERS,
+		rendererSettings:{
+			  dataviewer:{
+				download: true,
+				sortable: true,
+				defaultsize: 10,
+				renderers: CFW.render.createDataviewerDefaults()
+			}
+		}
+	};
+	
+	let renderedViewer = CFW.render.getRenderer('dataviewer').render(dataToRender);	
+	resultDiv.append('<h3>Datapoints<h3>');
+	resultDiv.append(renderedViewer);
+
+	//----------------------------
+	// Show Modal
+	let modalTitle = `Details: ${datapoints[0].name}`;
+	CFW.ui.showModalLarge(modalTitle, resultDiv, null, true);
+	
+	
+}
+
+/**************************************************************************************
  * 
  * @param baseOptions the object that where the options should be added.
  * @param fieldArray array of fieldnames
@@ -1755,23 +1946,24 @@ function drawTable(target, data, showFields, typeFilterArray){
 	
 	//-------------------------
 	// Details Button
-/* 		actionButtons.push(
-		function (record, id){ 
+ 	actionButtons.push(
+	function (record, id){ 
 			
-			let htmlString = '<button class="btn btn-primary btn-sm" alt="Edit" title="Edit" '
-					+'onclick="cfw_filemanager_editStoredFile('+id+')");">'
-					+ '<i class="fa fa-pen"></i>'
+			let htmlString = '<button class="btn btn-primary btn-sm" alt="Details" title="Details" '
+					+'onclick="showRecordDetails('+id+')");">'
+					+ '<i class="fa fa-search"></i>'
 					+ '</button>';
 
 			return htmlString;
-		}); */
+		}
+	); 
 	
 	//-----------------------------------
 	// Render Data
 
 	var rendererSettings = {
 			data: data,
-			idfield: null,
+			idfield: 'statsid',
 			bgstylefield: null,
 			textstylefield: null,
 			titlefields: ['path', 'name', 'ok_sla'],
@@ -1849,7 +2041,10 @@ function drawTable(target, data, showFields, typeFilterArray){
 								customizers: Object.assign({}, CUSTOMIZERS, {
 									"Counts": customizerSparkchartCount,
 									"Stats": function(record, value, rendererName, fieldname){
-											return customizerSparkchartStats(record, value, rendererName, fieldname, ["ok_min", "ok_p50", "ok_p90"]);
+											return customizerSparkchartStats(record, value, rendererName, fieldname
+																			, ["ok_min", "ok_p50", "ok_p90"]
+																			, { colors: COLOR_CHART_MIN_P50_P90 }
+																		);
 									}
 								}),
 								rendererSettings: {
@@ -1867,7 +2062,10 @@ function drawTable(target, data, showFields, typeFilterArray){
 								customizers: Object.assign({}, CUSTOMIZERS, {
 									"Counts": customizerSparkchartCount,
 									"Stats": function(record, value, rendererName, fieldname){
-											return customizerSparkchartStats(record, value, rendererName, fieldname, ["ok_p25", "ok_p50", "ok_p75"]);
+											return customizerSparkchartStats(record, value, rendererName, fieldname
+																			, ["ok_p25", "ok_p50", "ok_p75"]
+																			, { colors: COLOR_CHART_P25_P50_P75 }
+																			);
 									}
 								}),
 								rendererSettings: {
