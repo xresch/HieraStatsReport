@@ -141,7 +141,7 @@ const FIELDS_PROPERTIES = [
 	//"time",
 	"type",
 	//"test", // test excluded, needs to much space
-	"usecase",
+	//"usecase",
 	"path",
 	"name",
 	"code",
@@ -190,7 +190,7 @@ const FIELDS_RECORD_DETAILS = [
 ];
 
 const FIELDS_BOXPLOT = [
-	"usecase",
+	//"usecase",
 	"path",
 	"name",
 	"code",
@@ -414,7 +414,7 @@ function customizerSLA(record, value, rendererName, fieldname){
  * The main customizer for statistical values.
  *************************************************************************************/
 function customizerTextValues(record, value, rendererName, fieldname){
-	return '<div class="maxvw-20 maxvw-20 word-wrap-prewrap word-break-word pr-2">'+value+'</div>';
+	return '<span class="maxvw-20 maxvw-20 word-wrap-prewrap word-break-word pr-2">'+value+'</span>';
 }
 	
 /**************************************************************************************
@@ -2247,8 +2247,8 @@ function drawTable(target, data, showFields, typeFilterArray){
 			idfield: 'statsid',
 			bgstylefield: null,
 			textstylefield: null,
-			titlefields: ['path', 'name', 'ok_sla'],
-			titleformat: "{0} / {1} {2}",
+			titlefields: ['pathrecord', 'ok_sla'],
+			titleformat: "{0} {1}",
 			visiblefields: showFields,
 			labels: FIELDLABELS,
 			customizers: CUSTOMIZERS,
@@ -2267,7 +2267,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 					download: true,
 					sortable: true,
 					sortoptions: addFieldSortOptions(
-							  {"Test, Usecase, Groups, Name": [[ "pathrecord", "usecase", "test",], ["asc","asc","asc"] ]}
+							  {"Path, Name": [[ "name", "pathrecord"], ["asc","asc"] ]}
 							, showFields.concat(FIELDS_STATUS)
 						) ,
 					renderers: [
