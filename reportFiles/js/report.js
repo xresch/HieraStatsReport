@@ -1693,7 +1693,6 @@ function drawTable(target, data, showFields, typeFilterArray){
 	}
 	
 	var parent = $(target);
-	parent.html('');
 	
 	//======================================
 	// Filter Data
@@ -2052,20 +2051,47 @@ function draw(options){
 										drawChartsNetworkIOSent(target,"50vh"); 
 										break;
 			
-			case "tableAll": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS); break;
-			case "tableGSMCG": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
-			case "tableGSMC": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
-			case "tableGSM": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric"]); break;
-			case "tableGroupsSteps": 	drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step"]); break;
-			case "tableCountGauges": 	drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Count", "Gauge"]); break;
-			case "tableGroups": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group"]); break;
-			case "tableSteps": 			drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Step"]); break;
-			case "tableMetrics": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Metric"]); break;
-			case "tableCounts": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Count"]); break;
-			case "tableGauges": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Gauge"]); break;
-			case "tableAsserts": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Assert"]); break;
-			case "tableMessages": 		drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Message"]); break;
-			case "tableExceptions": 	drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;
+			case "tableAll": 			target.append('<h2>Table: All Types</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS); break;
+										
+			case "tableGSMCG": 			target.append('<h2>Table: Groups & Steps & Metrics & Counts & Gauges</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
+										
+			case "tableGSMC": 			target.append('<h2>Table: Groups & Steps & Metrics & Counts</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
+										
+			case "tableGSM": 			target.append('<h2>Table: Groups & Steps & Metrics</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric"]); break;
+										
+			case "tableGroupsSteps": 	target.append('<h2>Table: Groups & Steps</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step"]); break;
+										
+			case "tableCountGauges": 	target.append('<h2>Table: Counts & Gauges</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Count", "Gauge"]); break;
+										
+			case "tableGroups": 		target.append('<h2>Table: Groups</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group"]); break;
+										
+			case "tableSteps": 			target.append('<h2>Table: Steps</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Step"]); break;
+										
+			case "tableMetrics": 		target.append('<h2>Table: Metrics</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Metric"]); break;
+										
+			case "tableCounts": 		target.append('<h2>Table: Counts</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Count"]); break;
+										
+			case "tableGauges": 		target.append('<h2>Table: Gauges</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Gauge"]); break;
+										
+			case "tableAsserts": 		target.append('<h2>Table: Asserts</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Assert"]); break;
+										
+			case "tableMessages": 		target.append('<h2>Table: Messages</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Message"]); break;
+										
+			case "tableExceptions": 	target.append('<h2>Table: Exceptions</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;
 			
 			case "csv": 				drawCSV(); break;
 			case "json": 				drawJSON(); break;
