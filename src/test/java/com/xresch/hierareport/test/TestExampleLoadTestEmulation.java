@@ -47,11 +47,13 @@ public class TestExampleLoadTestEmulation {
 		HSRConfig.setLogLevelRoot(Level.WARN);
 		
 		//--------------------------
-		// Disabling System Usage Stats
+		// Optional: Disabling System Usage Stats
 //		HSRConfig.statsProcessMemory(false);
 //		HSRConfig.statsHostMemory(false);
 //		HSRConfig.statsCPU(false);
-//		HSRConfig.statsDisk(false);
+//		HSRConfig.statsDiskUsage(false);
+//		HSRConfig.statsDiskIO();
+//		HSRConfig.statsNetworkIO();
 		
 		//--------------------------
 		// Define Reporters
@@ -72,30 +74,6 @@ public class TestExampleLoadTestEmulation {
 		
 	}
 	
-	/************************************************************************
-	 * 
-	 ************************************************************************/
-	@AfterAll
-	static void closeBrowser() {
-
-	}
-
-	/************************************************************************
-	 * 
-	 ************************************************************************/
-	@BeforeEach
-	void createContextAndPage() {
-
-	}
-
-	/************************************************************************
-	 * 
-	 ************************************************************************/
-	@AfterEach
-	void closeContext() {
-
-	}
-
 	/*****************************************************************
 	 * 
 	 *****************************************************************/
@@ -131,6 +109,7 @@ public class TestExampleLoadTestEmulation {
 			@Override
 			public void run() {
 				
+				
 				try {
 					for(int k = 0; k < executionsPerUser; k++) {
 						//-------------------------------
@@ -145,8 +124,8 @@ public class TestExampleLoadTestEmulation {
 							Thread.sleep(HSR.Random.integer(100, 300));
 						HSR.end();
 						
-						HSR.startGroup("MyGroup");
-							HSR.startGroup("MySubGroup");
+						HSR.startGroup("015_MyGroup");
+							HSR.startGroup("017_MySubGroup");
 								//-------------------------------
 								// 
 								HSR.start("020_Execute_Search");
@@ -192,20 +171,28 @@ public class TestExampleLoadTestEmulation {
 						HSR.start("070_CustomValues");
 							Thread.sleep(HSR.Random.integer(100, 300));
 							
-							HSR.addMetric("Metric: TimeWalked", HSR.Random.bigDecimal(100, 300));
-							HSR.addCount("Count: TiramisusEaten", HSR.Random.bigDecimal(0, 100));
-							HSR.addGauge("Gauge: SessionCount", HSR.Random.bigDecimal(80, 250));
+							// Add a Gauge, will be averaged in aggregation
+							HSR.addGauge("070.1 Gauge: SessionCount", HSR.Random.bigDecimal(80, 250));
 							
+							// Add a Count, will be summed up in aggregation 
+							HSR.addCount("070.2 Count: TiramisusEaten", HSR.Random.bigDecimal(0, 100));
+							HSR.addInfoMessage(HSR.Random.from("Valeria", "Roberta", "Ariella") + " has eaten the Tiramisu!");
+							
+							// Add a Metric, will calculate statistical values for it
+							HSR.addMetric("070.3 Metric: TimeWalked", HSR.Random.bigDecimal(100, 300));
+							
+							// Add a Ranged Metric
 							// simulate a correlation between count and duration
 							int multiplier = HSR.Random.integer(0, 10);
 							int count = multiplier * HSR.Random.integer(1, 900);
 							int duration = multiplier * HSR.Random.integer(10, 1000);
-							HSR.addMetricRanged("TableLoadTime", new BigDecimal(duration), count, 50);
+							HSR.addMetricRanged("070.4 TableLoadTime", new BigDecimal(duration), count, 50);
+							
 						HSR.end(HSR.Random.fromArray(HSRRecordStatus.values()));
 						
 						//-------------------------------
 						// 
-						HSR.startGroup("ServiceLevelAgreements");
+						HSR.startGroup("075 ServiceLevelAgreements");
 							
 							HSR.start("080_SLA_P90-NOK", SLA_P90_LTE_100MS);
 								Thread.sleep(HSR.Random.integer(80, 120));

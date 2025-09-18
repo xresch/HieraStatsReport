@@ -38,7 +38,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static boolean enableStatsProcessMemory = true;
 	private static boolean enableStatsCPU = true;
 	private static boolean enableStatsHostMemory= true;
-	private static boolean enableStatsDisk = true;
+	private static boolean enableStatsDiskUsage = true;
+	private static boolean enableStatsDiskIO = true;
 	private static boolean enableStatsNetworkIO = true;
 	
 	private static boolean databaseAgeOut = false;
@@ -79,7 +80,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			HSRConfig.addProperty("[HSR] enableStatsProcessMemory", "" + enableStatsProcessMemory);
 			HSRConfig.addProperty("[HSR] enableStatsCPU", "" + enableStatsCPU);
 			HSRConfig.addProperty("[HSR] enableStatsHostMemory", "" + enableStatsHostMemory);
-			HSRConfig.addProperty("[HSR] enableStatsDisk", "" + enableStatsDisk);
+			HSRConfig.addProperty("[HSR] enableStatsDiskUsage", "" + enableStatsDiskUsage);
+			HSRConfig.addProperty("[HSR] enableStatsDiskIO", "" + enableStatsDiskIO);
 			HSRConfig.addProperty("[HSR] databaseAgeOut", "" + databaseAgeOut);
 			HSRConfig.addProperty("[HSR] rawDataToSysout", "" + rawDataToSysout);
 			HSRConfig.addProperty("[HSR] rawdataLogPath", "" + rawdataLogPath);
@@ -336,17 +338,30 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	/******************************************************************
 	 * Toggle if statistics for the Disk Usage should be collected.
 	 ******************************************************************/
-	public static void statsDisk(boolean isEnabled) {
-		enableStatsDisk = isEnabled;
+	public static void statsDiskUsage(boolean isEnabled) {
+		enableStatsDiskUsage = isEnabled;
 	}
 	
 	/******************************************************************
 	 * Return if statistics for the Disk Usage should be collected.
 	 ******************************************************************/
-	public static boolean statsDisk() {
-		return enableStatsDisk;
+	public static boolean statsDiskUsage() {
+		return enableStatsDiskUsage;
 	}
 	
+	/******************************************************************
+	 * Toggle if statistics for the Disk I/O should be collected.
+	 ******************************************************************/
+	public static void statsDiskIO(boolean isEnabled) {
+		enableStatsDiskIO = isEnabled;
+	}
+	
+	/******************************************************************
+	 * Return if statistics for the Disk I/O should be collected.
+	 ******************************************************************/
+	public static boolean statsDiskIO() {
+		return enableStatsDiskIO;
+	}
 	/******************************************************************
 	 * Toggle if statistics for the Network I/O should be collected.
 	 ******************************************************************/

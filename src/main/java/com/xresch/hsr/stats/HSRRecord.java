@@ -49,16 +49,17 @@ public class HSRRecord {
 		  Step(false, false)
 		, Group(false, false)
 		, User(true, true)
-		, Exception(true, false)
-		, Count(true, false)
 		, Metric(false, false)
+		, Count(true, false)
 		, Gauge(true, true)
-		, Unknown(true, false)
+		, System(true, true)
 		, Assert(true, false)
 		, Wait(false, false)
+		, Exception(true, false)
 		, MessageInfo(true, false)
 		, MessageWarn(true, false)
 		, MessageError(true, false)
+		, Unknown(true, false)
 		;
 		
 		// Defines that the value is a count and not a duration 
@@ -531,7 +532,7 @@ public class HSRRecord {
 			this.statsIdentifier = type.toString() + test + usecase;
 			
 			if( !this.pathlist.isEmpty() ) {
-				this.statsIdentifier += "/" + getPath("/", "");
+				this.statsIdentifier += "/" + getPath("/");
 			}	
 			
 			//this.statsIdentifier += name + status.state() + code;
@@ -547,24 +548,28 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public String getPath() {
-		return getPath(HSRRecord.PATH_SEP, "");
+		return getPath(HSRRecord.PATH_SEP);
 	}
 	
 	/******************************************************************
-	 * Returns the pathlist as a string separated by the given separator.
+	 * Returns the pathlist prefixed with the usecase as a string 
+	 * separated by the given separator.
 	 * 
 	 ******************************************************************/
-	private String getPath(String separator, String fallbackForNoPath) {
+	private String getPath(String separator) {
 		
-		if(pathlist.isEmpty()) { return fallbackForNoPath; }
+		if(pathlist.isEmpty()) { return this.usecase; }
 				
 		ArrayList<String> noSeparators = new ArrayList<>();
 		for(String part : pathlist) {
 			noSeparators.add(part.replace(PATH_SEP_TRIMMED, "_"));
 		}
 		
-		return String.join(separator, noSeparators);
+		if(usecase != null && !usecase.isBlank()) {
+			return this.usecase + separator + String.join(separator, noSeparators);
+		}
 		
+		return String.join(separator, noSeparators);
 	}
 	
 	/******************************************************************
@@ -587,7 +592,7 @@ public class HSRRecord {
 			.append( startMillis ).append(" ")
 			.append( endTimeMillis ).append(" ")
 			.append( usecase.replaceAll(" ", "_") ).append(" ")
-			.append( getPath(PATH_SEP, "noPath").replaceAll(" ", "_") ).append(" ")
+			.append( getPath(PATH_SEP).replaceAll(" ", "_") ).append(" ")
 			.append( name.replaceAll(" ", "_") ).append(" ")
 			.append( value ).append(" ")
 				;
@@ -612,7 +617,7 @@ public class HSRRecord {
 				;
 		
 		if(!pathlist.isEmpty()) {
-			pathFull += getPath(PATH_SEP, "noPath")
+			pathFull += getPath(PATH_SEP)
 					 +  PATH_SEP;
 		}
 		
@@ -635,7 +640,7 @@ public class HSRRecord {
 			   ;
 			}
 			
-			pathRecordCached = getPath(PATH_SEP, "noPath")
+			pathRecordCached = getPath(PATH_SEP)
 			 + PATH_SEP 
 			 + name.replace(PATH_SEP_TRIMMED, "_")
 			 ;

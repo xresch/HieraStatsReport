@@ -28,6 +28,7 @@ import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
+import oshi.hardware.HWDiskStore;
 import oshi.hardware.NetworkIF;
 import oshi.software.os.OSFileStore;
 import oshi.software.os.OperatingSystem;
@@ -60,6 +61,8 @@ public class HSRStatsEngine {
 	private static double lastCpuUsage = 0;
 	private static TreeMap<String, Double> networkUsageMB_SentPerSec = new TreeMap<>();
 	private static TreeMap<String, Double> networkUsageMB_RecvPerSec = new TreeMap<>();
+	private static TreeMap<String, Double> diskUsageMB_ReadBytesPerSec = new TreeMap<>();
+	private static TreeMap<String, Double> diskUsageMB_WriteBytesPerSec = new TreeMap<>();
 	
 	private static boolean isFirstReport = true;
 	
@@ -136,45 +139,77 @@ public class HSRStatsEngine {
 						
 						//-----------------------------
 						// Get Previous Network IO
-				        List<NetworkIF> networkIFs = systemInfo.getHardware().getNetworkIFs();
+						List<NetworkIF> networkIFs = systemInfo.getHardware().getNetworkIFs();
 						
-				        TreeMap<String, Long> prevNetworkUsageSent = new TreeMap<>();
-				        TreeMap<String, Long> prevNetworkUsageRecv = new TreeMap<>();
-				        for (NetworkIF net : networkIFs) {
-				            net.updateAttributes(); // Refresh stats
-				            
-				            String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
-				            
-				            prevNetworkUsageSent.put(intefaceName, net.getBytesSent() );
-				            prevNetworkUsageRecv.put(intefaceName, net.getBytesRecv() );
+						TreeMap<String, Long> prevNetworkUsageSent = new TreeMap<>();
+						TreeMap<String, Long> prevNetworkUsageRecv = new TreeMap<>();
+						for (NetworkIF net : networkIFs) {
+							net.updateAttributes(); // Refresh stats
+							
+							String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
+							
+							prevNetworkUsageSent.put(intefaceName, net.getBytesSent() );
+							prevNetworkUsageRecv.put(intefaceName, net.getBytesRecv() );
 
-				        }
+						}
+						
+						//-----------------------------
+						// Get Previous Disk IO
+						List<HWDiskStore> disks = systemInfo.getHardware().getDiskStores();
+					   
+						TreeMap<String, Long> prevDiskUsageReads = new TreeMap<>();
+						TreeMap<String, Long> prevDiskUsageWrites = new TreeMap<>();
+						for (HWDiskStore disk : disks) {
+							disk.updateAttributes();
+							String diskName = disk.getName();
+								
+							prevDiskUsageReads.put(diskName, disk.getReadBytes() );
+							prevDiskUsageWrites.put(diskName, disk.getWriteBytes() );
+						}
+
 						//-----------------------------
 						// Wait a second
 						Thread.sleep(1000);
 						
 						//-----------------------------
 						// Get Current CPU
-				        lastCpuUsage = 100 * processor.getSystemCpuLoadBetweenTicks(prevCPUTicks);
-				        
-				        //-----------------------------
-						// Get Previous Network IO
+						lastCpuUsage = 100 * processor.getSystemCpuLoadBetweenTicks(prevCPUTicks);
+						
+						//-----------------------------
+						// Get Current Network IO
 
-				        synchronized(networkUsageMB_SentPerSec) {
-					        networkUsageMB_SentPerSec.clear();
-					        networkUsageMB_RecvPerSec.clear();
-					        for (NetworkIF net : networkIFs) {
-					            net.updateAttributes(); // Refresh stats
-					            
-					            String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
-					            
-					            double bytesSentPerSec = (net.getBytesSent() - prevNetworkUsageSent.get(intefaceName));
-					            double bytesRecPerSec = (net.getBytesRecv() - prevNetworkUsageRecv.get(intefaceName));
-					            networkUsageMB_SentPerSec.put(intefaceName, bytesSentPerSec / MB );
-					            networkUsageMB_RecvPerSec.put(intefaceName, bytesRecPerSec / MB );
+						synchronized(networkUsageMB_SentPerSec) {
+							networkUsageMB_SentPerSec.clear();
+							networkUsageMB_RecvPerSec.clear();
+							for (NetworkIF net : networkIFs) {
+								net.updateAttributes(); // Refresh stats
+								
+								String intefaceName = net.getName() +" ("+ net.getDisplayName() + ")";
+								
+								double bytesSentPerSec = (net.getBytesSent() - prevNetworkUsageSent.get(intefaceName));
+								double bytesRecPerSec = (net.getBytesRecv() - prevNetworkUsageRecv.get(intefaceName));
+								networkUsageMB_SentPerSec.put(intefaceName, bytesSentPerSec / MB );
+								networkUsageMB_RecvPerSec.put(intefaceName, bytesRecPerSec / MB );
 	
-					        }
-				        }
+							}
+						}
+						
+						//-----------------------------
+						// Get Current Disk IO
+						synchronized(diskUsageMB_ReadBytesPerSec) {
+							diskUsageMB_ReadBytesPerSec.clear();
+							diskUsageMB_WriteBytesPerSec.clear();
+							for (HWDiskStore disk : disks) {
+								disk.updateAttributes();
+								String diskName = disk.getName();
+								
+								double bytesReadPerSec = (disk.getReadBytes() - prevDiskUsageReads.get(diskName));
+								double bytesWritePerSec = (disk.getWriteBytes() - prevDiskUsageWrites.get(diskName));
+								diskUsageMB_ReadBytesPerSec.put(diskName, bytesReadPerSec / MB );
+								diskUsageMB_WriteBytesPerSec.put(diskName, bytesWritePerSec / MB );
+								
+							}
+						}
 					}
 				
 				}catch(InterruptedException e) {
@@ -249,28 +284,28 @@ public class HSRStatsEngine {
 				double usagePercent = (usage * 100.0) / max;
 				
 				addRecord(
-					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [MB]")
+					new HSRRecord(HSRRecordType.System, "Process Memory Usage [MB]")
 						.test(test)
 						.pathlist(systemUsagePathlist)
 						.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
 					);
 				
 				addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "Process Memory Committed [MB]")
+						new HSRRecord(HSRRecordType.System, "Process Memory Committed [MB]")
 						.test(test)
 						.pathlist(systemUsagePathlist)
 						.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
 						);
 				
 				addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "Process Memory Max [MB]")
+						new HSRRecord(HSRRecordType.System, "Process Memory Max [MB]")
 						.test(test)
 						.pathlist(systemUsagePathlist)
 						.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
 					);
 				
 				addRecord(
-					new HSRRecord(HSRRecordType.Gauge, "Process Memory Usage [%]")
+					new HSRRecord(HSRRecordType.System, "Process Memory Usage [%]")
 						.test(test)
 						.pathlist(systemUsagePathlist)
 						.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
@@ -285,16 +320,16 @@ public class HSRStatsEngine {
 		// Host Memory
 		if(HSRConfig.statsHostMemory()) {
 			try {
-	        GlobalMemory memory = systemInfo.getHardware().getMemory();
+			GlobalMemory memory = systemInfo.getHardware().getMemory();
 	
-	        long memTotal = memory.getTotal();
-	        long memAvailable = memory.getAvailable();
-	        long memUsed = memTotal - memAvailable;
+			long memTotal = memory.getTotal();
+			long memAvailable = memory.getAvailable();
+			long memUsed = memTotal - memAvailable;
 	
-	        double memUsagePercent = (memUsed * 100.0) / memTotal;
+			double memUsagePercent = (memUsed * 100.0) / memTotal;
 	
-	        addRecord(
-					new HSRRecord(HSRRecordType.Gauge, "Host Memory Usage [%]")
+			addRecord(
+					new HSRRecord(HSRRecordType.System, "Host Memory Usage [%]")
 						.test(test)
 						.pathlist(systemUsagePathlist)
 						.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
@@ -307,12 +342,12 @@ public class HSRStatsEngine {
 		// CPU
 		if(HSRConfig.statsCPU()) {
 			try {
-		        //CentralProcessor processor = systemInfo.getHardware().getProcessor();
+				//CentralProcessor processor = systemInfo.getHardware().getProcessor();
 		
-		        //double cpuUsage = 100 * processor.getSystemCpuLoad(500);
+				//double cpuUsage = 100 * processor.getSystemCpuLoad(500);
 	
 				addRecord(
-						new HSRRecord(HSRRecordType.Gauge, "CPU Usage [%]")
+						new HSRRecord(HSRRecordType.System, "CPU Usage [%]")
 							.test(test)
 							.pathlist(systemUsagePathlist)
 							.value(new BigDecimal(lastCpuUsage).setScale(1, RoundingMode.HALF_UP))
@@ -323,32 +358,60 @@ public class HSRStatsEngine {
 		}
 		//------------------------------
 		// Disk Usage
-		if(HSRConfig.statsDisk()) {
+		if(HSRConfig.statsDiskUsage()) {
 			try {
 				OperatingSystem os = systemInfo.getOperatingSystem();
-		        for (OSFileStore fs : os.getFileSystem().getFileStores()) {
-		            
-		        	String diskName = fs.getName() +" ("+ fs.getMount() + ")";
-		        	long diskTotal = fs.getTotalSpace();
-		        	
-		        	// skip disks that have no size
-		        	if(diskTotal == 0) { continue; }
-		        	
-		            long diskUsable = fs.getUsableSpace();
-		            long diskUsed = diskTotal - diskUsable;
+				for (OSFileStore fs : os.getFileSystem().getFileStores()) {
+					
+					String diskName = fs.getName() +" ("+ fs.getMount() + ")";
+					long diskTotal = fs.getTotalSpace();
+
+					// skip disks that have no size
+					if(diskTotal == 0) { continue; }
+					
+					long diskUsable = fs.getUsableSpace();
+					long diskUsed = diskTotal - diskUsable;
 		
-		            double diskUsagePercent = (diskUsed * 100.0) / diskTotal;
-		           
+					double diskUsagePercent = (diskUsed * 100.0) / diskTotal;
+				   
 					addRecord(
-							new HSRRecord(HSRRecordType.Gauge, "Disk Usage [%]: "+diskName)
+							new HSRRecord(HSRRecordType.System, "Disk Usage [%]: "+diskName)
 								.test(test)
 								.pathlist(systemUsagePathlist)
 								.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
 							);
-		        }
+				}
 			}catch(Throwable e) {
 				logger.error("Error while reading Disk usage: "+e.getMessage(), e);
 			}   
+		}
+		
+		//------------------------------
+		// Disk I/O
+		if(HSRConfig.statsDiskIO()) {
+			synchronized(diskUsageMB_ReadBytesPerSec) {
+				
+				for(Entry<String, Double> entry : diskUsageMB_ReadBytesPerSec.entrySet()) {
+					 
+						String diskName = entry.getKey();
+						double mbytesReadPerSec = entry.getValue();
+						double mbytesWritesPerSec = diskUsageMB_WriteBytesPerSec.get(diskName);
+						
+						addRecord(
+								new HSRRecord(HSRRecordType.System, "Disk I/O Read [MB/sec]: "+diskName)
+									.test(test)
+									.pathlist(systemUsagePathlist)
+									.value(new BigDecimal(mbytesReadPerSec).setScale(1, RoundingMode.HALF_UP))
+								);
+						
+						addRecord(
+								new HSRRecord(HSRRecordType.System, "Disk I/O Write [MB/sec]: "+diskName)
+									.test(test)
+									.pathlist(systemUsagePathlist)
+									.value(new BigDecimal(mbytesWritesPerSec).setScale(1, RoundingMode.HALF_UP))
+								);
+				}
+			}
 		}
 		//------------------------------
 		// Network I/O
@@ -356,24 +419,24 @@ public class HSRStatsEngine {
 			synchronized(networkUsageMB_SentPerSec) {
 				
 				for(Entry<String, Double> entry : networkUsageMB_SentPerSec.entrySet()) {
-					 
-						String interfaceName = entry.getKey();
-						double mbytesSentPerSec = entry.getValue();
-						double mbytesRecvPerSec = networkUsageMB_RecvPerSec.get(interfaceName);
-						
-						addRecord(
-								new HSRRecord(HSRRecordType.Gauge, "Network I/O [MB sent/sec]: "+interfaceName)
-									.test(test)
-									.pathlist(systemUsagePathlist)
-									.value(new BigDecimal(mbytesSentPerSec).setScale(1, RoundingMode.HALF_UP))
-								);
-			            
-			            addRecord(
-								new HSRRecord(HSRRecordType.Gauge, "Network I/O [MB recv/sec]: "+interfaceName)
-									.test(test)
-									.pathlist(systemUsagePathlist)
-									.value(new BigDecimal(mbytesRecvPerSec).setScale(1, RoundingMode.HALF_UP))
-								);
+					
+					String interfaceName = entry.getKey();
+					double mbytesSentPerSec = entry.getValue();
+					double mbytesRecvPerSec = networkUsageMB_RecvPerSec.get(interfaceName);
+					
+					addRecord(
+							new HSRRecord(HSRRecordType.System, "Network I/O Sent [MB/sec]: "+interfaceName)
+							.test(test)
+							.pathlist(systemUsagePathlist)
+							.value(new BigDecimal(mbytesSentPerSec).setScale(1, RoundingMode.HALF_UP))
+							);
+					
+					addRecord(
+							new HSRRecord(HSRRecordType.System, "Network I/O Recv [MB/sec]: "+interfaceName)
+							.test(test)
+							.pathlist(systemUsagePathlist)
+							.value(new BigDecimal(mbytesRecvPerSec).setScale(1, RoundingMode.HALF_UP))
+							);
 				}
 			}
 		}
@@ -882,9 +945,9 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-     * Send the records to the Reporters, resets the existingRecords.
-     * 
-     ***************************************************************************/
+	 * Send the records to the Reporters, resets the existingRecords.
+	 * 
+	 ***************************************************************************/
 	private static void sendRecordsToReporter( ArrayList<HSRRecordStats> finalRecords ){
 		
 		//-------------------------
@@ -905,9 +968,9 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-     * Send the records to the Reporters, resets the existingRecords.
-     * 
-     ***************************************************************************/
+	 * Send the records to the Reporters, resets the existingRecords.
+	 * 
+	 ***************************************************************************/
 	private static void sendSummaryReportToReporter(
 			  ArrayList<HSRRecordStats> finalRecords
 			, JsonArray finalRecordsAarrayWithSeries

@@ -1470,6 +1470,84 @@ function drawChartsCPUUsage(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
+function drawChartsDiskIOReads(target, chartOptions){
+	
+	target.append("<h5>Disk I/O Reads [MB/sec]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'area'
+			, stacked: true
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.match(/^Disk I\/O Read.*/g); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record["megabytesPerSec"] = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["megabytesPerSec"]
+		, finalChartOptions
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartsDiskIOWrites(target, chartOptions){
+	
+	target.append("<h5>Disk I/O Writes [MB/sec]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'area'
+			, stacked: true
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.name.match(/^Disk I\/O Write.*/g); 
+	});
+	
+	//---------------------
+	// Rename
+	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
+		record["megabytesPerSec"] = record.ok_count;
+	});
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, datapoints
+		, ["name"]
+		, ["megabytesPerSec"]
+		, finalChartOptions
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
 function drawChartsNetworkIORecv(target, chartOptions){
 	
 	target.append("<h5>Network I/O Received [MB/sec]<h5>");
@@ -1486,7 +1564,7 @@ function drawChartsNetworkIORecv(target, chartOptions){
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
-		return record.name.match(/^Network I\/O.*\[MB recv\/sec\].*/g); 
+		return record.name.match(/^Network I\/O Recv.*/g); 
 	});
 	
 	//---------------------
@@ -1526,7 +1604,7 @@ function drawChartsNetworkIOSent(target, chartOptions){
 	//---------------------
 	// Filter
 	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
-		return record.name.match(/^Network I\/O.*\[MB sent\/sec\].*/g); 
+		return record.name.match(/^Network I\/O Sent.*/g); 
 	});
 	
 	//---------------------
@@ -1971,7 +2049,6 @@ function drawSummaryPage(target){
 		else if (r.type == "MessageError"){ r.error = r.ok_count; }
 	});
 
-
 	//--------------------------
 	// Result 
 	let resultDiv = $('<div class="container minvw-90">');
@@ -2093,22 +2170,27 @@ function drawSummaryPage(target){
 			
 		//--------------------------
 		// Network I/O Recv
-		let processNetIORecv = $('<div class="col-3">');
-		drawChartsNetworkIORecv(processNetIORecv, chartOptions);
-		row.append(processNetIORecv);
+		let networkIORecv = $('<div class="col-3">');
+		drawChartsNetworkIORecv(networkIORecv, chartOptions);
+		row.append(networkIORecv);
 		
 		//--------------------------
 		// Network I/O Sent
-		let processNetIOSent = $('<div class="col-3">');
-		drawChartsNetworkIOSent(processNetIOSent, chartOptions);
-		row.append(processNetIOSent);
+		let networkIOSent = $('<div class="col-3">');
+		drawChartsNetworkIOSent(networkIOSent, chartOptions);
+		row.append(networkIOSent);
 		
 		//--------------------------
-		// Disk
-		let diskUsage = $('<div class="col-3">');
-		drawChartsDiskusage(diskUsage, chartOptions);
-		row.append(diskUsage);		
+		// Disk I/O Read
+		let diskIORead = $('<div class="col-3">');
+		drawChartsDiskIOReads(diskIORead, chartOptions);
+		row.append(diskIORead);
 		
+		//--------------------------
+		// Disk I/O Read
+		let diskIOWrite = $('<div class="col-3">');
+		drawChartsDiskIOWrites(diskIOWrite, chartOptions);
+		row.append(diskIOWrite);
 		
 	resultDiv.append(row);
 	
@@ -2134,6 +2216,12 @@ function drawSummaryPage(target){
 		let usersStopped = $('<div class="col-3">');
 		drawChartsUsers(usersStopped, chartOptions, "Stopped");
 		row.append(usersStopped);
+		
+		//--------------------------
+		// Disk
+		let diskUsage = $('<div class="col-3">');
+		drawChartsDiskusage(diskUsage, chartOptions);
+		row.append(diskUsage);		
 		
 	resultDiv.append(row);
 	
@@ -2526,7 +2614,10 @@ function draw(options){
 			case "chartsUsers": 		drawChartsUsers(target, {height: "30vh"} ); break;
 			case "chartsCPUUsage": 		drawChartsCPUUsage(target, {height: "50vh"} ); break;
 			case "chartsMemoryUsage": 	drawChartsMemoryUsage(target); break;
-			case "chartsDiskusage": 	drawChartsDiskusage(target, { height: "25vh" } ); break;
+			case "chartsDiskusage": 	drawChartsDiskIOReads(target, { height: "30vh" } ); 
+										drawChartsDiskIOWrites(target, { height: "30vh" } ); 
+										drawChartsDiskusage(target, { height: "30vh" } ); 
+										break;
 			case "chartsNetworkIO": 	drawChartsNetworkIORecv(target, { height:"50vh" } ); 
 										drawChartsNetworkIOSent(target, { height:"50vh" } ); 
 										break;
