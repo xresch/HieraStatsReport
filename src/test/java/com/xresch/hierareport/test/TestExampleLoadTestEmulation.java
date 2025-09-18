@@ -91,12 +91,12 @@ public class TestExampleLoadTestEmulation {
 		
     	//------------------------------
     	// EMP Reporter
-		HSRConfig.addReporter(
-    			new HSRReporterEMP(
-    					"http://localhost:8888"
-    					,"gatlytron-test-token-MSGIUzrLyUsOypYOkekVgmlfjMpLbRCA"
-    				)
-    			);
+//		HSRConfig.addReporter(
+//    			new HSRReporterEMP(
+//    					"http://localhost:8888"
+//    					,"gatlytron-test-token-MSGIUzrLyUsOypYOkekVgmlfjMpLbRCA"
+//    				)
+//    			);
     	
     	//------------------------------
     	// JDBC DB Reporter
@@ -134,7 +134,7 @@ public class TestExampleLoadTestEmulation {
 	@Test
 	void emulateLoadTest() throws InterruptedException {
 		
-		int multiplier = 10;
+		int multiplier = 3;
 		int users = 10 * multiplier;
 		int rampUpMillis = 200;
 		int executionsPerUser = 5 * multiplier;
