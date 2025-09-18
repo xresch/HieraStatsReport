@@ -173,7 +173,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		HSRConfig.rawdataLogPath = rawdataLogPath;
 		
 		try {
-			rawDataLogWriter = new BufferedWriter(new FileWriter(rawdataLogPath, true));
+			rawDataLogWriter = new BufferedWriter(new FileWriter(rawdataLogPath, false));
 		} catch (IOException e) {
 			logger.error("Error while initializing raw data log writer.", e);
 		}
@@ -184,6 +184,13 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 ******************************************************************/
 	public static String getRawDataLogPath() {
 		return HSRConfig.rawdataLogPath;
+	}
+	
+	/******************************************************************
+	 * Return true if raw data logs should be written
+	 ******************************************************************/
+	public static boolean isWriteRawDataLog() {
+		return rawDataLogWriter != null;
 	}
 	
 	
@@ -198,7 +205,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		try {
 			rawDataLogWriter.write(rawData);
 		} catch (IOException e) {
-			logger.error("Error while writing raw data.", e);
+			logger.error("Error while writing raw data: "+e.getMessage());
 		}
 			
 	}

@@ -57,6 +57,11 @@ public class TestExampleLoadTestEmulation {
 //		HSRConfig.statsNetworkIO();
 		
 		//--------------------------
+		// Optional: Log every datapoint
+		// potential performance impact, debug use only
+//		HSRConfig.setRawDataLogPath(DIR_RESULTS+"/raw.log");
+		
+		//--------------------------
 		// Define Reporters
 		HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 		//HSRConfig.addReporter(new HSRReporterSysoutJson());

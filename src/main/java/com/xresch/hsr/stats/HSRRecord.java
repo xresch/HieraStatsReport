@@ -120,9 +120,12 @@ public class HSRRecord {
 			, String recordName
 			){
 		
+		long now = System.currentTimeMillis();
+		startTime(now); 
+		endTime(now);  // setting end = start, for items that do not measure time
+		
 		type(type);
 		name(recordName);
-		startTime(System.currentTimeMillis()); // now
 		value(BigDecimal.ONE); 
 				
 	}
@@ -158,11 +161,14 @@ public class HSRRecord {
 			, String recordName
 			){
 		
+		long now = System.currentTimeMillis();
+		startTime(now); 
+		endTime(now);  // setting end = start, for items that do not measure time
+		
 		parent(parent);
 		
 		type(type);
 		name(recordName);
-		startTime(System.currentTimeMillis()); // now
 		value(BigDecimal.ONE); 
 			
 	}
@@ -182,11 +188,14 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
+		long now = System.currentTimeMillis();
+		startTime(now); 
+		endTime(now);  // setting end = start, for items that do not measure time
+		
 		parent(parent);
 		name(recordName);
 		
 		type(type);
-		startTime(System.currentTimeMillis()); // now
 		value(value); 		
 	}
 	
@@ -209,16 +218,17 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
+		long now = System.currentTimeMillis();
+		startTime(now); 
+		endTime(now);  // setting end = start, for items that do not measure time
+		
 		type(type);
 		
 		test(test);
 		usecase(usecase);
 		name(recordName);
-		
 		pathlist(pathlist);
-		
-		startTime(System.currentTimeMillis()); // now
-		
+				
 		value(value); 
 				
 	}
@@ -515,8 +525,11 @@ public class HSRRecord {
 	public HSRRecord end(){
 		
 		long endMillis = System.currentTimeMillis();
+		this.endTime(endMillis);
+		
 		long duration = (endMillis - startMillis);
 		this.value(new BigDecimal(duration));
+		
 		return this;
 		
 	}
@@ -585,17 +598,19 @@ public class HSRRecord {
 		// Create Log String
 		StringBuilder builder = new StringBuilder();
 		
+		String sep = " | ";
 		builder
-			.append( type.toString() ).append(" ")
-			.append( status ).append(" ")
-			.append( code ).append(" ")
-			.append( startMillis ).append(" ")
-			.append( endTimeMillis ).append(" ")
-			.append( usecase.replaceAll(" ", "_") ).append(" ")
-			.append( getPath(PATH_SEP).replaceAll(" ", "_") ).append(" ")
-			.append( name.replaceAll(" ", "_") ).append(" ")
-			.append( value ).append(" ")
-				;
+			.append( type.toString() ).append(sep)
+			.append( status.state() ).append(sep)
+			.append( status ).append(sep)
+			.append( code ).append(sep)
+			.append( startMillis ).append(sep)
+			.append( endTimeMillis ).append(sep)
+			.append( usecase.replace(sep, "_") ).append(sep)
+			.append( getPath(PATH_SEP).replace(sep, "_") ).append(sep)
+			.append( name.replace(sep, "_").replaceAll("\r\n|\n", " ") ).append(sep)
+			.append( value )
+			;
 		
 		logString = builder.toString();
 		return logString;

@@ -245,16 +245,17 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static void addRecord(HSRRecord record) {
 
+
+		String id = record.getStatsIdentifier();
+		
 		synchronized (SYNC_LOCK) {
-			String id = record.getStatsIdentifier();
-			
 			if( !groupedRecordsInterval.containsKey(id) ) {
 				groupedRecordsInterval.put(id, new ArrayList<>() );
 			}
-			
-			groupedRecordsInterval.get(id).add(record);
 		}
-	
+		
+		groupedRecordsInterval.get(id).add(record);
+		
 	}
 	
 	
@@ -533,6 +534,8 @@ public class HSRStatsEngine {
 		//----------------------------------------
 		// Iterate Groups
 		long timeMillis = System.currentTimeMillis(); // make sure every record has the exact time, needed for proper stacked charts
+		StringBuilder rawLog = new StringBuilder();
+		
 		for(Entry<String, ArrayList<HSRRecord>> entry : groupedRecordsCurrent.entrySet()) {
 			
 			ArrayList<HSRRecord> records = entry.getValue();
@@ -552,6 +555,13 @@ public class HSRStatsEngine {
 			
 			for(HSRRecord record : records) {
 				BigDecimal value = record.value();
+				
+				//------------------------------
+				// Create Raw Log
+				if(HSRConfig.isWriteRawDataLog()) { rawLog.append(record.toLogString()).append("\n"); };
+				
+				//------------------------------
+				// Get Values
 				if(value != null) {
 					
 					switch(record.status().state()) {
@@ -696,7 +706,9 @@ public class HSRStatsEngine {
 		// Report Stats
 		sendRecordsToReporter(statsRecordList);
 		
-		
+		//----------------------------------
+		// Print Raw
+		HSRConfig.writeToRawDataLog(rawLog.toString());
 		
 		//-------------------------------
 		// Report Test Settings
