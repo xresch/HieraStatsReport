@@ -92,6 +92,21 @@
 						</ul>
 					</li>
 					
+					
+					<li class="dropdown">
+						<a href="#" class="dropdown-item dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+							Export 
+						<span class="caret"></span></a>
+						<ul class="dropdown-menu dropdown-submenu">
+							 <li><a href="#" class="dropdown-item" onclick="exportData('csv', true)">Statistics CSV</a></li>
+							 <li><a href="#" class="dropdown-item" onclick="exportData('json', true)">Statistics JSON</a></li>
+							 <li><a href="#" class="dropdown-item" onclick="exportData('xml', true)">Statistics XML</a></li>
+							 <li><a href="#" class="dropdown-item" onclick="exportData('csv', false)">Datapoints CSV</a></li>
+							 <li><a href="#" class="dropdown-item" onclick="exportData('json', false)">Datapoints JSON</a></li>
+							 <li><a href="#" class="dropdown-item" onclick="exportData('xml', false)">Datapoints XML</a></li>
+						</ul>
+					</li>
+					
 
 				</ul>
 			</div><!--/.nav-collapse -->

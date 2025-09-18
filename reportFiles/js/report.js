@@ -681,6 +681,41 @@ function loadData(){
 
 }
 
+/******************************************************************
+ * 
+ @param renderer csv | json | xml
+ @param isStats if true export the summary statstistics, else export datapoints
+ ******************************************************************/
+function exportData(renderer, isStats) {
+	
+	let exportThis;
+	let filename;
+	if(isStats){
+		
+		
+		exportThis = _.cloneDeep(RECORDS_ALL);
+		
+		if(renderer == 'csv'){		
+			_.forEach(exportThis, function(r){ 
+					delete r.series; 
+				});
+		}
+		
+		filename = "export-statistics." + renderer;
+	}else{
+		exportThis = _.cloneDeep(RECORDS_ALL_DATAPOINTS);
+		filename = "export-datapoints." + renderer;
+	}
+	
+	let renderedResult = CFW.render.getRenderer(renderer)
+								   .render( {data: exportThis} );
+	
+	let formattedData = renderedResult.find('code').text();
+	
+	CFW.utils.downloadText(filename, formattedData); 
+
+}
+
 /**************************************************************************************
  * Load all javascript files containing data by chaining the method together. 
  * After one file got loaded trigger the method again with "onload" to load the next
@@ -1401,6 +1436,7 @@ function drawChartsDiskusage(target, chartOptions){
 	let defaultChartOptions = { 
 			  multichart: true 
 			, multichartcolumns: 2
+			, ymax: 100
 		}
 	
 	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
