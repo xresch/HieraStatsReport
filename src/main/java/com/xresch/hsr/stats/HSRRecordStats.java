@@ -647,10 +647,17 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	}
 	
 	/***********************************************************************
-	 * Returns the type of this record.
+	 * Returns the status of this record.
 	 ***********************************************************************/
-	public HSRRecordType state() {
-		return type;
+	public HSRRecordStatus status() {
+		return status;
+	}
+	
+	/***********************************************************************
+	 * Returns the state of this record.
+	 ***********************************************************************/
+	public HSRRecordState state() {
+		return state;
 	}
 	
 

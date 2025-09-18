@@ -231,6 +231,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 				org.slf4j.LoggerFactory.getLogger(loggerName);
 		
 	    logger.setLevel(level);
+	    
+	    HSRConfig.addProperty("[HSR] Log Level: "+loggerName, level.toString());
 	}
 		
 

@@ -52,17 +52,9 @@ public class HSRReporterEMP implements HSRReporter {
 		
 	}
 	
-	private static final String ATTRIBUTES = "\"{"
-									+ "  status: \\\"$statusPlaceholder$\\\""
-									+ ", code: \\\"$codePlaceholder$\\\""
-									+ ", type: \\\"$typePlaceholder$\\\""
-									+ ", path: \\\"$pathPlaceholder$\\\""
-									+ ", usecase: \\\"$usecasePlaceholder$\\\""
-									+ "}\""; 
-
 	private String empURL;
 	private String apiToken;
-	private String categoryPrefix = "GTRON:";
+	private String categoryPrefix = "HSR:";
 	private HttpClient client = HttpClient.newBuilder()
 									.connectTimeout(Duration.ofSeconds(15))
 									.build();
@@ -192,7 +184,7 @@ public class HSRReporterEMP implements HSRReporter {
 		//-------------------------------
 		// Escape Quotes
 		category = category.replace("\"", "\\\"");
-		entityName = entityName.replace("\"", "\\\"");
+		entityName = entityName.replace("\"", "\\\"").replaceAll("\r\n|\n", " ");
 		
 		//-------------------------------
 		// Create base
@@ -202,16 +194,18 @@ public class HSRReporterEMP implements HSRReporter {
 						+ "\""+entityName+"\""
 						+ SEPARATOR;
 		
+		JsonObject attributes = new JsonObject();
+		attributes.addProperty("type", record.type().toString());
+		attributes.addProperty("state", HSRRecordState.ok.toString());
+		attributes.addProperty("status", record.status().toString());
+		attributes.addProperty("path", record.path());
+		attributes.addProperty("usecase", record.usecase());
 		
-		String attrPrepared = ATTRIBUTES
-							.replace("$codePlaceholder$",  record.code() )
-							.replace("$typePlaceholder$",  record.type().toString() )
-							.replace("$pathPlaceholder$",  record.path() )
-							.replace("$usecasePlaceholder$",  record.usecase().replace("\"", "\\\"") )
-							;
+		String recordOK  = commonInfo + "\"" + attributes.toString().replace("\"", "\\\"")+ "\""; 
 		
-		String recordOK  = commonInfo + attrPrepared.replace("$statusPlaceholder$",  "ok"); 
-		String recordKO  = commonInfo + attrPrepared.replace("$statusPlaceholder$",  "ko"); 
+		attributes.addProperty("state", HSRRecordState.nok.toString());
+		String recordNOK  = commonInfo + "\"" + attributes.toString().replace("\"", "\\\"")+ "\""; 
+		
 		
 		//-------------------------------
 		// Common information
@@ -222,11 +216,11 @@ public class HSRReporterEMP implements HSRReporter {
 			BigDecimal valueNOK = record.getValue(HSRRecordState.nok, metric);
 			
 			recordOK += SEPARATOR + ( (valueOK != null) ? valueOK : "") ;
-			recordKO += SEPARATOR + ( (valueNOK != null) ? valueNOK : "");
+			recordNOK += SEPARATOR + ( (valueNOK != null) ? valueNOK : "");
 		}
 		
 		csv.append("\r\n"+recordOK);
-		csv.append("\r\n"+recordKO);
+		csv.append("\r\n"+recordNOK);
 
 	}
 

@@ -3,16 +3,14 @@ package com.xresch.hierareport.test;
 import java.math.BigDecimal;
 import java.util.concurrent.CountDownLatch;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.reporting.HSRReporterCSV;
 import com.xresch.hsr.reporting.HSRReporterDatabasePostGres;
+import com.xresch.hsr.reporting.HSRReporterEMP;
 import com.xresch.hsr.reporting.HSRReporterHTML;
 import com.xresch.hsr.reporting.HSRReporterJson;
 import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
@@ -46,6 +44,12 @@ public class TestExampleLoadTestEmulation {
 		//--------------------------
 		// Log Levels
 		HSRConfig.setLogLevelRoot(Level.WARN);
+		HSRConfig.setLogLevel(Level.WARN, "com.xresch.hsr.reporting");
+		
+		//--------------------------
+		// Set Test Properties
+		HSRConfig.addProperty("[Custom] Environment", "TEST");
+		HSRConfig.addProperty("[Custom] Testdata Rows", "120");
 		
 		//--------------------------
 		// Optional: Disabling System Usage Stats
@@ -62,13 +66,18 @@ public class TestExampleLoadTestEmulation {
 //		HSRConfig.setRawDataLogPath(DIR_RESULTS+"/raw.log");
 		
 		//--------------------------
-		// Define Reporters
+		// Define Sysout Reporters
 		HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 		//HSRConfig.addReporter(new HSRReporterSysoutJson());
+		
+		//--------------------------
+		// Define File Reporters
 		HSRConfig.addReporter(new HSRReporterJson( DIR_RESULTS + "/hsr-stats.json", true) );
 		HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ",") );
 		HSRConfig.addReporter(new HSRReporterHTML( DIR_RESULTS + "/HTMLReport") );
 		
+		//--------------------------
+		// Database Reporters
 		HSRConfig.addReporter(
 			new HSRReporterDatabasePostGres(
 				"localhost"
@@ -80,10 +89,38 @@ public class TestExampleLoadTestEmulation {
 			)
 		);
 		
-		//--------------------------
-		// Set Test Properties
-		HSRConfig.addProperty("[Custom] Environment", "TEST");
-		HSRConfig.addProperty("[Custom] Testdata Rows", "120");
+    	//------------------------------
+    	// EMP Reporter
+		HSRConfig.addReporter(
+    			new HSRReporterEMP(
+    					"http://localhost:8888"
+    					,"gatlytron-test-token-MSGIUzrLyUsOypYOkekVgmlfjMpLbRCA"
+    				)
+    			);
+    	
+    	//------------------------------
+    	// JDBC DB Reporter
+//		HSRConfig.addReporter(
+//    			new HSRReporterDatabaseJDBC("org.h2.Driver"
+//    					, "jdbc:h2:tcp://localhost:8889/./datastore/h2database;MODE=MYSQL;IGNORECASE=TRUE"
+//    					, "hsr"
+//    					, "sa"
+//    					, "sa") {
+//					
+//					@Override
+//					public HSRDBInterface getGatlytronDB(DBInterface dbInterface, String tableNamePrefix) {
+//						return new HSRDBInterface(dbInterface, tableNamePrefix);
+//					}
+//
+//					@Override
+//					public void reportSummary(ArrayList<HSRRecordStats> summaryRecords,
+//							JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties,
+//							JsonObject slaForRecords) {
+//						// TODO Auto-generated method stub
+//						
+//					}
+//				}
+//    		);
 		
 		//--------------------------
 		// Enable
@@ -97,7 +134,7 @@ public class TestExampleLoadTestEmulation {
 	@Test
 	void emulateLoadTest() throws InterruptedException {
 		
-		int multiplier = 3;
+		int multiplier = 10;
 		int users = 10 * multiplier;
 		int rampUpMillis = 200;
 		int executionsPerUser = 5 * multiplier;
