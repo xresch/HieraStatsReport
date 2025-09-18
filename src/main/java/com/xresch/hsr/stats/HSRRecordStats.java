@@ -569,13 +569,24 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 		valueList.add(name);
 		valueList.add(code);
 		valueList.add(granularity);
-				
+		
+		//------------------------------------
+		// OK NOK Metrics
 		for(HSRRecordState state : HSRRecordState.values()) {
 			for(HSRMetric metric : HSRMetric.values()) {
+				if(metric.isOkNok()) {
+					valueList.add(this.getValue(state,metric));
+				}
+			}
+		}
+		//------------------------------------
+		// NOT okNok Metrics
+		for(HSRMetric metric : HSRMetric.values()) {
+			if(!metric.isOkNok()) {
 				valueList.add(this.getValue(state,metric));
 			}
 		}
-		
+				
 		return db.preparedExecute(insertSQL, valueList.toArray());
 		
 

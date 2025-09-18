@@ -93,23 +93,15 @@ public class HSRDBInterface {
 	 * 
 	 ****************************************************************************/
 	private void alterTables() {
-		//----------------------------
-		// Add P25 Column
-		String addOkP25Column = "ALTER TABLE "+tablenameStats+" ADD IF NOT EXISTS ok_p25 DECIMAL(32,3);";
-		db.preparedExecute(addOkP25Column);
-		
-		String addKoP25Column = "ALTER TABLE "+tablenameStats+" ADD IF NOT EXISTS ko_p25 DECIMAL(32,3);";
-		db.preparedExecute(addKoP25Column);
-		
-		//----------------------------
-		// Add granularity Column
-		String addGranularityColumn = "ALTER TABLE "+tablenameStats+" ADD IF NOT EXISTS granularity INTEGER DEFAULT 0;";
-		db.preparedExecute(addGranularityColumn);
-		
-		//----------------------------
-		// Add endTime to testsettings
-		String endtime = "ALTER TABLE "+tablenameTestsettings+" ADD IF NOT EXISTS endtime BIGINT;";
-		db.preparedExecute(endtime);
+//		//----------------------------
+//		// Add P25 Column
+//		String addOkP25Column = "ALTER TABLE "+tablenameStats+" ADD IF NOT EXISTS ok_p25 DECIMAL(32,3);";
+//		db.preparedExecute(addOkP25Column);
+//		
+//		//----------------------------
+//		// Add endTime to testsettings
+//		String endtime = "ALTER TABLE "+tablenameTestsettings+" ADD IF NOT EXISTS endtime BIGINT;";
+//		db.preparedExecute(endtime);
 	}
 	
 	/****************************************************************************

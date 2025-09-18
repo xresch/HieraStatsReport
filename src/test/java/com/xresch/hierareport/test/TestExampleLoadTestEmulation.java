@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.reporting.HSRReporterCSV;
+import com.xresch.hsr.reporting.HSRReporterDatabasePostGres;
 import com.xresch.hsr.reporting.HSRReporterHTML;
 import com.xresch.hsr.reporting.HSRReporterJson;
 import com.xresch.hsr.reporting.HSRReporterSysoutCSV;
@@ -62,6 +63,17 @@ public class TestExampleLoadTestEmulation {
 		HSRConfig.addReporter(new HSRReporterJson( DIR_RESULTS + "/hsr-stats.json", true) );
 		HSRConfig.addReporter(new HSRReporterCSV( DIR_RESULTS + "/hsr-stats.csv", ",") );
 		HSRConfig.addReporter(new HSRReporterHTML( DIR_RESULTS + "/HTMLReport") );
+		
+		HSRConfig.addReporter(
+			new HSRReporterDatabasePostGres(
+				"localhost"
+				, 5432
+				, "postgres"	// dbname
+				, "hsr"			// table name prefix
+				, "postgres"	// user
+				, "postgres"	// pw
+			)
+		);
 		
 		//--------------------------
 		// Set Test Properties
