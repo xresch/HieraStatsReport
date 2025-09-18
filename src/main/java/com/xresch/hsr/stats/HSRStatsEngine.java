@@ -84,6 +84,7 @@ public class HSRStatsEngine {
 			
 			startThreadStatsEngine(reportInterval);
 			startThreadSystemUsage();
+			registerShutdownHook();
 		}
 	}
 	
@@ -115,7 +116,7 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * Starts the reporting of the statistics.
+	 * Starts the collection of system usage info.
 	 *  
 	 ***************************************************************************/
 	private static void startThreadSystemUsage() {
@@ -220,6 +221,24 @@ public class HSRStatsEngine {
 		
 		threadSystemInfo.setName("SysInfoCollector");
 		threadSystemInfo.start();
+	}
+	
+	/***************************************************************************
+	 * Shutdown hook for graceful stops.
+	 *  
+	 ***************************************************************************/
+	private static void registerShutdownHook() {
+		
+	    Runtime.getRuntime().addShutdownHook(new Thread()
+        {
+            @Override
+            public void run()
+            {
+            	System.out.println("Shutdown signal received.");
+            	HSRStatsEngine.stop();
+            	return;
+            }
+        });
 	}
 	
 	/***************************************************************************
