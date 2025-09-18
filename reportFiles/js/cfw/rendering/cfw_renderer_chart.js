@@ -1295,7 +1295,6 @@ function cfw_renderer_chart_createDatasetsGroupedByTitleFields(renderDef, settin
 				value = (value != null) ? value : 0;
 				datasets[label].cfwSum += isNaN(value) ? 0 : parseFloat(value);
 				datasets[label].cfwCount += 1;
-								console.log("======")
 			}
 		}
 	}

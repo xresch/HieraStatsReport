@@ -135,6 +135,20 @@ const COLOR_CHART_MIN_P50_P90 = ["rgb(76, 138, 197)", "rgb(255, 226, 87)", "rgb(
 const COLOR_CHART_P25_P50_P75 = ["rgb(255, 124, 87)", "rgb(223, 76, 156)", "rgb(255, 190, 87)"];
 
 //================================================
+// ACTION BUTTONS
+//================================================
+var ACTION_BUTTONS = [ 
+	function (record, id){ 
+		
+		let htmlString = '<button class="btn btn-primary btn-sm" alt="Details" title="Details" '
+				+'onclick="showRecordDetails('+id+')");">'
+				+ '<i class="fa fa-search"></i>'
+				+ '</button>';
+
+		return htmlString;
+	} 
+];	
+//================================================
 // ENUM: FIELDS
 //================================================
 const FIELDS_PROPERTIES = [
@@ -829,9 +843,7 @@ function initialize(){
 		}
 				
 	}
-	
-	
-		console.log(RECORDS_ALL_DATAPOINTS);		
+		
 	//------------------------------------
 	// Calculate Statistics per Type
 	for(var type in RECORDTYPE){
@@ -927,7 +939,6 @@ function initialWalkthrough(parent, currentItem){
 		currentItem.percentFail = ( (currentItem.statusCount.Fail / currentItem.statusCount.All) * 100).toFixed(1);
 		currentItem.percentUndefined = ( (currentItem.statusCount.Undefined / currentItem.statusCount.All) * 100).toFixed(1);
 			
-		//console.log(currentItem.statusCount);
 	}
 	
 }
@@ -1898,7 +1909,6 @@ function showRecordDetails(statsid){
 	// Filter
 	let datapoints = datapointsForStatsID(statsid);
 	let record = recordForStatsID(statsid);
-	console.log(record);
 	
 	if(datapoints == null || datapoints.length == 0){
 		CFW.ui.showModalLarge(modalTitle, "<span>No data found to display.</span>", null, true);
@@ -2042,6 +2052,15 @@ function showRecordDetails(statsid){
 	
 }
 
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function defaultSortOptions(){
+	return addFieldSortOptions(
+				  {"Path, Name": [[ "name", "path"], ["asc","asc"] ]}
+				, FIELDS_BASE_STATS.concat(FIELDS_STATUS)
+			);
+}
 /**************************************************************************************
  * 
  * @param baseOptions the object that where the options should be added.
@@ -2263,13 +2282,94 @@ function drawSummaryPage(target){
 	
 
 	//----------------------------
-	// Create Table
+	// Create SLA Table
+	resultDiv.append('<h3>SLA Analysis<h3>');
+	resultDiv.append('<p>Lists all records that have an SLA rule defined.</p>');
+	let slaRendeDef = {
+		idfield: 'statsid',
+		data: _.filter(clonedRecord, function(o){ return o.ok_sla != null; } ),
+		visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "failrate", "Rule", "ok_sla", "status_over_time"),
+		labels: FIELDLABELS,
+		actions: ACTION_BUTTONS,
+		customizers: Object.assign({}, CUSTOMIZERS, {
+			  "Rule": function(record){ return slaForRecord(record); }
+			, "status_over_time": customizerStatusBartSLA
+		}),
+		rendererSettings: {
+			dataviewer:{ storeid: "table-summary-sla", download: true, sortable: true, sortoptions: defaultSortOptions() },
+			table: {filterable: false, narrow: true, stickyheader: true},
+		},
+	}
+	
+	let slaTable = CFW.render.getRenderer('dataviewer').render(slaRendeDef);	
+	
+	resultDiv.append(slaTable);	
+	
+	//----------------------------
+	// Create Boxplot Table
+	resultDiv.append('<h3>Boxplot Analysis<h3>');
+	resultDiv.append('<p>Lists all records that have not only count but statistical values.</p>');
+	let boxplotRendeDef = {
+		idfield: 'statsid',
+		data: _.filter(clonedRecord, function(o){ return o.ok_p50 != null &&  o.ok_p50 > 0; } ),
+		visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
+		labels: FIELDLABELS,
+		actions: ACTION_BUTTONS,
+		customizers: Object.assign({}, CUSTOMIZERS, {
+			"Range": function(record, value){ return record_calc_range(record); },	
+			"IQR": function(record, value){ return record_calc_IQR(record); },
+			"Boxplot": function(record, value){
+				return $('<div class="vw-25">')
+							.append( record_format_boxplot(record) );
+			}
+		}),
+		rendererSettings: {
+			dataviewer:{ storeid: "table-summary-boxplots", download: true, sortable: true, sortoptions: defaultSortOptions() },
+			table: {filterable: false, narrow: true, stickyheader: true},
+		},
+	}						
+								
+	let boxplotTable = CFW.render.getRenderer('dataviewer').render(boxplotRendeDef);	
+	
+	resultDiv.append(boxplotTable);
+	
+	//----------------------------
+	// Create Failure Rate Table
+	resultDiv.append('<h3>Failure Rate Analysis<h3>');
+	resultDiv.append('<p>Lists all records that have a failure rate greater than 0%.</p>');
+	let failrateRendeDef = {
+		idfield: 'statsid',
+		data: _.filter(clonedRecord, function(o){ return o.failrate != null &&  o.failrate > 0; } ),
+		visiblefields: FIELDS_BASE_COUNTS.concat("total_count", "failed", "ok_sla", "failrate", "failure_over_time"),
+		labels: FIELDLABELS,
+		actions: ACTION_BUTTONS,
+		customizers: Object.assign({}, CUSTOMIZERS, {
+			"failure_over_time": function(record, value, rendererName, fieldname){
+					return customizerSparkchartStats(record, value, rendererName, fieldname
+													, ["failrate"]
+													, { colors: ["red"], ymin: 0, ymax: 100 }
+												);
+			}
+		}),
+		rendererSettings: {
+			dataviewer:{ storeid: "table-summary-failure", download: true, sortable: true, sortoptions: defaultSortOptions() },
+			table: {filterable: false, narrow: true, stickyheader: true},
+		},
+	}
+	
+	let failrateTable = CFW.render.getRenderer('dataviewer').render(failrateRendeDef);	
+	
+	resultDiv.append(failrateTable);
+		
+	//----------------------------
+	// Create Statistics Table
 	resultDiv.append('<h3>Statistics<h3>');
+	resultDiv.append('<p>Lists all the records except of type System.</p>');
 	drawTable(resultDiv
 			, _.filter(clonedRecord, function(r){ return r.type != 'System'; } )
 			, FIELDS_BASE_STATS
 			);
-
+	
 	
 	//----------------------------
 	// Add to Target
@@ -2344,26 +2444,9 @@ function drawTable(target, data, showFields, typeFilterArray){
 		CFW.ui.addToastInfo("Hmm... seems there aren't any storedfile in the list.");
 	}
 	
+	
+	
 	//======================================
-	// Prepare actions
-	
-	var actionButtons = [ ];		
-	
-	//-------------------------
-	// Details Button
- 	actionButtons.push(
-	function (record, id){ 
-			
-			let htmlString = '<button class="btn btn-primary btn-sm" alt="Details" title="Details" '
-					+'onclick="showRecordDetails('+id+')");">'
-					+ '<i class="fa fa-search"></i>'
-					+ '</button>';
-
-			return htmlString;
-		}
-	); 
-	
-	//-----------------------------------
 	// Render Data
 
 	var rendererSettings = {
@@ -2376,7 +2459,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 			visiblefields: showFields,
 			labels: FIELDLABELS,
 			customizers: CUSTOMIZERS,
-			actions: actionButtons,
+			actions: ACTION_BUTTONS,
 			rendererSettings: {
 				csv:{
 					csvcustomizers: {
@@ -2390,10 +2473,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 					storeid: "table-"+filterID,
 					download: true,
 					sortable: true,
-					sortoptions: addFieldSortOptions(
-							  {"Path, Name": [[ "name", "pathrecord"], ["asc","asc"] ]}
-							, showFields.concat(FIELDS_STATUS)
-						) ,
+					sortoptions: defaultSortOptions(),
 					renderers: [
 						{	
 							label: 'Table',

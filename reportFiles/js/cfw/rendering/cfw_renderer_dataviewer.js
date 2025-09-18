@@ -844,6 +844,7 @@ function cfw_renderer_dataviewer_createSortSelectHTML(dataviewerSettings, render
 	if( ! Array.isArray(sortoptions) && typeof sortoptions == 'object'){
 			let ascendingHTML = ""; 
 			let descendingHTML = ""; 
+			let isFirst = true;
 			for(let fielLabel in sortoptions){
 				let fieldValue = sortoptions[fielLabel];
 				
@@ -855,7 +856,7 @@ function cfw_renderer_dataviewer_createSortSelectHTML(dataviewerSettings, render
 				
 				let selectedAsc = '';
 				let selectedDesc = '';
-				if(index == 0 && selectedSortbyFields == null){
+				if(isFirst && selectedSortbyFields == null){
 					selectedAsc = 'selected';
 				}else{
 					if(sortbyFields == selectedSortbyFields){
@@ -879,7 +880,7 @@ function cfw_renderer_dataviewer_createSortSelectHTML(dataviewerSettings, render
 					
 				ascendingHTML += '<option value="'+sortbyFields+'" data-direction="'+sortbyDirections+'" '+selectedAsc+'>&uarr; '+fielLabel+'</option>';
 				descendingHTML += '<option value="'+sortbyFields+'" data-direction="'+sortbyDirectionsDesc+'" '+selectedDesc+'>&darr; '+fielLabel+'</option>';
-				
+				isFirst = false;
 			}
 		
 			html += ascendingHTML + descendingHTML;
