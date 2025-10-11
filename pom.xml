@@ -2,17 +2,50 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	
-	
+	<!-- ================= PROJECT INFORMATION ================== -->
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.xresch</groupId>
 	<artifactId>hsr</artifactId>
 	<version>1.0.0</version>
+	
+	<name>HieraStatsReport</name>
+	<description>HieraStatsReport ("Hierachical Statistics Report") is a small tool that was created to report test results for load tests as HTML, CSV, JSON, into Databases and other targets with the option to be extended for custom reporting.</description>
+	<url>https://github.com/xresch/HieraStatsReport</url>
 
 	<!-- ================= PROPERTIES ================== -->
 	<properties>
+		
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<otel.version>1.49.0</otel.version>
+		
+		<skipJavadoc>false</skipJavadoc>
+		
 	</properties>
+	
+		<!-- ================= LICENSES ================== -->
+	<licenses>
+		<license>
+			<name>Eclipse Public License - v 2.0</name>
+			<url>https://github.com/xresch/HieraStatsReport/blob/main/LICENSE</url>
+		</license>
+	</licenses>
+
+	<!-- ================= DEVELOPERS ================== -->
+	<developers>
+		<developer>
+			<name>Reto Scheiwiller</name>
+			<email>reto.scheiwiller5@bluewin.ch</email>
+			<organization>xresch</organization>
+			<organizationUrl>http://www.xresch.com</organizationUrl>
+		</developer>
+	</developers>
+
+	<!-- ================= SCM ================== -->
+	<scm>
+		<connection>scm:git:git://github.com/xresch/HieraStatsReport.git</connection>
+		<developerConnection>scm:git:ssh://github.com/xresch/HieraStatsReport.git</developerConnection>
+		<url>https://github.com/xresch/HieraStatsReport/tree/main</url>
+	</scm>
 
 	<!-- ================= DEPENDENCIES ================== -->
 	<dependencies>
@@ -222,6 +255,43 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			<!-- ================= SOURCES ================== -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- ================= JAVADOC ================== -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<skip>${skipJavadoc}</skip>
+					<additionalparam>-Xdoclint:none</additionalparam>
+					<additionalOptions>-Xdoclint:none</additionalOptions>
+					<additionalJOption>-Xdoclint:none</additionalJOption>
+				</configuration>
+			</plugin>
+			
 		</plugins>
 
 	</build>

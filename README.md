@@ -1,5 +1,5 @@
 # HieraStatsReport
-HieraStatsReport (Hierachical Statistics Report") is a small reporting tool that was created to make HTML reports for load tests.
+HieraStatsReport ("Hierachical Statistics Report") is a small tool that was created to report test results for load tests as HTML, CSV, JSON, into Databases and other targets with the option to be extended for custom reporting.
 
 THIS PROJECT JUST STARTED AND IS UNDER CONSTRUCTION! :D
 
