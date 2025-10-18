@@ -467,11 +467,15 @@ public class HSRRecord {
 	 ******************************************************************/
 	public HSRRecord pathlist(List<String> pathlist) {
 		
-		if(pathlist != null) {	
-			this.pathlist = new ArrayList<>();
-			this.pathlist.addAll(pathlist); 
-			identityChanged = true;
+		if(pathlist == null) {	
+			this.pathlist.clear();
+			return this;
 		}
+		
+		this.pathlist = new ArrayList<>();
+		this.pathlist.addAll(pathlist); 
+		identityChanged = true;
+	
 		return this;
 		
 	}

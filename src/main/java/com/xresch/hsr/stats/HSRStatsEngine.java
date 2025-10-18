@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +57,7 @@ public class HSRStatsEngine {
 	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
 
 	private static boolean isStopped;
-	private static Thread threadStatsengine;
+	private static ScheduledExecutorService schedulerStatsEngine;
 	private static Thread threadSystemInfo;
 	
 	// last values collected by threadSystemInfo
@@ -80,7 +83,7 @@ public class HSRStatsEngine {
 		
 		//--------------------------------------
 		// Only Start once
-		if(threadStatsengine == null) {
+		if(schedulerStatsEngine == null) {
 			
 			startThreadStatsEngine(reportInterval);
 			startThreadSystemUsage();
@@ -93,26 +96,29 @@ public class HSRStatsEngine {
 	 *  
 	 ***************************************************************************/
 	private static void startThreadStatsEngine(int reportInterval) {
-		threadStatsengine = new Thread(new Runnable() {
+		
+		
+		Thread threadStatsengine = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				
 				try {
-					while( !Thread.currentThread().isInterrupted()
-						&& !isStopped
-						){
-						Thread.sleep(reportInterval * 1000);
-						aggregateAndReport();
-					}
-				
-				}catch(InterruptedException e) {
-					logger.info("HSRStatsEngine has been stopped.");
+					System.out.println(">> Start Time: "+HSR.Time.currentTimestamp());
+					aggregateAndReport();
+					System.out.println(">> End Time: "+HSR.Time.currentTimestamp());
+				}catch (Throwable e) {
+					logger.error("Error occured while executing stats engine: "+e.getMessage(), e);
 				}
+
 			}
 		});
 		
+		schedulerStatsEngine = Executors.newScheduledThreadPool(1);
+		
 		threadStatsengine.setName("statsengine");
-		threadStatsengine.start();
+		threadStatsengine.setPriority(9); // to get smoother reporting
+		//threadStatsengine.start();
+		schedulerStatsEngine.scheduleAtFixedRate(threadStatsengine, 0, reportInterval, TimeUnit.SECONDS);
+		
 	}
 	
 	/***************************************************************************
@@ -249,7 +255,7 @@ public class HSRStatsEngine {
 		if(!isStopped) {
 			isStopped = true;
 			
-			threadStatsengine.interrupt();
+			schedulerStatsEngine.shutdown();
 			threadSystemInfo.interrupt();
 			
 			aggregateAndReport();
@@ -468,7 +474,7 @@ public class HSRStatsEngine {
 	private static void createUserRecords() {
 		
 		String test = HSR.getTest();
-		
+
 		//-------------------------------
 		// Started Users
 		for(Entry<String, Integer> entry : HSR.getUsersStartedMap().entrySet()) {
@@ -479,6 +485,7 @@ public class HSRStatsEngine {
 				new HSRRecord(HSRRecordType.User, "Started")
 					.test(test)
 					.usecase(usecase)
+					.pathlist(null)
 					.value(new BigDecimal(amount))
 					;
 			
@@ -495,6 +502,7 @@ public class HSRStatsEngine {
 				new HSRRecord(HSRRecordType.User, "Active")
 					.test(test)
 					.usecase(usecase)
+					.pathlist(null)
 					.value(new BigDecimal(amount))
 					;
 			
@@ -989,8 +997,15 @@ public class HSRStatsEngine {
 
 			// wrap with try catch to not stop reporting to all reporters
 			try {
-				logger.debug("Report data to: "+reporter.getClass().getName());
-				reporter.reportRecords(clone);
+				
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						logger.debug("Report data to: "+reporter.getClass().getName());
+						reporter.reportRecords(clone);
+					}
+				}).start();
+				
 			}catch(Exception e) {
 				logger.error("Exception while reporting data.", e);
 			}

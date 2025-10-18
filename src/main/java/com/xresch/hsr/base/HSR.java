@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Stack;
 import java.util.TreeMap;
 
-import org.openqa.selenium.WebDriver;
 import org.slf4j.LoggerFactory;
 
 import com.xresch.hsr.stats.HSRRecord;
@@ -53,8 +52,6 @@ public class HSR {
 	
 	private static Logger logger = (Logger) LoggerFactory.getLogger(HSR.class.getName());
 	
-	private static InheritableThreadLocal<WebDriver> driver = new InheritableThreadLocal<WebDriver>();
-	
 
 	/***********************************************************************************
 	 * Utility References
@@ -72,14 +69,6 @@ public class HSR {
 	public static void initialize(){
 		initializeThreadLocals();    	    	
 	} 
-
-	
-	/***********************************************************************************
-	 * Set the WebDriver.
-	 ***********************************************************************************/
-	public static void setDriver(WebDriver driver) {
-		HSR.driver.set(driver);
-	}
 	
 	/***********************************************************************************
 	 * Increases the user count by the defined amount for the usecase of the current 
