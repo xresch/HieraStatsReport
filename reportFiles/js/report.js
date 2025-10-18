@@ -1340,7 +1340,9 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
 	//---------------------------
 	// Sort to make series properly 
 	// overlaying in area charts
-	data = _.sortBy(data, metricsArray);
+	if(chartOptions.multichart != true){
+		data = _.sortBy(data, metricsArray);
+	}
 		
 	//---------------------------
 	// Render Settings
@@ -1403,8 +1405,10 @@ function drawChartsUsers(target, chartOptions, userFilter){
 	// Render Settings
 	let defaultChartOptions = { 
 			    multichart: true 
+			  , multichartcolumns: 3
+			  , charttype: "line"
 			  , height: '30vh'
-			  , stacked: true
+			  , stacked: false
 		}
 	
 	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
@@ -1418,10 +1422,12 @@ function drawChartsUsers(target, chartOptions, userFilter){
 	});
 	
 	//---------------------
-	// Rename
+	// Rename & Sort
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record.users = record.ok_count;
 	});
+	
+	datapoints = _.sortBy(datapoints, ["usecase", "name"]);
 	
 	//---------------------
 	// Draw
