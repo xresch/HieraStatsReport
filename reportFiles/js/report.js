@@ -1404,6 +1404,7 @@ function drawChartsUsers(target, chartOptions, userFilter){
 	let defaultChartOptions = { 
 			    multichart: true 
 			  , height: '30vh'
+			  , stacked: true
 		}
 	
 	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
@@ -1427,7 +1428,7 @@ function drawChartsUsers(target, chartOptions, userFilter){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["usecase", "name"]
 		, ["users"]
 		, finalChartOptions
 	);
