@@ -61,6 +61,10 @@ public class HSRStatsEngine {
 	private static Thread threadSystemInfo;
 	
 	// last values collected by threadSystemInfo
+	private static SystemInfo systemInfo = new SystemInfo();
+	private static OperatingSystem os = systemInfo.getOperatingSystem();
+	private static List<OSFileStore> fileStores = os.getFileSystem().getFileStores(); // performance issues, keep this here
+	
 	private static double lastCpuUsage = 0;
 	private static TreeMap<String, Double> networkUsageMB_SentPerSec = new TreeMap<>();
 	private static TreeMap<String, Double> networkUsageMB_RecvPerSec = new TreeMap<>();
@@ -102,9 +106,7 @@ public class HSRStatsEngine {
 			@Override
 			public void run() {
 				try {
-					System.out.println(">> Start Time: "+HSR.Time.currentTimestamp());
 					aggregateAndReport();
-					System.out.println(">> End Time: "+HSR.Time.currentTimestamp());
 				}catch (Throwable e) {
 					logger.error("Error occured while executing stats engine: "+e.getMessage(), e);
 				}
@@ -240,7 +242,7 @@ public class HSRStatsEngine {
             @Override
             public void run()
             {
-            	System.out.println("Shutdown signal received.");
+            	System.out.println("Initialize Shutdown.");
             	HSRStatsEngine.stop();
             	return;
             }
@@ -290,11 +292,9 @@ public class HSRStatsEngine {
 	private static void createSystemUsageRecords() {
 		
 		String test = HSR.getTest();
-		SystemInfo systemInfo = new SystemInfo();
-		
+				
 		ArrayList<String> systemUsagePathlist = new ArrayList<>();
 		systemUsagePathlist.add("System Usage");
-		
 		
 		//------------------------------
 		// Process Memory
@@ -382,12 +382,13 @@ public class HSRStatsEngine {
 				logger.error("Error while reading CPU usage: "+e.getMessage(), e);
 			}
 		}
+		
 		//------------------------------
 		// Disk Usage
 		if(HSRConfig.statsDiskUsage()) {
 			try {
-				OperatingSystem os = systemInfo.getOperatingSystem();
-				for (OSFileStore fs : os.getFileSystem().getFileStores()) {
+				
+				for (OSFileStore fs : fileStores) {
 					
 					String diskName = fs.getName() +" ("+ fs.getMount() + ")";
 					long diskTotal = fs.getTotalSpace();
@@ -411,7 +412,7 @@ public class HSRStatsEngine {
 				logger.error("Error while reading Disk usage: "+e.getMessage(), e);
 			}   
 		}
-		
+
 		//------------------------------
 		// Disk I/O
 		if(HSRConfig.statsDiskIO()) {
@@ -439,6 +440,7 @@ public class HSRStatsEngine {
 				}
 			}
 		}
+
 		//------------------------------
 		// Network I/O
 		if(HSRConfig.statsNetworkIO()) {
@@ -543,9 +545,10 @@ public class HSRStatsEngine {
 		
 		//----------------------------------------
 		// Create User Records
+
 		createUserRecords();
 		createSystemUsageRecords();
-		
+
 		//----------------------------------------
 		// Steal Reference to not block writing
 		// new records
@@ -556,7 +559,6 @@ public class HSRStatsEngine {
 			groupedRecordsCurrent = groupedRecordsInterval;
 			groupedRecordsInterval = new TreeMap<>();
 		}
-		
 		
 		//----------------------------------------
 		// Iterate Groups
@@ -615,7 +617,6 @@ public class HSRStatsEngine {
 				}
 			}
 			
-
 			//---------------------------
 			// Create StatsRecord
 			HSRRecord firstRecord = records.get(0);
@@ -636,7 +637,7 @@ public class HSRStatsEngine {
 			BigDecimal nok_count 	= new BigDecimal(nok_values.size());
 
 			calculateFailrate(statsRecord, ok_count, nok_count, failed);
-			
+
 			//---------------------------
 			// Calculate OK Stats
 			if( ! ok_values.isEmpty()) {
@@ -667,7 +668,7 @@ public class HSRStatsEngine {
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.p99, 		bigPercentile(99, ok_values) );
 				}
 			}
-			
+
 			//---------------------------
 			// Calculate NOK Stats
 			if( ! nok_values.isEmpty()) {
