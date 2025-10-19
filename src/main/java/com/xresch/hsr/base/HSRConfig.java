@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
 import com.xresch.hsr.database.HSRAgeOutConfig;
 import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.stats.HSRStatsEngine;
@@ -29,7 +30,7 @@ public class HSRConfig {
 private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	private static ArrayList<HSRReporter> reporterList = new ArrayList<>();
-	private static ArrayList<HSRUsecase> usecaseList = new ArrayList<>();
+	private static ArrayList<HSRTestSettings> testsettingsList = new ArrayList<>();
 	
 	private static TreeMap<String,String> properties = new TreeMap<>();
 
@@ -127,11 +128,12 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	/******************************************************************
 	 * For internal use only.
-	 * Adds a usecase to the list of usecases.
+	 * Adds Test settings to the 
 	 ******************************************************************/
-	public static void addUsecase(HSRUsecase usecase) {
-		usecaseList.add(usecase);
+	public static void addTestSettings(HSRTestSettings settings) {
+		testsettingsList.add(settings);
 	}
+	
 	
 	/******************************************************************
 	 * Set a custom HSRHooks class to hook into the system.
@@ -146,8 +148,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 * 
 	 ******************************************************************/
 	@SuppressWarnings("unchecked")
-	public static ArrayList<HSRUsecase> getUsecaseList() {
-		return (ArrayList<HSRUsecase>) usecaseList.clone();
+	public static ArrayList<HSRTestSettings> getTestSettings() {
+		return (ArrayList<HSRTestSettings>) testsettingsList.clone();
 	}
 
 	
@@ -416,7 +418,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			}
 		}
 		
-	}
-	
+	}	
 	
 }

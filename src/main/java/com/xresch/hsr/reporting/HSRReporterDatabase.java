@@ -1,5 +1,9 @@
 package com.xresch.hsr.reporting;
 
+import java.util.ArrayList;
+
+import com.xresch.hsr.base.HSRTestSettings;
+
 /**************************************************************************************************************
  * Interface for reporting data to a database.
  * 
@@ -8,6 +12,6 @@ package com.xresch.hsr.reporting;
  **************************************************************************************************************/
 public abstract class HSRReporterDatabase implements HSRReporter {
 
-	public abstract void reportTestSettings(String testName);
+	public abstract void reportTestSettings(ArrayList<HSRTestSettings> testsettings);
 	
 }

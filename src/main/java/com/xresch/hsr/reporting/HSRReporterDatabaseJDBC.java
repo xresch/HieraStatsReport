@@ -3,6 +3,7 @@ package com.xresch.hsr.reporting;
 import java.util.ArrayList;
 
 import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecordStats;
@@ -68,8 +69,8 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportTestSettings(String testName) {
-		gtronDB.reportTestSettings(testName);
+	public void reportTestSettings(ArrayList<HSRTestSettings> testsettings) {
+		gtronDB.reportTestSettings(testsettings);
 	}
 	
 	/****************************************************************************

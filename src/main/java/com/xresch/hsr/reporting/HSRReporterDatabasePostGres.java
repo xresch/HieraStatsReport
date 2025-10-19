@@ -6,6 +6,7 @@ import java.util.TreeMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecordStats;
@@ -19,7 +20,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
 public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 
 	private DBInterface db;
-	HSRDBInterface gtronDB;
+	HSRDBInterface hsrDB;
 	
 	/****************************************************************************
 	 * 
@@ -42,11 +43,11 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 		
 		db = DBInterface.createDBInterfacePostgres(uniqueName, servername, port, dbName, username, password);
 		
-		gtronDB = new HSRDBInterface(db, tableNamePrefix);
-		gtronDB.initializeDB();
+		hsrDB = new HSRDBInterface(db, tableNamePrefix);
+		hsrDB.initializeDB();
 		
 		if(HSRConfig.isAgeOut()) {
-			gtronDB.ageOutStatistics();
+			hsrDB.ageOutStatistics();
 		}
 		
 	}			
@@ -56,15 +57,15 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
-		gtronDB.reportRecords(records);
+		hsrDB.reportRecords(records);
 	}
 	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportTestSettings(String testName) {
-		gtronDB.reportTestSettings(testName);
+	public void reportTestSettings(ArrayList<HSRTestSettings> testsettings) {
+		hsrDB.reportTestSettings(testsettings);
 	}
 	
 	/****************************************************************************
@@ -81,7 +82,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void terminate() {
-		gtronDB.reportTestSettingsEndTime();
+		hsrDB.reportTestSettingsEndTime();
 	}
 
 }

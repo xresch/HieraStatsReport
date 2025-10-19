@@ -136,7 +136,7 @@ public class HSRStatsEngine {
 		threadStatsengine.setName("statsengine");
 		threadStatsengine.setPriority(9); // to get smoother reporting
 		//threadStatsengine.start();
-		schedulerStatsEngine.scheduleAtFixedRate(threadStatsengine, 0, reportInterval, TimeUnit.SECONDS);
+		schedulerStatsEngine.scheduleAtFixedRate(threadStatsengine, reportInterval, reportInterval, TimeUnit.SECONDS);
 		
 	}
 	
@@ -1094,7 +1094,7 @@ public class HSRStatsEngine {
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			if(reporter instanceof HSRReporterDatabase) {
 				logger.debug("Send TestSettings Data to: "+reporter.getClass().getName());
-				((HSRReporterDatabase)reporter).reportTestSettings(HSR.getTest());
+				((HSRReporterDatabase)reporter).reportTestSettings(HSRConfig.getTestSettings());
 			}
 		}
 		

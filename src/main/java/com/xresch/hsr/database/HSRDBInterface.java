@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xresch.hsr.base.HSRConfig;
-import com.xresch.hsr.base.HSRUsecase;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.utils.HSRFiles;
 import com.xresch.hsr.utils.HSRTime;
@@ -54,7 +54,7 @@ public class HSRDBInterface {
 		this.tablenameTempAggregation = tablenamePrefix+"_temp_aggregation";
 
 		this.setCreateTableSQLStats( HSRRecordStats.getSQLCreateTableTemplate(tablenameStats) );
-		this.setCreateTableSQLTestSettings( HSRUsecase.getSQLCreateTableTemplate(tablenameTestsettings) );
+		this.setCreateTableSQLTestSettings( HSRTestSettings.getSQLCreateTableTemplate(tablenameTestsettings) );
 		this.setAggregateSQL( HSRRecordStats.createAggregationSQL(tablenameStats, tablenameTempAggregation) );
 	}
 	
@@ -118,12 +118,12 @@ public class HSRDBInterface {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public void reportTestSettings(String testName) {
+	public void reportTestSettings(ArrayList<HSRTestSettings> testsettings) {
 		
-		ArrayList<HSRUsecase> usecaseList = HSRConfig.getUsecaseList();
+		ArrayList<HSRTestSettings> testSettingsList = HSRConfig.getTestSettings();
 		
-		for(HSRUsecase usecase : usecaseList ) {
-			usecase.insertIntoDatabase(db, tablenameTestsettings, testName);
+		for(HSRTestSettings usecase : testSettingsList ) {
+			usecase.insertIntoDatabase(db, tablenameTestsettings);
 		}
 	}
 	
