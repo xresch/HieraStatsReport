@@ -343,8 +343,7 @@ public class HSR {
 			
 		HSRConfig.hooks.afterStart(type, item);
 		
-		logger.info("START "+getLogIndendation(item)+" "+name);	
-		HSRLog.log(logger, Level.INFO, "START "+getLogIndendation(item)+" "+name);
+		HSRLog.log(logger, Level.TRACE, "START "+getLogIndendation(item)+" "+name);
 		return item;
 	}
 	
@@ -414,7 +413,7 @@ public class HSR {
 				itemToEnd.end();
 				itemToEnd.status(status);
 				itemToEnd.code(code);
-				logger.info("END   "+getLogIndendation(itemToEnd)+" "+itemToEnd.name());	
+				logger.trace("END   "+getLogIndendation(itemToEnd)+" "+itemToEnd.name());	
 				//----------------------------
 				// Add URL
 //				try{
@@ -624,7 +623,7 @@ public class HSR {
 		
 		HSRStatsEngine.addRecord(item);
 		
-		logger.info("ADD   "+getLogIndendation(item)+" "+name);	
+		logger.trace("ADD   "+getLogIndendation(item)+" "+name);	
 		return item;
 	}
 	

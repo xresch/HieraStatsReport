@@ -28,6 +28,7 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
 import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 
+import ch.qos.logback.classic.Level;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
@@ -48,6 +49,9 @@ public class HSRStatsEngine {
 	
 	private static final Object SYNC_LOCK = new Object();
 
+	//=========================================
+	// Tree Maps
+	//=========================================
 	// key is based on hashCode() which is the StatsIdentifier, value are all records that are part of the group
 	// these are aggregated and purged based on the report interval
 	private static TreeMap<String, ArrayList<HSRRecord> > groupedRecordsInterval = new TreeMap<>();
@@ -56,14 +60,34 @@ public class HSRStatsEngine {
 	// these are used for making reports over the full test duration
 	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
 
+	// key is record name, will be added the first time the sla is encountered
+	// used to add it to reports
+	private static TreeMap<String, HSRSLA> slaCollection = new TreeMap<>();
+	
+	//=========================================
+	// Thread Management
+	//=========================================
 	private static boolean isStopped;
 	private static ScheduledExecutorService schedulerStatsEngine;
 	private static Thread threadSystemInfo;
+	private static boolean isFirstReport = true;
 	
-	// last values collected by threadSystemInfo
-	private static SystemInfo systemInfo = new SystemInfo();
-	private static OperatingSystem os = systemInfo.getOperatingSystem();
-	private static List<OSFileStore> fileStores = os.getFileSystem().getFileStores(); // performance issues, keep this here
+	private static final double MB = 1024.0 * 1024.0;
+	
+	//=========================================
+	// OSHI Instances
+	//=========================================
+	private static SystemInfo systemInfo;
+	private static OperatingSystem os;
+	private static List<OSFileStore> fileStores;
+	
+	static {
+		HSRConfig.setLogLevel(Level.INFO, "com.xresch.hsr.stats");
+		logger.info("Loading Open Source Hardware Info(OSHI) ...");
+		systemInfo = new SystemInfo();
+		os = systemInfo.getOperatingSystem();
+		fileStores = os.getFileSystem().getFileStores(); // performance issues, keep this here	
+	}
 	
 	private static double lastCpuUsage = 0;
 	private static TreeMap<String, Double> networkUsageMB_SentPerSec = new TreeMap<>();
@@ -71,14 +95,7 @@ public class HSRStatsEngine {
 	private static TreeMap<String, Double> diskUsageMB_ReadBytesPerSec = new TreeMap<>();
 	private static TreeMap<String, Double> diskUsageMB_WriteBytesPerSec = new TreeMap<>();
 	
-	private static boolean isFirstReport = true;
-	
-	private static final double MB = 1024.0 * 1024.0;
-	
-	// key is record name, will be added the first time the sla is encountered
-	// used to add it to reports
-	private static TreeMap<String, HSRSLA> slaCollection = new TreeMap<>();
-	
+
 	/***************************************************************************
 	 * Starts the reporting of the statistics.
 	 *  
