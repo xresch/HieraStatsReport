@@ -1903,6 +1903,54 @@ function drawSLA(target){
 }
 
 /**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawTestsettings(target){
+	
+	target = $(target);
+	
+	for(i in DATA){
+		
+		//-----------------------------------
+		// title
+		let title = "Test Settings"
+		if(i >= 1){  title = "More Test Settings"; }
+		
+		if(i > 1){
+			for(k = 1; k < i; k++){
+				title = "Even " + title;
+			}
+		}
+		
+		target.append('<h2>' + title + '</h2>');
+		
+		//-----------------------------------
+		// Render Data
+		let rendererSettings = {
+				data: DATA[i].testsettings,
+				customizers: {
+					"settings": function(record, value){
+							return CFW.format.objectToHTMLList(value);
+					}
+				},
+				rendererSettings: {
+					table: {
+						filterable: true
+						, verticalize: false
+						, verticalizelabelize: false
+						, stickyheader: true
+						}
+				},
+			};
+				
+		let renderResult = CFW.render.getRenderer('table').render(rendererSettings);	
+		
+		target.append(renderResult);
+	}
+
+}
+
+/**************************************************************************************
  * Shows the details of the record in a modal panel
  * @param record
  *************************************************************************************/
@@ -2732,6 +2780,7 @@ function draw(options){
 			case "summary": 			drawSummaryPage(target); break;
 			case "manual": 				drawManualPage(target); break;
 			case "properties": 			drawProperties(target); break;
+			case "testsettings": 		drawTestsettings(target); break;
 			case "sla": 				drawSLA(target); break;
 				
 			case "chartsUsers": 		drawChartsUsers(target, {height: "30vh"} ); break;

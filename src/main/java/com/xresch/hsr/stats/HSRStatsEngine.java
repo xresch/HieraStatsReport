@@ -22,6 +22,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.reporting.HSRReporterDatabase;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
@@ -1041,7 +1042,15 @@ public class HSRStatsEngine {
 		){
 		
 		//-------------------------
-		// Lsit of SLAs
+		// List of TestSettings
+		JsonArray testSettings = new JsonArray();
+		
+		for(HSRTestSettings settings : HSRConfig.getTestSettings()) {
+			testSettings.add(settings.toJson());
+		}
+		
+		//-------------------------
+		// List of SLAs
 		JsonObject slaForRecords = generateSLAObject();
 		
 		//-------------------------
@@ -1058,6 +1067,7 @@ public class HSRStatsEngine {
 						, finalRecordsAarrayWithSeries.deepCopy()
 						, new TreeMap<>(properties)
 						, slaForRecords.deepCopy()
+						, HSRConfig.getTestSettings()
 					);
 			}catch(Exception e) {
 				logger.error("Exception while reporting data.", e);

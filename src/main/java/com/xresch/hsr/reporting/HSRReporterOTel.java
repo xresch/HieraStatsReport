@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 
@@ -109,7 +110,7 @@ public class HSRReporterOTel implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
 		// do nothing
 		
 	}

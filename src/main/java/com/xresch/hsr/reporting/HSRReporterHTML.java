@@ -16,6 +16,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.utils.HSRReportUtils;
 
@@ -63,6 +64,7 @@ public class HSRReporterHTML implements HSRReporter {
 			, JsonArray summaryRecordsWithSeries
 			, TreeMap<String, String> properties
 			, JsonObject slaForRecords
+			, ArrayList<HSRTestSettings> testSettings
 			){
 		
 		//-----------------------------------
@@ -81,6 +83,7 @@ public class HSRReporterHTML implements HSRReporter {
 		data.addProperty("endtime", System.currentTimeMillis());
 		
     	data.add("properties", HSR.JSON.toJSONElement(properties) );
+    	data.add("testsettings", HSR.JSON.toJSONElement(testSettings) );
     	data.add("sla", slaForRecords);
     	data.add("records", summaryRecordsWithSeries);
     	

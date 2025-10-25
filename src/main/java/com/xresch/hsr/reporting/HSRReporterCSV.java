@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -77,7 +78,7 @@ public class HSRReporterCSV implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords) {
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
 		
 		//----------------------------
 		// Make Summary File

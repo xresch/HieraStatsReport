@@ -57,7 +57,7 @@ public class HSRTestSettings {
 	}
 	
 	/***********************************************************************
-	 * Returns an insert statement 
+	 * Insert into database.
 	 ***********************************************************************/
 	public boolean insertIntoDatabase(DBInterface db, String tableName) {
 		
@@ -77,6 +77,22 @@ public class HSRTestSettings {
 	
 		return db.preparedExecute(insertSQL, valueList.toArray());
 		
+	}
+	
+	/***********************************************************************
+	 * Return this object as a JsonObject.
+	 ***********************************************************************/
+	public JsonObject toJson() {
+		
+		JsonObject object = new JsonObject();
+
+		object.addProperty("starttime", HSRConfig.STARTTIME_MILLIS);
+		object.addProperty("execid", HSRConfig.EXECUTION_ID);
+		object.addProperty("test", HSR.getTest());
+		object.addProperty("usecase", usecase);
+		object.addProperty("settings", HSR.JSON.toJSON(settings));
+		
+		return object;
 	}
 
 }

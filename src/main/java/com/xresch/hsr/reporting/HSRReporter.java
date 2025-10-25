@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 
@@ -32,12 +33,14 @@ public interface HSRReporter {
 	 * @param summaryRecordsWithSeries the final statistics as a JsonArray
 	 * @param properties the properties that have been added with HSRConfig.addProperties()
 	 * @param slaForRecords object with record name as key and a string representation of its SLA
+	 * @param testSettings TODO
 	 ******************************************************************************************/
 	public void reportSummary(
 			  ArrayList<HSRRecordStats> summaryRecords
 			, JsonArray summaryRecordsWithSeries
 			, TreeMap<String, String> properties
 			, JsonObject slaForRecords
+			, ArrayList<HSRTestSettings> testSettings
 			);
 	
 	/******************************************************************************************
