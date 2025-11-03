@@ -16,6 +16,7 @@ import com.xresch.hsr.utils.HSRJson;
 import com.xresch.hsr.utils.HSRLog;
 import com.xresch.hsr.utils.HSRMath;
 import com.xresch.hsr.utils.HSRRandom;
+import com.xresch.hsr.utils.HSRText;
 import com.xresch.hsr.utils.HSRTime;
 
 import ch.qos.logback.classic.Level;
@@ -25,7 +26,7 @@ import ch.qos.logback.classic.Logger;
  * The Report class provides methods to add items to the reports, create screenshots
  * and write the report to the disk.
  * 
- * Copyright Reto Scheiwiller, 2025 - 
+ * Copyright Reto Scheiwiller, 2025
  * @license EPL-License
  **************************************************************************************/
 
@@ -60,6 +61,7 @@ public class HSR {
 	public static class JSON extends HSRJson {}
 	public static class Math extends HSRMath {}
 	public static class Random extends HSRRandom {}
+	public static class Text extends HSRText {}
 	public static class Time extends HSRTime {}
 	
 	/***********************************************************************************
