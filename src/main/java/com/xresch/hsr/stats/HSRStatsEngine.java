@@ -81,13 +81,14 @@ public class HSRStatsEngine {
 	private static SystemInfo systemInfo;
 	private static OperatingSystem os;
 	private static List<OSFileStore> fileStores;
-	
+	private static String hostname;
 	static {
 		HSRConfig.setLogLevel(Level.INFO, "com.xresch.hsr.stats");
 		logger.info("Loading Open Source Hardware Info(OSHI) ...");
 		systemInfo = new SystemInfo();
 		os = systemInfo.getOperatingSystem();
 		fileStores = os.getFileSystem().getFileStores(); // performance issues, keep this here	
+		hostname = os.getNetworkParams().getHostName();
 	}
 	
 	private static double lastCpuUsage = 0;
@@ -311,8 +312,8 @@ public class HSRStatsEngine {
 		
 		String test = HSR.getTest();
 				
-		ArrayList<String> systemUsagePathlist = new ArrayList<>();
-		systemUsagePathlist.add("System Usage");
+		ArrayList<String> pathlist = new ArrayList<>();
+		pathlist.add(hostname);
 		
 		//------------------------------
 		// Process Memory
@@ -330,28 +331,28 @@ public class HSRStatsEngine {
 				addRecord(
 					new HSRRecord(HSRRecordType.System, "Process Memory Usage [MB]")
 						.test(test)
-						.pathlist(systemUsagePathlist)
+						.pathlist(pathlist)
 						.value(new BigDecimal(usageMB).setScale(1, RoundingMode.HALF_UP))
 					);
 				
 				addRecord(
 						new HSRRecord(HSRRecordType.System, "Process Memory Committed [MB]")
 						.test(test)
-						.pathlist(systemUsagePathlist)
+						.pathlist(pathlist)
 						.value(new BigDecimal(committedMB).setScale(1, RoundingMode.HALF_UP))
 						);
 				
 				addRecord(
 						new HSRRecord(HSRRecordType.System, "Process Memory Max [MB]")
 						.test(test)
-						.pathlist(systemUsagePathlist)
+						.pathlist(pathlist)
 						.value(new BigDecimal(maxMB).setScale(1, RoundingMode.HALF_UP))
 					);
 				
 				addRecord(
 					new HSRRecord(HSRRecordType.System, "Process Memory Usage [%]")
 						.test(test)
-						.pathlist(systemUsagePathlist)
+						.pathlist(pathlist)
 						.value(new BigDecimal(usagePercent).setScale(1, RoundingMode.HALF_UP))
 					);
 
@@ -375,7 +376,7 @@ public class HSRStatsEngine {
 			addRecord(
 					new HSRRecord(HSRRecordType.System, "Host Memory Usage [%]")
 						.test(test)
-						.pathlist(systemUsagePathlist)
+						.pathlist(pathlist)
 						.value(new BigDecimal(memUsagePercent).setScale(1, RoundingMode.HALF_UP))
 					);
 			}catch(Throwable e) {
@@ -393,7 +394,7 @@ public class HSRStatsEngine {
 				addRecord(
 						new HSRRecord(HSRRecordType.System, "CPU Usage [%]")
 							.test(test)
-							.pathlist(systemUsagePathlist)
+							.pathlist(pathlist)
 							.value(new BigDecimal(lastCpuUsage).setScale(1, RoundingMode.HALF_UP))
 						);
 			}catch(Throwable e) {
@@ -422,7 +423,7 @@ public class HSRStatsEngine {
 					addRecord(
 							new HSRRecord(HSRRecordType.System, "Disk Usage [%]: "+diskName)
 								.test(test)
-								.pathlist(systemUsagePathlist)
+								.pathlist(pathlist)
 								.value(new BigDecimal(diskUsagePercent).setScale(1, RoundingMode.HALF_UP))
 							);
 				}
@@ -445,14 +446,14 @@ public class HSRStatsEngine {
 						addRecord(
 								new HSRRecord(HSRRecordType.System, "Disk I/O Read [MB/sec]: "+diskName)
 									.test(test)
-									.pathlist(systemUsagePathlist)
+									.pathlist(pathlist)
 									.value(new BigDecimal(mbytesReadPerSec).setScale(1, RoundingMode.HALF_UP))
 								);
 						
 						addRecord(
 								new HSRRecord(HSRRecordType.System, "Disk I/O Write [MB/sec]: "+diskName)
 									.test(test)
-									.pathlist(systemUsagePathlist)
+									.pathlist(pathlist)
 									.value(new BigDecimal(mbytesWritesPerSec).setScale(1, RoundingMode.HALF_UP))
 								);
 				}
@@ -473,14 +474,14 @@ public class HSRStatsEngine {
 					addRecord(
 							new HSRRecord(HSRRecordType.System, "Network I/O Sent [MB/sec]: "+interfaceName)
 							.test(test)
-							.pathlist(systemUsagePathlist)
+							.pathlist(pathlist)
 							.value(new BigDecimal(mbytesSentPerSec).setScale(1, RoundingMode.HALF_UP))
 							);
 					
 					addRecord(
 							new HSRRecord(HSRRecordType.System, "Network I/O Recv [MB/sec]: "+interfaceName)
 							.test(test)
-							.pathlist(systemUsagePathlist)
+							.pathlist(pathlist)
 							.value(new BigDecimal(mbytesRecvPerSec).setScale(1, RoundingMode.HALF_UP))
 							);
 				}

@@ -1187,7 +1187,7 @@ function drawManualPage(target){
 		<h3>General Tips</h3>
 		<ul>
 			<li><b>Filter:&nbsp;</b> The filter field allows you to also filter with wildcards(*) and regular expressions. 
-			It filters on the HTML contents of each row. You can use all javascript regex features, for example "^(?!.*System Usage.*).*" will filter for all rows that do not contains "System Usage".</li>
+			It filters on the HTML contents of each row. You can use all javascript regex features, for example "^(?!.*System.*).*" will filter for all rows that do not contains "System".</li>
 			<li><b>Chart Zoom:&nbsp;</b> Click and drag on a chart to zoom into a specific range of the chart to see it more detailed. </li>
 			<li><b>Chart Double-Click:&nbsp;</b> Double click a chart to get a popup with every series in a single chart. </li>
 			<li><b>Boxplot Colors:&nbsp;</b> The boxplot is colored by the position of the P50(median) inside of the Inter-Quartile-Range(IQR: P75-P25). The closer it gets to P75, the more red it turns.</li>
@@ -1452,7 +1452,8 @@ function drawChartsDiskusage(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			  multichart: true 
+			  charttype: 'line'
+			, multichart: true 
 			, multichartcolumns: 2
 			, ymax: 100
 		}
@@ -1469,6 +1470,7 @@ function drawChartsDiskusage(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record.percent = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1476,7 +1478,7 @@ function drawChartsDiskusage(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["percent"]
 		, finalChartOptions
 	);
@@ -1493,7 +1495,8 @@ function drawChartsCPUUsage(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			 ymax: 100
+			   charttype: 'line'
+			 , ymax: 100
 		}
 	
 	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
@@ -1508,6 +1511,7 @@ function drawChartsCPUUsage(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record.percent = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1515,7 +1519,7 @@ function drawChartsCPUUsage(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["percent"]
 		, finalChartOptions
 	);
@@ -1531,7 +1535,7 @@ function drawChartsDiskIOReads(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			 charttype: 'area'
+			 charttype: 'line'
 			, stacked: true
 		}
 	
@@ -1547,6 +1551,7 @@ function drawChartsDiskIOReads(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record["megabytesPerSec"] = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1554,7 +1559,7 @@ function drawChartsDiskIOReads(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["megabytesPerSec"]
 		, finalChartOptions
 	);
@@ -1570,7 +1575,7 @@ function drawChartsDiskIOWrites(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			 charttype: 'area'
+			 charttype: 'line'
 			, stacked: true
 		}
 	
@@ -1586,6 +1591,7 @@ function drawChartsDiskIOWrites(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record["megabytesPerSec"] = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1593,7 +1599,7 @@ function drawChartsDiskIOWrites(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["megabytesPerSec"]
 		, finalChartOptions
 	);
@@ -1609,7 +1615,7 @@ function drawChartsNetworkIORecv(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			 charttype: 'area'
+			 charttype: 'line'
 			, stacked: true
 		}
 	
@@ -1625,6 +1631,7 @@ function drawChartsNetworkIORecv(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record["megabytesPerSec"] = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1632,7 +1639,7 @@ function drawChartsNetworkIORecv(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["megabytesPerSec"]
 		, finalChartOptions
 	);
@@ -1648,7 +1655,7 @@ function drawChartsNetworkIOSent(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			 charttype: 'area'
+			 charttype: 'line'
 			, stacked: true
 		}
 	
@@ -1665,6 +1672,7 @@ function drawChartsNetworkIOSent(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record["megabytesPerSec"] = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1673,7 +1681,7 @@ function drawChartsNetworkIOSent(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["megabytesPerSec"]
 		, finalChartOptions
 	);
@@ -1698,7 +1706,7 @@ function drawChartsProcessMemoryMB(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			  charttype: 'area'
+			  charttype: 'line'
 			, ytype: 'logarithmic'
 			, multichart: false 
 			, multichartcolumns: 2
@@ -1716,6 +1724,7 @@ function drawChartsProcessMemoryMB(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record["MB"] = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1724,7 +1733,7 @@ function drawChartsProcessMemoryMB(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["MB"]
 		, finalChartOptions
 	);
@@ -1740,7 +1749,7 @@ function drawChartsProcessMemoryPercent(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			  charttype: 'area'
+			  charttype: 'line'
 			, ytype: 'linear'
 			, ymax: 100
 			, multichart: false 
@@ -1759,6 +1768,7 @@ function drawChartsProcessMemoryPercent(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record["percent"] = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1767,7 +1777,7 @@ function drawChartsProcessMemoryPercent(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["percent"]
 		, finalChartOptions
 	);
@@ -1783,7 +1793,7 @@ function drawChartsHostMemory(target, chartOptions){
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
-			  charttype: 'area'
+			  charttype: 'line'
 			, ytype: 'linear'
 			, ymax: 100
 			, multichart: false 
@@ -1802,6 +1812,7 @@ function drawChartsHostMemory(target, chartOptions){
 	// Rename
 	datapoints = _.forEach(_.cloneDeep(datapoints), function(record){
 		record["percent"] = record.ok_count;
+		record.host = record.path;
 	});
 	
 	//---------------------
@@ -1810,7 +1821,7 @@ function drawChartsHostMemory(target, chartOptions){
 	drawChartByFields(
 		  target
 		, datapoints
-		, ["name"]
+		, ["host", "name"]
 		, ["percent"]
 		, finalChartOptions
 	);
