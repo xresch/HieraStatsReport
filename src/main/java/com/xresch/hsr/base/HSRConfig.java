@@ -3,6 +3,8 @@ package com.xresch.hsr.base;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -10,12 +12,17 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonObject;
 import com.xresch.hsr.database.HSRAgeOutConfig;
 import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.stats.HSRStatsEngine;
 
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
+import ch.qos.logback.core.util.FileSize;
 
 /***************************************************************************
  * The config class of the HieraStatsReport Framework.
@@ -236,6 +243,65 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	    
 	    HSRConfig.addProperty("[HSR] Log Level: "+loggerName, level.toString());
 	}
+	
+	private static final Object LOCK = new Object();
+    private static final String APPENDER_NAME = "ROOT-ROLLING-FILE";
+	
+    /******************************************************************
+     * No log file will be written until this method has been called.
+     * Therefore, it is recommended to call this method as soon as possible.
+     ******************************************************************/
+    public static void setLogFilePath(String logFilePath) {
+    	
+    	ch.qos.logback.classic.Logger root = 
+    			(ch.qos.logback.classic.Logger) 
+    				LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        
+
+        synchronized (LOCK) {
+            if (root.getAppender(APPENDER_NAME) != null) return;
+
+            LoggerContext ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+            // ensure directory exists
+            try {
+                Files.createDirectories(Paths.get(logFilePath).getParent());
+            } catch (Exception ignored) {}
+
+            PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+            encoder.setContext(ctx);
+            encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n");
+            encoder.start();
+
+            RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
+            appender.setContext(ctx);
+            appender.setName(APPENDER_NAME);
+            //appender.setFile(logFilePath); // do not call this, leave it to rolling file policy
+            appender.setEncoder(encoder);
+            appender.setAppend(true); // ← ensure writing
+
+            // remove ".log" for rotating pattern
+            String base = logFilePath.endsWith(".log") ?
+                    logFilePath.substring(0, logFilePath.length() - 4) : logFilePath;
+
+            SizeAndTimeBasedRollingPolicy<ILoggingEvent> policy = new SizeAndTimeBasedRollingPolicy<>();
+            policy.setContext(ctx);
+            policy.setParent(appender); // must be before start
+            policy.setFileNamePattern(base + "_%d{yyyy-MM-dd}_%i.log");
+            policy.setMaxFileSize(FileSize.valueOf("50MB"));
+            policy.setMaxHistory(10);
+            policy.setTotalSizeCap(FileSize.valueOf("2GB"));
+            policy.setCleanHistoryOnStart(true);
+
+            // **Correct order**
+            appender.setRollingPolicy(policy);
+            policy.start();        // policy must start before appender
+            appender.start();      // appender starts last
+
+            root.addAppender(appender);
+            root.setAdditive(true); // keep console + file together (optional)
+        }
+    }
 		
 
 	/******************************************************************
