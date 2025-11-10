@@ -13,8 +13,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -533,5 +538,116 @@ public class HSRFiles {
 			}
 		}
 	}
+	
+    private static final DateTimeFormatter TS_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss");
+    // length of "yyyy-MM-dd_HHmmss" is 17
+    private static final int TS_LENGTH = 17;
+    // regex to quickly filter candidate names that begin with a timestamp-like prefix
+    private static final String TS_PREFIX_REGEX = "^\\d{4}-\\d{2}-\\d{2}_\\d{6}.*$";
+
+    /******************************************************************************************
+     * Creates a timestamped folder inside rootDir named "yyyy-MM-dd_HHmmss_<name>"
+     * and ensures at most historyCount timestamped folders exist (deletes oldest).
+     *
+     * @param rootDir      root directory where timestamped folders live
+     * @param name         name suffix to append to the timestamp (may vary between runs)
+     * @param historyCount maximum number of timestamped folders to keep
+     * 
+     * @return path to the newly created timestamped folder
+     * 
+     * @throws IOException if IO operations fail
+     * @throws IllegalArgumentException if historyCount < 0
+     ******************************************************************************************/
+    public static Path createTimestampedFolder(String rootDir, String name, int historyCount) throws IOException {
+        
+    	if (historyCount < 0) historyCount = 0;
+
+        Path rootPath = Paths.get(rootDir);
+        Files.createDirectories(rootPath);
+
+        // Build folder name
+        String timestamp = LocalDateTime.now().format(TS_FORMATTER);
+        String folderName = timestamp + "_" + name;
+        Path newFolder = rootPath.resolve(folderName);
+
+        // Create directory (will throw if cannot)
+        Files.createDirectories(newFolder);
+
+        // Cleanup: keep at most historyCount folders that start with a timestamp
+        cleanupOldTimestampedFolders(rootPath, historyCount);
+
+        return newFolder;
+    }
+
+	/***********************************************************************
+	 * INTERNAL: Used to keep a maximum amount of timestamped folders
+	 * 
+	 ***********************************************************************/
+    private static void cleanupOldTimestampedFolders(Path rootPath, int historyCount) throws IOException {
+        
+    	try (Stream<Path> stream = Files.list(rootPath)) {
+            List<Path> timestampedDirs = stream
+                    .filter(Files::isDirectory)
+                    .filter(p -> p.getFileName() != null)
+                    .filter(p -> p.getFileName().toString().matches(TS_PREFIX_REGEX)) // quick filter
+                    .map(p -> new TimestampedPath(p))
+                    .filter(TimestampedPath::isValid) // only those with a parseable timestamp
+                    .sorted(Comparator.comparing(TimestampedPath::getTimestamp)) // oldest first
+                    .map(TimestampedPath::getPath)
+                    .collect(Collectors.toList());
+
+            // delete oldest while we have more than historyCount
+            while (timestampedDirs.size() > historyCount) {
+                Path oldest = timestampedDirs.remove(0);
+                deleteRecursively(oldest);
+            }
+        }
+    }
+
+	/***********************************************************************
+	 * INTERNAL: Used to keep a maximum amount of timestamped folders.
+	 * 
+	 ***********************************************************************/
+    private static void deleteRecursively(Path path) throws IOException {
+        if (!Files.exists(path)) return;
+        // walk and delete children first
+        try (Stream<Path> walk = Files.walk(path)) {
+            List<Path> toDelete = walk.sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+            for (Path p : toDelete) {
+                Files.deleteIfExists(p);
+            }
+        }
+    }
+
+	/***********************************************************************
+	 * INTERNAL: Used to keep a maximum amount of timestamped folders
+	 * 
+	 ***********************************************************************/
+    // small helper to keep parsed timestamp and path together
+    private static final class TimestampedPath {
+        private final Path path;
+        private final LocalDateTime timestamp;
+        private final boolean valid;
+
+        TimestampedPath(Path p) {
+            this.path = p;
+            LocalDateTime ts = null;
+            boolean ok = false;
+            String name = p.getFileName().toString();
+            if (name.length() >= TS_LENGTH) {
+                String prefix = name.substring(0, TS_LENGTH);
+                try {
+                    ts = LocalDateTime.parse(prefix, TS_FORMATTER);
+                    ok = true;
+                } catch (DateTimeParseException ignored) { /* not a timestamped folder */ }
+            }
+            this.timestamp = ts;
+            this.valid = ok;
+        }
+
+        boolean isValid() { return valid; }
+        LocalDateTime getTimestamp() { return timestamp; }
+        Path getPath() { return path; }
+    }
 	
 }
