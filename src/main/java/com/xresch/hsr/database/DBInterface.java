@@ -612,6 +612,18 @@ public class DBInterface {
 		}
 	}
 	
+	/********************************************************************************************
+	 * Closes all connections in the pool.
+	 ********************************************************************************************/
+	public void closeAll(){
+		try {
+			pooledSource.close();
+		} catch (SQLException e) {
+			logger
+			.error("Exception occured while closing connection in pool. ", e);
+		}
+	}
+	
 	
 	/************************************************************************
 	 * 

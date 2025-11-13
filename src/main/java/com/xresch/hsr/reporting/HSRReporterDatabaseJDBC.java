@@ -79,6 +79,8 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	@Override
 	public void terminate() {
 		gtronDB.reportTestSettingsEndTime();
+		
+		db.closeAll(); // fixes exception on test end
 	}
 
 }

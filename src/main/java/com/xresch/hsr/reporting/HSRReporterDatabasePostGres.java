@@ -83,6 +83,8 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	@Override
 	public void terminate() {
 		hsrDB.reportTestSettingsEndTime();
+		
+		db.closeAll(); // fixes exception on test end
 	}
 
 }
