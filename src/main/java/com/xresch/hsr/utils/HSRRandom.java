@@ -9,6 +9,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -495,7 +497,17 @@ public class HSRRandom {
 	    return fromArray(0, array);
 	}
 	
-
+	/******************************************************************************
+	 * Returns a random String from an array.
+	 * 
+	 * @param array to choose from
+	 * 
+	 ******************************************************************************/
+	public static <T> T fromArray(ArrayList<T> array) {
+	    int index = random.nextInt(array.size());
+	    return array.get(index);
+	}
+	
 
 	/******************************************************************************
 	 * Returns a random item from an array.

@@ -1,4 +1,4 @@
-package com.xresch.hsr.base;
+package com.xresch.hsr.utils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -14,17 +14,22 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
+import com.xresch.hsr.base.HSR;
+import com.xresch.hsr.base.HSR.JSON;
+import com.xresch.hsr.base.HSR.Text;
 
 /**************************************************************************************************************
  * A Value class that allows to bypass type safety that like to get into the way of programmers.
+ * Called an "Unvalue" as some programmers would call it a sacrilegous and blasphemic perversion of far-spread
+ * programming paradigms to ever come up with an idea of doing such a thing.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
  * @license EPL-License
  * 
  **************************************************************************************************************/
-public class HSRValue implements Comparable<HSRValue> {
+public class Unvalue implements Comparable<Unvalue> {
 	
-	private HSRValueType type;
+	private UnvalueType type;
 	private Object value = null;
 	
 	// set to true to NOT convert strings that are fieldnames to the value of the field
@@ -33,7 +38,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public enum HSRValueType{
+	public enum UnvalueType{
 		  NUMBER
 		, STRING
 		, BOOLEAN
@@ -46,7 +51,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * 
 	 ******************************************************************************************************/
 	@Override
-	public HSRValue clone() {
+	public Unvalue clone() {
 		return this.getAsClone();
 	}
 			
@@ -54,13 +59,13 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Private Constructor to enforce correct types.
 	 * 
 	 ******************************************************************************************************/
-	private HSRValue(HSRValueType type, Object value) {
+	private Unvalue(UnvalueType type, Object value) {
 		super();
 		this.value = value;
 		if(value != null) {
 			this.type = type;
 		}else {
-			this.type = HSRValueType.NULL;
+			this.type = UnvalueType.NULL;
 		}
 	}
 		
@@ -68,90 +73,90 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * 
 	 ******************************************************************************************************/
 	// Overload method to improve performance of getAsBigDecimal()
-	public static HSRValue newNumber(Integer value){
+	public static Unvalue newNumber(Integer value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.NUMBER, new BigDecimal(value));
+		return new Unvalue(UnvalueType.NUMBER, new BigDecimal(value));
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
 	// Overload method to improve performance of getAsBigDecimal()
-	public static HSRValue newNumber(Long value){
+	public static Unvalue newNumber(Long value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.NUMBER, new BigDecimal(value));
+		return new Unvalue(UnvalueType.NUMBER, new BigDecimal(value));
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
 	// Overload method to improve performance of getAsBigDecimal()
-	public static HSRValue newNumber(Short value){
+	public static Unvalue newNumber(Short value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.NUMBER, new BigDecimal(value));
+		return new Unvalue(UnvalueType.NUMBER, new BigDecimal(value));
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
 	// Overload method to improve performance of getAsBigDecimal()
-	public static HSRValue newNumber(Float value){
+	public static Unvalue newNumber(Float value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.NUMBER, new BigDecimal(value));
+		return new Unvalue(UnvalueType.NUMBER, new BigDecimal(value));
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
 	// Overload method to improve performance of getAsBigDecimal()
-	public static HSRValue newNumber(Double value){
+	public static Unvalue newNumber(Double value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.NUMBER, new BigDecimal(value));
+		return new Unvalue(UnvalueType.NUMBER, new BigDecimal(value));
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public static HSRValue newNumber(Number value){
+	public static Unvalue newNumber(Number value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.NUMBER, value);
+		return new Unvalue(UnvalueType.NUMBER, value);
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public static HSRValue newString(String value){
+	public static Unvalue newString(String value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.STRING,value);
+		return new Unvalue(UnvalueType.STRING,value);
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public static HSRValue newNull(){
-		return new HSRValue(HSRValueType.NULL, null);
+	public static Unvalue newNull(){
+		return new Unvalue(UnvalueType.NULL, null);
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public static HSRValue newBoolean(Boolean value){
+	public static Unvalue newBoolean(Boolean value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.BOOLEAN, value);
+		return new Unvalue(UnvalueType.BOOLEAN, value);
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public static HSRValue newJson(JsonElement value){
+	public static Unvalue newJson(JsonElement value){
 		if(value == null) { return newNull(); }
-		return new HSRValue(HSRValueType.JSON, value);
+		return new Unvalue(UnvalueType.JSON, value);
 	}
 	
 	/******************************************************************************************************
 	 * Creates a new value based on the type of the JsonElement
 	 ******************************************************************************************************/
-	public static HSRValue newFromJsonElement(JsonElement value){
+	public static Unvalue newFromJsonElement(JsonElement value){
 		
 		if(value == null || value.isJsonNull()) {
 			return newNull(); 
@@ -173,12 +178,12 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Creates a new value from a string based on the type.
 	 * Enforces correct types by throwing nasty exceptions.
 	 ******************************************************************************************************/
-	public static HSRValue newFromString(HSRValueType type, String string) throws IllegalStateException {
+	public static Unvalue newFromString(UnvalueType type, String string) throws IllegalStateException {
 		
 		//-----------------------------
 		// Handle Nulls
 		if(string == null) {
-			return HSRValue.newNull();
+			return Unvalue.newNull();
 		}
 		
 		
@@ -188,11 +193,11 @@ public class HSRValue implements Comparable<HSRValue> {
 		switch (type) {
 			
 			case STRING: 
-				return new HSRValue(HSRValueType.STRING, string.trim() ); 
+				return new Unvalue(UnvalueType.STRING, string.trim() ); 
 			
 			case BOOLEAN: 
-				if( HSRValue.checkIsStringABoolean(string) ) { 
-					return new HSRValue(HSRValueType.BOOLEAN, Boolean.parseBoolean(string.trim()));
+				if( Unvalue.checkIsStringABoolean(string) ) { 
+					return new Unvalue(UnvalueType.BOOLEAN, Boolean.parseBoolean(string.trim()));
 				}else {
 					throw new IllegalStateException("The provided string was not a boolean: "+string); 
 				} 
@@ -200,7 +205,7 @@ public class HSRValue implements Comparable<HSRValue> {
 			
 			case NUMBER: 
 				if( NumberUtils.isCreatable(string) ) { 
-					return new HSRValue(HSRValueType.NUMBER, new BigDecimal(string.trim()));
+					return new Unvalue(UnvalueType.NUMBER, new BigDecimal(string.trim()));
 				} else {
 					throw new IllegalStateException("The provided string was not a number: "+string); 
 				}
@@ -208,8 +213,8 @@ public class HSRValue implements Comparable<HSRValue> {
 			
 
 			case JSON: 
-				if( HSRValue.checkIsJsonParsable(string) ) { 
-					return new HSRValue(HSRValueType.JSON, HSR.JSON.fromJson(string) );
+				if( Unvalue.checkIsJsonParsable(string) ) { 
+					return new Unvalue(UnvalueType.JSON, HSR.JSON.fromJson(string) );
 				}else {
 					throw new IllegalStateException("The provided string was not a JSON string: "+string); 
 				}
@@ -220,14 +225,14 @@ public class HSRValue implements Comparable<HSRValue> {
 
 		}
 		
-		return HSRValue.newNull();
+		return Unvalue.newNull();
 		
 	}
 	
 	/******************************************************************************************************
 	 * Creates a new QueryPart based on the type of the JsonElement
 	 ******************************************************************************************************/
-	public static HSRValue newFromStringArray(ArrayList<String> array){
+	public static Unvalue newFromStringArray(ArrayList<String> array){
 		
 		JsonArray newArray = new JsonArray();
 		
@@ -278,14 +283,14 @@ public class HSRValue implements Comparable<HSRValue> {
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public HSRValueType type() {
+	public UnvalueType type() {
 		return type;
 	}
 	
 	/******************************************************************************************************
 	 * 
 	 ******************************************************************************************************/
-	public boolean isOfType(HSRValueType type) {
+	public boolean isOfType(UnvalueType type) {
 		return this.type == type;
 	}
 	
@@ -296,7 +301,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	public void nullToZero() {
 		if(value == null) {
 			this.value = 0;
-			this.type = HSRValueType.NUMBER;
+			this.type = UnvalueType.NUMBER;
 		}
 	}
 	
@@ -313,7 +318,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	public boolean isNullOrEmptyString() {
 		return 
 			value == null 
-			|| (this.type == HSRValueType.STRING 
+			|| (this.type == UnvalueType.STRING 
 				&& Strings.isNullOrEmpty((String)value) 
 			);
 	}
@@ -322,7 +327,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Check if the value is of type boolean
 	 ******************************************************************************************************/
 	public boolean isBoolean() {
-		return this.type == HSRValueType.BOOLEAN;
+		return this.type == UnvalueType.BOOLEAN;
 	}
 	
 	/******************************************************************************************************
@@ -330,7 +335,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	 ******************************************************************************************************/
 	public boolean isBooleanString() {
 		
-		if(this.type == HSRValueType.STRING) {
+		if(this.type == UnvalueType.STRING) {
 			return  checkIsStringABoolean(this.getAsString());
 		}
 		
@@ -361,7 +366,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Check if the value is a number
 	 ******************************************************************************************************/
 	public boolean isNumber() {
-		return this.type == HSRValueType.NUMBER;
+		return this.type == UnvalueType.NUMBER;
 	}
 	
 	
@@ -369,7 +374,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Check if the value is a number
 	 ******************************************************************************************************/
 	public boolean isNumberString() {
-		if(this.type == HSRValueType.STRING) {
+		if(this.type == UnvalueType.STRING) {
 			String value = this.getAsString().trim();
 			
 			return NumberUtils.isParsable(value);
@@ -426,7 +431,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Check if the value is of type String
 	 ******************************************************************************************************/
 	public boolean isString() {
-		return this.type == HSRValueType.STRING;
+		return this.type == UnvalueType.STRING;
 	}
 	
 	/******************************************************************************************************
@@ -447,21 +452,21 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Check if the value is of type JSON
 	 ******************************************************************************************************/
 	public boolean isJson() {
-		return this.type == HSRValueType.JSON;
+		return this.type == UnvalueType.JSON;
 	}
 	
 	/******************************************************************************************************
 	 * Check if the value is a JSON Array
 	 ******************************************************************************************************/
 	public boolean isJsonArray() {
-		return this.type == HSRValueType.JSON && ((JsonElement)this.value).isJsonArray();
+		return this.type == UnvalueType.JSON && ((JsonElement)this.value).isJsonArray();
 	}
 	
 	/******************************************************************************************************
 	 * Check if the value is a JSON Object
 	 ******************************************************************************************************/
 	public boolean isJsonObject() {
-		return this.type == HSRValueType.JSON && ((JsonElement)this.value).isJsonObject();
+		return this.type == UnvalueType.JSON && ((JsonElement)this.value).isJsonObject();
 	}
 	
 	/******************************************************************************************************
@@ -715,13 +720,13 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Takes the value of this QueryPartValue and wraps it into an array.
 	 * @return the same object if it is already an array, new array if it is of another type
 	 ******************************************************************************************************/
-	public HSRValue convertToArray() {
+	public Unvalue convertToArray() {
 		
 		if(this.isJsonArray()) {
 			return this;
 		}
 		
-		return HSRValue.newFromJsonElement(
+		return Unvalue.newFromJsonElement(
 				this.getAsJsonArray()
 			);
 	}
@@ -770,23 +775,23 @@ public class HSRValue implements Comparable<HSRValue> {
 	/******************************************************************************************************
 	 * Creates a clone of this QueryPartValue.
 	 ******************************************************************************************************/
-	public HSRValue getAsClone() {
+	public Unvalue getAsClone() {
 		
 		switch(type) {
-			case NULL:		return HSRValue.newNull();
+			case NULL:		return Unvalue.newNull();
 			
-			case JSON:		return HSRValue.newJson( ((JsonElement)value).deepCopy());
+			case JSON:		return Unvalue.newJson( ((JsonElement)value).deepCopy());
 							
 			case NUMBER:	double myDouble = ((Number)value).doubleValue();
-							return HSRValue.newNumber(myDouble);
+							return Unvalue.newNumber(myDouble);
 
 			case BOOLEAN: 	boolean boolClone = (Boolean)value;
-							return HSRValue.newBoolean(boolClone);
+							return Unvalue.newBoolean(boolClone);
 			
 			case STRING:	String stringClone = ((String)value)+"";
-							return HSRValue.newString(stringClone);
+							return Unvalue.newString(stringClone);
 
-			default:		return HSRValue.newNull();
+			default:		return Unvalue.newNull();
 
 		}
 
@@ -799,7 +804,7 @@ public class HSRValue implements Comparable<HSRValue> {
 		if(value == null) return null;
 		
 		// convert numbers to string without scientific notation
-		if(type == HSRValueType.NUMBER) {
+		if(type == UnvalueType.NUMBER) {
 			return this.getAsBigDecimal().stripTrailingZeros().toPlainString();
 		}
 		
@@ -963,11 +968,11 @@ public class HSRValue implements Comparable<HSRValue> {
 		if (getClass() != obj.getClass()) 	{ return false; }
 		
 		
-		HSRValue other = (HSRValue) obj;
+		Unvalue other = (Unvalue) obj;
 		if(type == other.type) {
 			return Objects.equals(value, other.value);
-		}else if(type == HSRValueType.NULL 
-		|| other.type == HSRValueType.NULL   
+		}else if(type == UnvalueType.NULL 
+		|| other.type == UnvalueType.NULL   
 		){
 			return false;
 		}else {
@@ -989,7 +994,7 @@ public class HSRValue implements Comparable<HSRValue> {
 		if (obj == null) 					{ return false; }
 		if (getClass() != obj.getClass()) 	{ return false; }
 		
-		HSRValue other = (HSRValue) obj;
+		Unvalue other = (Unvalue) obj;
 		return type == other.type && Objects.equals(value, other.value);
 	}
 
@@ -997,7 +1002,7 @@ public class HSRValue implements Comparable<HSRValue> {
 	 * Will compare as string.
 	 ******************************************************************************************************/
 	@Override
-	public int compareTo(HSRValue o) {
+	public int compareTo(Unvalue o) {
 		
 		if(o == null) { return -1; }
 		
