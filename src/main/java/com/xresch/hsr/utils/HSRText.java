@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.JsonArray;
+
 /**************************************************************************************************************
  * 
  * @author Reto Scheiwiller, (c) Copyright 2019 
@@ -81,7 +83,7 @@ public class HSRText {
 	 * Will return a regex matcher for a pattern that applies the flags
 	 * Pattern.MULTILINE and Pattern.DOTALL.
 	 *******************************************************************/
-	private static Matcher getRegexMatcherCached(String regex, String textToMatch) {
+	public static Matcher getRegexMatcherCached(String regex, String textToMatch) {
 				
 		return getRegexPatternCached(regex, textToMatch).matcher(textToMatch);
 	}
@@ -91,7 +93,7 @@ public class HSRText {
 	 * Pattern.MULTILINE and Pattern.DOTALL.
 	 * 
 	 *******************************************************************/
-	private static Pattern getRegexPatternCached(String regex, String textToMatch) {
+	public static Pattern getRegexPatternCached(String regex, String textToMatch) {
 		
 		if(!regexPatternCache.containsKey(regex)) {
 			Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
@@ -99,6 +101,119 @@ public class HSRText {
 		}
 		
 		return regexPatternCache.get(regex);
+	}
+	
+	/*******************************************************************
+	 * For example, to extract the parts separated by "-" of an id:
+	 * <ul>
+	 * 		<li><b>ID:&nbsp;</b>420f2d3d-ed2d-4749-94e</li>
+	 * 		<li><b>Method Call:&nbsp;</b>extractAll("-?([^-]+)", 0, ID )</li>
+	 * 		<li><b>Result:&nbsp;</b>["420f2d3d", "ed2d", "4749", "94e"]</li>
+	 * </ul>
+	 * 
+	 * @param regex the regular expression that contains regex groups
+	 * @param groupIndex the index of the group, first group is 0
+	 * @param valueToSearch the text to search through
+	 * 
+	 * @return ArrayList of strings, empty if no matches, never null
+	 *******************************************************************/
+	public static ArrayList<String> extractRegexAll(String regex, int groupIndex, String valueToSearch) {
+		
+		ArrayList<String> result = new ArrayList<>();
+		Matcher m = getRegexMatcherCached(regex, valueToSearch);
+		while (m.find()) {
+			
+			if(m.groupCount() > groupIndex && groupIndex >= -1) {
+				result.add( m.group(groupIndex+1) );
+			}
+		}
+		
+		return result;
+	}
+	
+	/*******************************************************************
+	 * Extracts multiple values from a string using regex and regex groups.
+	 * For example, to extract the parts separated by "-" of an id:
+	 * <ul>
+	 * 		<li><b>ID:&nbsp;</b>420f2d3d-ed2d-4749-94e</li>
+	 * 		<li><b>Method Call:&nbsp;</b>extractAll("-?([^-]+)", 0, ID )</li>
+	 * 		<li><b>Result:&nbsp;</b>["420f2d3d", "ed2d", "4749", "94e"]</li>
+	 * </ul>
+	 * 
+	 * @param regex the regular expression that contains regex groups
+	 * @param groupIndex the index of the group, first group is 0
+	 * @param valueToSearch the text to search through
+	 * 
+	 * @return ArrayList of strings, empty if no matches, never null
+	 *******************************************************************/
+	public static JsonArray extractRegexAllAsJson(String regex, int groupIndex, String valueToSearch) {
+		
+		JsonArray result = new JsonArray();
+		Matcher m = getRegexMatcherCached(regex, valueToSearch);
+		while (m.find()) {
+			
+			if(m.groupCount() > groupIndex && groupIndex >= -1) {
+				result.add( m.group(groupIndex+1) );
+			}
+		}
+		
+		return result;
+	}
+	
+	/*******************************************************************
+	 * For example, to extract the parts separated by "-" of an id:
+	 * <ul>
+	 * 		<li><b>Text:&nbsp;</b>"a} {bb} ccc} {dddd}"</li>
+	 * 		<li><b>Method Call:&nbsp;</b>extractBounds("{", "}", Text) # </li>
+	 * 		<li><b>Result:&nbsp;</b>["bb", "dddd"]</li>
+	 * </ul>
+	 * 
+	 * @param left the left bound for the extraction
+	 * @param right the right bound for the extraction
+	 * @param searchThis the text to search through
+	 * 
+	 * @return ArrayList of strings, empty if no matches, never null
+	 *******************************************************************/
+	public static ArrayList<String> extractBounds(String left, String right, String searchThis) {
+		
+		//-------------------------
+		// Prepare Variables
+		boolean boundsEquals = left.equals(right);
+
+		//-------------------------
+		// Start Index
+		int startIndex = 1;
+		if(boundsEquals) {
+			startIndex = searchThis.indexOf(left, 0)+1;
+		}
+		
+		//-------------------------
+		// Extraction Loop
+		// Search first for the rightBound and then backwards for the leftBound.
+		// This will prevent to run into false positives on the left bound and getting unexpected long extractions.
+		ArrayList<String> results = new ArrayList<>();
+		int rightIndex = searchThis.indexOf(right, startIndex); // start at one, as right index cannot be at the start of the string
+		while(rightIndex != -1) {
+			
+			//----------------------------
+			// Find Left
+			int leftIndex = searchThis.lastIndexOf(left, rightIndex-1);
+			
+			//----------------------------
+			// Extract
+			if(leftIndex != -1) {
+				leftIndex += left.length();
+				String extracted = searchThis.substring(leftIndex, rightIndex);
+				results.add(extracted);
+			}
+			
+			//----------------------------
+			// Prepare next Round
+			searchThis = searchThis.substring(rightIndex); // substring to remove already found results.
+			rightIndex = searchThis.indexOf(right, 1);
+		}
+		
+		return results;
 	}
 	
 	/*******************************************************************
