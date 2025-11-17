@@ -31,28 +31,94 @@ public enum ByteSize {
 	
 	/*******************************************************************
 	 * Converts an amount of bytes to the chosen enum amount.
+	 * For example, if you call ByteSize.KB.convertBytes(2048, 0) the
+	 * return value will be "2".
 	 * 
 	 * @param bytes the size in bytes
 	 * 
 	 *******************************************************************/
-	public long convert(Long bytes){
+	public long convertBytes(Long bytes){
 		return bytes / bytesCount;
 	}
 	
 	/*******************************************************************
-	 * Converts an amount of bytes with the choosen decimal precision
-	 * to the chosen enum amount.
+	 * Converts an amount of bytes with the chosen decimal precision
+	 * to the chosen enum amount. 
+	 * For example, if you call ByteSize.KB.convertBytes(2048, 3) the
+	 * return value will be "2.000".
 	 * 
 	 * @param bytes the size in bytes
 	 * @param decimals the number of decimals
 	 * 
 	 *******************************************************************/
-	public BigDecimal convert(long bytes, int decimals){
+	public BigDecimal convertBytes(long bytes, int decimals){
 		return new BigDecimal( bytes / (bytesCount * 1.0) )
 					.setScale(decimals, RoundingMode.HALF_UP)
 				;
 	}
 	
+	/*******************************************************************
+	 * Converts an amount of bytes to the chosen enum amount.
+	 * For example, if you call ByteSize.KB.getAsBytes(2) the
+	 * return value will be "2048".
+	 * 
+	 * @param amount the amount to return in bytes
+	 * 
+	 *******************************************************************/
+	public long getAsBytes(int amount){
+		return amount * bytesCount;
+	}
+	
+	/*******************************************************************
+	 * Converts an amount of bytes to the chosen enum amount.
+	 * For example, if you call ByteSize.KB.getAsBytes(2) the
+	 * return value will be "2048".
+	 * 
+	 * @param amount the amount to return in bytes
+	 * 
+	 *******************************************************************/
+	public long getAsBytes(Long amount){
+		return amount * bytesCount;
+	}
+	
+	/*******************************************************************
+	 * Returns the size that is the most appropriate for displaying the
+	 * amount of bytes. 
+	 * For example, 999.99 MB will return "MB" while, 1 GB will return "GB"-
+	 * 
+	 * @param bytes the size in bytes
+	 * @return the best fitting size
+	 * 
+	 *******************************************************************/
+	public static ByteSize getBestSize(Long bytes){
+
+		if(bytes == null) { return ByteSize.B; }
+		
+	    if ( 	  bytes >= ByteSize.TB.bytesCount ){	return ByteSize.TB; }
+	    else if ( bytes >= ByteSize.GB.bytesCount ){ 	return ByteSize.GB; }
+	    else if ( bytes >= ByteSize.MB.bytesCount ){	return ByteSize.MB; }
+	    else if ( bytes >= ByteSize.KB.bytesCount ){ 	return ByteSize.KB; }
+	    else { 											return ByteSize.B;  }
+
+	}
+	
+	/*******************************************************************
+	 * Converts a size of bytes into a bytes String with a suffix like
+	 * KB, MB, GB or TB that can be read by a human being.
+	 * 
+	 * @param sizeBytes the size in bytes
+	 * @param decimals the number of decimals
+	 * 
+	 *******************************************************************/
+	public String toHumanReadableBytes(Long sizeBytes, int decimals){
+		
+		DecimalFormat dec = new DecimalFormat("0."+ "0".repeat(decimals) );
+		
+		return dec.format( this.convertBytes(sizeBytes, decimals) )
+				.concat(" ")
+				.concat(this.toString());
+	}
+		
 	/*******************************************************************
 	 * Converts a size of bytes into a bytes String with a suffix like
 	 * KB, MB, GB or TB that can be read by a human being.
@@ -65,17 +131,9 @@ public enum ByteSize {
 
 		if(sizeBytes == null) { return "0 B"; }
 		
-	    String readable = null;
+	    ByteSize best = getBestSize(sizeBytes);
+	    
+	    return best.toHumanReadableBytes(sizeBytes, decimals);
 
-	    DecimalFormat dec = new DecimalFormat("0."+ "0".repeat(decimals) );
-
-	    if ( 		sizeBytes >= ByteSize.TB.bytesCount ){	readable = dec.format( ByteSize.TB.convert(sizeBytes) ).concat(" TB");
-	    } else if ( sizeBytes >= ByteSize.GB.bytesCount ){ 	readable = dec.format( ByteSize.GB.convert(sizeBytes) ).concat(" GB");
-	    } else if ( sizeBytes >= ByteSize.MB.bytesCount ){	readable = dec.format( ByteSize.MB.convert(sizeBytes) ).concat(" MB");
-	    } else if ( sizeBytes >= ByteSize.KB.bytesCount ){ 	readable = dec.format( ByteSize.KB.convert(sizeBytes) ).concat(" KB");
-	    } else { 											readable = sizeBytes+" B";	}
-
-	    return readable;
-
-}
+	}
 }
