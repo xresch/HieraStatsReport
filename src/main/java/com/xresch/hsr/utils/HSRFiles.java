@@ -211,17 +211,17 @@ public class HSRFiles {
 	 * 
 	 * @param packagePath the name of the package e.g. "com.example.resources"
 	 *************************************************************/
-	public static boolean isAllowedResource(String packagePath) {
-		
-		boolean isAllowed = false;
-		for(String allowed : allowedPackages) {
-			if (packagePath.startsWith(allowed)) {
-				isAllowed = true;
-				break;
-			}
-		}	
-		return isAllowed;
-	}
+//	public static boolean isAllowedResource(String packagePath) {
+//		
+//		boolean isAllowed = false;
+//		for(String allowed : allowedPackages) {
+//			if (packagePath.startsWith(allowed)) {
+//				isAllowed = true;
+//				break;
+//			}
+//		}	
+//		return isAllowed;
+//	}
 	
 	/*************************************************************
 	 * Read a resource from the package and caches the file.
@@ -231,7 +231,7 @@ public class HSRFiles {
 	public static String readPackageResource(String packageName, String filename) {
 		String fileContent = null;
 		
-		if(isAllowedResource(packageName)) {
+		//if(isAllowedResource(packageName)) {
 			
 			packageName = packageName.replaceAll("\\.", "/");
 			String resourcePath = packageName + "/" + filename;
@@ -262,9 +262,9 @@ public class HSRFiles {
 				InputStream in = HSRFiles.class.getClassLoader().getResourceAsStream(resourcePath);
 				fileContent = readContentsFromInputStream(in);
 			}
-		}else {
-			logger.error("Not allowed to read resource from package: "+packageName, new Exception());
-		}
+//		}else {
+//			logger.error("Not allowed to read resource from package: "+packageName, new Exception());
+//		}
 		return fileContent;
 
 	}
@@ -278,7 +278,7 @@ public class HSRFiles {
 		
 		byte[] fileContent = null;
 		
-		if(isAllowedResource(packageName)) {
+		//if(isAllowedResource(packageName)) {
 			
 			packageName = packageName.replaceAll("\\.", "/");
 			String resourcePath = packageName + "/" + filename;
@@ -302,9 +302,9 @@ public class HSRFiles {
 				InputStream in = HSRFiles.class.getClassLoader().getResourceAsStream(resourcePath);
 				fileContent = readBytesFromInputStream(in);
 			}
-		}else {
-			logger.error("Not allowed to read resource from package: "+packageName);
-		}
+//		}else {
+//			logger.error("Not allowed to read resource from package: "+packageName);
+//		}
 		
 		return fileContent;
 

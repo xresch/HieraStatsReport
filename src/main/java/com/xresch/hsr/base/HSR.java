@@ -11,6 +11,7 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
 import com.xresch.hsr.stats.HSRSLA;
 import com.xresch.hsr.stats.HSRStatsEngine;
+import com.xresch.hsr.utils.HSRCSV;
 import com.xresch.hsr.utils.HSRFiles;
 import com.xresch.hsr.utils.HSRJson;
 import com.xresch.hsr.utils.HSRLog;
@@ -57,6 +58,7 @@ public class HSR {
 	/***********************************************************************************
 	 * Utility References
 	 ***********************************************************************************/
+	public static class CSV extends HSRCSV {}
 	public static class Files extends HSRFiles {}
 	public static class JSON extends HSRJson {}
 	public static class Math extends HSRMath {}
