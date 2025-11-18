@@ -55,8 +55,8 @@ public class HSRRecordStats {
 		, type("VARCHAR(32)")
 		, test("VARCHAR(4096)")
 		, usecase("VARCHAR(4096)")
-		, path("VARCHAR(4096)")
-		, name("VARCHAR(4096)")
+		, path("VARCHAR(65536)")
+		, name("VARCHAR(65536)")
 		, code("VARCHAR(32)")
 		, granularity("INTEGER")
 		;
