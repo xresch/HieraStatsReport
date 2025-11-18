@@ -15,11 +15,13 @@ import org.slf4j.LoggerFactory;
 import com.xresch.hsr.database.HSRAgeOutConfig;
 import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.stats.HSRStatsEngine;
+import com.xresch.hsr.utils.HSRLogInterceptorDefault;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import ch.qos.logback.core.util.FileSize;
@@ -42,6 +44,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static TreeMap<String,String> properties = new TreeMap<>();
 
 	private static boolean debug = false;
+	
+	private static boolean isLogInterceptorSet = false;
 	
 	private static boolean enableStatsProcessMemory = true;
 	private static boolean enableStatsCPU = true;
@@ -82,6 +86,14 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			isEnabled = true;
 			reportingIntervalSec = reportingInterval;
 			
+			//----------------------------
+			// Add Default Log Interceptor
+			if(!isLogInterceptorSet) {
+				setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN) );
+			}
+			
+			//----------------------------
+			// Add Default Properties
 			HSRConfig.addProperty("[HSR] reportingInterval", reportingInterval + " sec");
 			HSRConfig.addProperty("[HSR] timeStartMillis", "" + STARTTIME_MILLIS);
 			HSRConfig.addProperty("[HSR] timeStartTimestamp", HSR.Time.formatMillisAsTimestamp(STARTTIME_MILLIS));
@@ -96,6 +108,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			HSRConfig.addProperty("[HSR] executionID", "" + EXECUTION_ID);
 			HSRConfig.addProperty("[HSR] debug", "" + debug);
 			
+			//----------------------------
+			// Churn up the engines! VROOM!!!
 			HSRStatsEngine.start(reportingInterval);
 		}
 	}
@@ -244,6 +258,19 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	    HSRConfig.addProperty("[HSR] Log Level: "+loggerName, level.toString());
 	}
 	
+	/******************************************************************
+	 * Sets a TurboFilter to logback that can be used to intercept
+	 * logs. This method has to be called before HSRConfig.enable().
+	 ******************************************************************/
+    public static void setLogInterceptor(TurboFilter filter) {
+    	
+    	isLogInterceptorSet = true;
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        context.resetTurboFilterList(); // optional: rebuilds internal structures
+        context.addTurboFilter(filter);
+
+    }
+    
 	private static final Object LOCK = new Object();
     private static final String APPENDER_NAME = "ROOT-ROLLING-FILE";
 	

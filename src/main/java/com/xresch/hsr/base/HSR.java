@@ -482,7 +482,7 @@ public class HSR {
 	}
 
 	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
+	 * Adds an info message to the report.
 	 ***********************************************************************************/
 	public static HSRRecord addInfoMessage(String message){
 				
@@ -492,7 +492,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
+	 * Add a warning essage to the report.
 	 ***********************************************************************************/
 	public static HSRRecord addWarnMessage(String message){
 				
@@ -501,7 +501,16 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
+	 * Add a warn message and an exception to the report.
+	 ***********************************************************************************/
+	public static void addWarnMessage(String message, Throwable t){
+				
+		addItem(HSRRecordType.MessageWarn, message).status(HSRRecordStatus.None);
+		addException(t);
+	}
+	
+	/***********************************************************************************
+	 * Add an error message to the report.
 	 ***********************************************************************************/
 	public static HSRRecord addErrorMessage(String message){
 				
@@ -509,9 +518,43 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * Add an error message and an exception to the report.
+	 ***********************************************************************************/
+	public static void addErrorMessage(String message, Throwable t){
+				
+		addItem(HSRRecordType.MessageError, message).status(HSRRecordStatus.None);
+		addException(t);
+	}
+	
+	/***********************************************************************************
+	 * Add a log message to the report.
+	 * This is mainly useful for log interceptors.
+	 ***********************************************************************************/
+	public static HSRRecord addLogMessage(Level level, String message){
+		
+		switch(level.levelInt) {
+		
+			case Level.ERROR_INT: return addErrorMessage(message);
+			case Level.WARN_INT: return addWarnMessage(message);
+			default: return addWarnMessage(message);
+		
+		}
+	}
+	/***********************************************************************************
+	 * Add a log message and an exception(if not null) to the report.
+	 ***********************************************************************************/
+	public static void addLogMessage(Level level, String message, Throwable t){
+		
+		addLogMessage( level, message);
+		addException(t);
+	}
+	
+	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
 	 ***********************************************************************************/
 	public static HSRRecord addException(Throwable e){	
+		if(e == null) { return null; }
+		
 		String message = HSRConfig.hooks.createExceptionItemName(e);
 		return addItem(HSRRecordType.Exception, message).status(HSRRecordStatus.None);
 	}
