@@ -195,7 +195,7 @@ This will add part of the exception stack trace to the report.
 HSR.addException(new Exception("This is an exception."));
 ```
 
-### Status: Success or Rail
+### Status: Success or Fail
 You can set success or fail for your metrics by using `HSR.end(boolean)`.
 In the following example, also an error message and an exception are added to the step.
 
