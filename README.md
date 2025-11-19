@@ -497,3 +497,53 @@ public class TestExampleJUnitPlaywright {
   }
 }
 ```
+
+
+# Example: Measuring HTTP Calls
+Following is an example on how to measure an HTTP call created with Apache HTTPClient5.
+
+```java
+/******************************************************************************************************
+ * 
+ ******************************************************************************************************/
+public static void measureHTTPCall(CloseableHttpClient httpClient, HttpUriRequestBase requestBase, String metric){
+	
+	//----------------------------------
+	// Variables
+	ClassicHttpResponse response = null
+	HSRRecord record = null;
+	
+	//----------------------------------
+	// Send Request and Read Response
+	try {
+		
+		//--------------------------
+		// Start Measurement
+		HSR.start(metric, request.sla);
+		
+		//--------------------------
+		// Execute Request
+		Boolean success = httpClient.execute(requestBase, new HttpClientResponseHandler<Boolean>() {
+			@Override
+			public Boolean handleResponse(ClassicHttpResponse r) throws HttpException, IOException {
+				// [...] custom responsehandlings here						
+				response = r;
+				return r.getStatus() < 400;
+			}
+		});
+			
+		//--------------------------
+		// End Measurement	
+		record = HSR.end(success).code(""+response.getStatus()); 
+
+	} catch (Throwable e) {
+		
+		HSR.addErrorMessage("Exception during HTTP request: "+e.getMessage(), e);
+		
+		if(record != null){
+			record = HSR.end(false).code(""+response.getStatus());
+		}
+		
+	}
+}
+```
