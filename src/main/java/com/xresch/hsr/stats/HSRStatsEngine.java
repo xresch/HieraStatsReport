@@ -1021,8 +1021,10 @@ public class HSRStatsEngine {
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
-						logger.debug("Report data to: "+reporter.getClass().getName());
-						reporter.reportRecords(clone);
+						if(!isStopped) { // prevent some exceptions
+							logger.debug("Report data to: "+reporter.getClass().getName());
+							reporter.reportRecords(clone);
+						}
 					}
 				}).start();
 				
