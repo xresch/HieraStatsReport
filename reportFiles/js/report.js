@@ -2734,6 +2734,10 @@ function drawTable(target, data, showFields, typeFilterArray){
 						{	label: 'JSON',
 							name: 'json',
 							renderdef: {}
+						},
+						{	label: 'Text Table',
+							name: 'texttable',
+							renderdef: {}
 						}
 					],
 				},
