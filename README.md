@@ -181,8 +181,10 @@ You can add messages by using the methods `HSR.add*Message(String)`:
 
 ```java
 //-------------------------------
-// Add Error Message
-HSR.addErrorMessage("Exception Occured: Figure it out!");
+// Add Message
+HSR.addInfoMessage("The train will leave at 4:16 PM.");
+HSR.addWarnMessage("The train is delayed");
+HSR.addErrorMessage("The train has been cancelled.");
 ```
 
 ### Exceptions
