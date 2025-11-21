@@ -123,6 +123,42 @@ HSRConfig.addReporter(
 );
 ```
 
+### DB Reporter Age Out Settings
+Aging-out data is the process of reducing the amount of datapoints by aggregating them when they reach a certain age.
+This is done to keep the database size in check.
+
+When enabled, HSR will trigger an age-out when a test is started.
+You anable it as follows:
+
+```java
+HSRConfig.setAgeOut(true);
+//HSRConfig.setAgeOutConfig(new HSRAgeOutConfig().keep15MinFor(...));
+```
+
+The default age out settings can be found in `HSRAgeOutConfig.java`:
+
+```java
+private Duration keep1MinFor = Duration.ofDays(90); 		// Default 3 months
+private Duration keep5MinFor = Duration.ofDays(180);		// Default 6 months
+private Duration keep10MinFor = Duration.ofDays(365);		// Default 1 year
+private Duration keep15MinFor = Duration.ofDays(365 * 3);	// Default 3 years
+private Duration keep60MinFor = Duration.ofDays(365 * 20);	// Default 20 years
+```
+
+To customize the default age out times, you can do the following:
+
+```java
+HSRConfig.setAgeOutConfig(
+	new HSRAgeOutConfig()
+		.keep1MinFor(Duration.ofDays(30))
+		.keep5MinFor(Duration.ofDays(60))
+		.keep10MinFor(Duration.ofDays(90))
+		.keep15MinFor(Duration.ofDays(120))
+		.keep60MinFor(Duration.ofDays(180))
+);
+```
+
+
 
 ### Custom Reporters
 You can create your custom reporter by implementing the interface HSRReporter.
