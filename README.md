@@ -84,11 +84,12 @@ HSR ships with various default reporters, or you can create your own reporter cl
 Reporters are registered with `HSRConfig.addReporter()` and should be done before calling `HSRConfig.enable()`.
 
 ### Sysout Reporter
-To get a real time view on your data, you can log the metrics to the console using the default SysoutReporters:
+To get a real time view on your data, you can log the metrics to the console using the default SysoutReporters, best to only use one at the time:
 
 ```java
 //--------------------------
 // Define Sysout Reporters
+HSRConfig.addReporter(new HSRReporterSysoutAsciiTable());
 HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 HSRConfig.addReporter(new HSRReporterSysoutJson());
 ```

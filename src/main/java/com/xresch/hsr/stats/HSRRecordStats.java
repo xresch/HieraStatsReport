@@ -723,6 +723,14 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	}
 	
 	/******************************************************************
+	 * Returns the granularity in seconds.
+	 ******************************************************************/
+	public int granularity() {
+		return granularity;
+	}
+	
+	
+	/******************************************************************
 	 * Returns the stats identifier
 	 ******************************************************************/
 	public String statsIdentifier() {

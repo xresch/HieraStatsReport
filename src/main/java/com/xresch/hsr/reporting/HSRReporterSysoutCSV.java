@@ -30,11 +30,15 @@ public class HSRReporterSysoutCSV implements HSRReporter {
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
 		
-		System.out.println("\r\n" + HSRRecordStats.getCSVHeader(separator) );
+		StringBuilder output = new StringBuilder();
+		output.append("\r\n" + HSRRecordStats.getCSVHeader(separator) )
+				.append("\r\n");
 		for(HSRRecordStats record : records ) {
-			System.out.println( record.toCSV(separator) );
+			output.append( record.toCSV(separator) ).append("\r\n");
 		}
-		System.out.println(" ");
+		output.append("\r\n");
+		
+		System.out.println(output.toString());
 	}
 	
 	/****************************************************************************
