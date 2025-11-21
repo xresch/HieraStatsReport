@@ -21,11 +21,15 @@ import com.xresch.hsr.stats.HSRRecordStats;
  **************************************************************************************************************/
 public class HSRReporterSysoutAsciiTable implements HSRReporter {
 
+	private int nameMaxLength = 100;
+	
 	/****************************************************************************
 	 * 
+	 * @param nameMaxLength the maximum amount of characters shown in the table
+	 * for the name field.
 	 ****************************************************************************/
-	public HSRReporterSysoutAsciiTable (){
-
+	public HSRReporterSysoutAsciiTable (int nameMaxLength){
+		this.nameMaxLength = nameMaxLength;
 	}
 
 	/****************************************************************************
@@ -33,12 +37,14 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
-		System.out.println( generateAsciiTable(records) );
+		
+		System.out.println( generateAsciiTable(records, nameMaxLength) );
+		
 	}
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public static String generateAsciiTable(ArrayList<HSRRecordStats> records) {
+	public static String generateAsciiTable(ArrayList<HSRRecordStats> records, int nameMaxLength) {
 
 	    // Build header columns
 	    ArrayList<String> columns = new ArrayList<>();
@@ -56,12 +62,19 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	        row.add(record.test());
 	        row.add(record.usecase());
 	        row.add(record.path());
-	        row.add(record.name());
+	        
+	        String name = record.name().trim().replaceAll("\r\n|\n|\t", " ");
+	        if(name.length() <= nameMaxLength) {
+	        	row.add(name);
+	        }else {
+	        	row.add(name.substring(0, nameMaxLength-3) + "...");
+	        }
+	        
 	        row.add(record.code());
 	        row.add(String.valueOf(record.granularity()));
 
-	        for (String name : HSRRecordStats.valueNames) {
-	            BigDecimal val = record.getValues().get(name);
+	        for (String valueName : HSRRecordStats.valueNames) {
+	            BigDecimal val = record.getValues().get(valueName);
 	            row.add(val == null ? "0" : val.stripTrailingZeros().toPlainString());
 	        }
 

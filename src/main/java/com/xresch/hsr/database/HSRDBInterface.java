@@ -132,7 +132,7 @@ public class HSRDBInterface {
 	 ****************************************************************************/
 	public void reportTestSettingsEndTime() {
 		
-		long endTime = System.currentTimeMillis();
+		long endTime = System.nanoTime()  / 1_000_000;
 		
 		String sqlUpdateTime = "UPDATE "+tablenameTestsettings
 				+ " SET endtime = "+endTime

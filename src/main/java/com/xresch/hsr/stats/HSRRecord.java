@@ -127,7 +127,7 @@ public class HSRRecord {
 			, String recordName
 			){
 		
-		long now = System.currentTimeMillis();
+		long now = System.nanoTime() / 1_000_000;
 		startTime(now); 
 		endTime(now);  // setting end = start, for items that do not measure time
 		
@@ -168,7 +168,7 @@ public class HSRRecord {
 			, String recordName
 			){
 		
-		long now = System.currentTimeMillis();
+		long now = System.nanoTime() / 1_000_000;
 		startTime(now); 
 		endTime(now);  // setting end = start, for items that do not measure time
 		
@@ -195,7 +195,7 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		long now = System.currentTimeMillis();
+		long now = System.nanoTime() / 1_000_000;
 		startTime(now); 
 		endTime(now);  // setting end = start, for items that do not measure time
 		
@@ -225,7 +225,7 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		long now = System.currentTimeMillis();
+		long now = System.nanoTime() / 1_000_000;
 		startTime(now); 
 		endTime(now);  // setting end = start, for items that do not measure time
 		
@@ -535,7 +535,7 @@ public class HSRRecord {
 	 ***********************************************************************************/
 	public HSRRecord end(){
 		
-		long endMillis = System.currentTimeMillis();
+		long endMillis = System.nanoTime()  / 1_000_000;
 		this.endTime(endMillis);
 		
 		long duration = (endMillis - startMillis);

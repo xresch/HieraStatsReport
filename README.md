@@ -89,7 +89,7 @@ To get a real time view on your data, you can log the metrics to the console usi
 ```java
 //--------------------------
 // Define Sysout Reporters
-HSRConfig.addReporter(new HSRReporterSysoutAsciiTable());
+HSRConfig.addReporter(new HSRReporterSysoutAsciiTable(75));
 HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 HSRConfig.addReporter(new HSRReporterSysoutJson());
 ```
