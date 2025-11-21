@@ -45,6 +45,13 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
+	
+	// !#!#!#!#!#!#!# IMPORTANT !#!#!#!#!#!#!#
+	// If you change this in any way make sure to test the ageOut mechanism again.
+	// Easiest way to test: Generate data in the database and use a DB tool to adjust the time column. 
+	// Also you might want to check the Generated SQL in HSRRecordStats.
+	// all Values with  "isGauge=true" need special handling in aggregation.
+	// !#!#!#!#!# END OF IMPORTANCE !#!#!#!#!#
 	public enum HSRRecordType{
 		  Step(false, false)
 		, Group(false, false)

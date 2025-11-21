@@ -98,7 +98,11 @@ public class HSRRecordStats {
 	// !#!#!#!#!# END OF IMPORTANCE !#!#!#!#!#
 
 	public enum HSRMetric {
-		  count(true, "SUM(\"{type}_count\")")
+		  count(true, """
+					( CASE 
+				        WHEN type IN ('System', 'User', 'Gauge') THEN AVG({type}_count)
+				        ELSE SUM({type}_count)
+				    END )""")
 		, min(true, "MIN(\"{type}_min\")")
 		, avg(true, "AVG(\"{type}_avg\")")
 		, max(true, "MAX(\"{type}_max\")")
@@ -168,6 +172,7 @@ public class HSRRecordStats {
 					valueNames.add(valueName);
 					
 					sqlAggregationPart += "\r\n, "
+							+ metric.sqlAggregation
 							+ " AS \"" + valueName + "\""
 							;
 				}
@@ -529,6 +534,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 		String fieldsNoTimeGranularity = fieldNamesJoined
 			.replaceAll("\"time\",", "")
 			.replaceAll(",\"granularity\"", "");
+		
 		// it's ridiculously complicated, but well... 
 		// at least the next guy adjusting anything will be able to backtrack the problem
 		sqlAggregateTempStats = sqlAggregateTempStats
@@ -538,6 +544,9 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 							.replaceAll("\\{namesWithoutTimeOrGranularity\\}", fieldsNoTimeGranularity)
 							.replaceAll("\\{valuesAggregation\\}", HSRMetric.getSQLAggregationPart())
 							;
+		
+		
+		//System.out.println(sqlAggregateTempStats);
 		
 		return sqlAggregateTempStats;
 	}

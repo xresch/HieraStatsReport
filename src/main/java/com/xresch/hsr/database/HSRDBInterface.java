@@ -34,7 +34,7 @@ public class HSRDBInterface {
 	private String sqlCreateTableTestSettings;
 	private String sqlAggregateStats;
 	
-	public static final String PACKAGE_RESOURCES = "com.performetriks.gatlytron.database.resources";
+	public static final String PACKAGE_RESOURCES = "com.xresch.hsr.database.resources";
 	static { HSRFiles.addAllowedPackage(PACKAGE_RESOURCES); }
 	
 
