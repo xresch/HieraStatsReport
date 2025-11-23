@@ -520,7 +520,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 				rawDataLogWriter.flush();
 				rawDataLogWriter.close();
 			} catch (IOException e) {
-				logger.error("Error while closing raw data log writer.", e);
+				// swallow the exception to not scare the lovely users. ^^'
 			}
 		}
 		
