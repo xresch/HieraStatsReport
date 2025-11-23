@@ -373,6 +373,7 @@ public class HSRDBInterface {
 		//----------------------------
 		// Iterate all granularities
 		for(int granularitySec : HSRTime.AGE_OUT_GRANULARITIES) {
+			
 			//--------------------------
 			// Get Age Out Time
 			long ageOutTime = this.getAgeOutTime(granularitySec);
