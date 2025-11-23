@@ -27,6 +27,7 @@ public class HSRTestSettings {
 	private static String sqlCreateTableTemplate = "CREATE TABLE IF NOT EXISTS {tablename} ("
 			+ "		    time BIGINT \r\n"
 			+ "		  , endtime BIGINT \r\n"
+			+ "		  , testid BIGINT \r\n"
 			+ "		  , execID VARCHAR(4096) \r\n"
 			+ "		  , test VARCHAR(4096) \r\n"
 			+ "		  , usecase VARCHAR(4096) \r\n"
@@ -36,8 +37,8 @@ public class HSRTestSettings {
 	
 	private static String sqlInsertIntoTemplate = 
 						  "INSERT INTO {tablename} "
-						+ " (time, endtime, execID, test, usecase, settings) "
-						+ " VALUES (?,?,?,?,?,?)"
+						+ " (time, endtime, testid, execID, test, usecase, settings) "
+						+ " VALUES (?,?,?,?,?,?,?)"
 						;
 
 	
@@ -52,14 +53,14 @@ public class HSRTestSettings {
 	/***********************************************************************
 	 * Returns a SQL template for creating the database table.
 	 ***********************************************************************/
-	public static String getSQLCreateTableTemplate(String tableName) {
+	public static String createSQL_CreateTableTestSettings(String tableName) {
 		return sqlCreateTableTemplate.replace("{tablename}", tableName);
 	}
 	
 	/***********************************************************************
 	 * Insert into database.
 	 ***********************************************************************/
-	public boolean insertIntoDatabase(DBInterface db, String tableName) {
+	public boolean insertIntoDatabase(DBInterface db, int testid, String tableName) {
 		
 		if(db == null || tableName == null) { return false; }
 
@@ -70,6 +71,7 @@ public class HSRTestSettings {
 		
 		valueList.add(HSRConfig.STARTTIME_MILLIS);
 		valueList.add(null); //report nothing for endtime
+		valueList.add(testid);
 		valueList.add(HSRConfig.EXECUTION_ID);
 		valueList.add(HSR.getTest());
 		valueList.add(usecase);

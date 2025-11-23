@@ -226,8 +226,9 @@ public class HSRRecordStats {
 	private static String sqlTableColumnNames;
 	static {
 		
-		sqlTableColumnDefinitions = "(";
-		sqlTableColumnNames = "(";
+		// testid is a separate field only used for databases.
+		sqlTableColumnDefinitions = "(testid BIGINT,\r\n";
+		sqlTableColumnNames = "(testid,\r\n";
 		
 			//-----------------------------------------
 			// SQL Create Table Template
@@ -256,11 +257,11 @@ public class HSRRecordStats {
 	
 	private static String csvHeaderTemplate = fieldNamesJoined+","+valueNamesJoined;
 	private static String sqlCreateTableTemplate = "CREATE TABLE IF NOT EXISTS {tablename} "+sqlTableColumnDefinitions;
-			;
+			
 	
 	private static String sqlInsertIntoTemplate = "INSERT INTO {tablename} "+sqlTableColumnNames
 													  + " VALUES (?"+ 
-													  			", ?".repeat( fieldNames.size() + valueNames.size() - 1 ) 
+													  			", ?".repeat( fieldNames.size() + valueNames.size() ) 
 													  +")";
 
 	
@@ -458,7 +459,7 @@ public class HSRRecordStats {
 	 * Returns a SQL Create Table statement for the statistics table
 	 * with the provided table name inserted.
 	 ***********************************************************************/
-	public static String getSQLCreateTableTemplate(String tableName) {
+	public static String createSQL_CreateTableStats(String tableName) {
 		return sqlCreateTableTemplate.replace("{tablename}", tableName);
 	}
 	
@@ -527,7 +528,7 @@ AND "granularity" < ?
 GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 * </code></pre>
 	 ***********************************************************************/
-	public static String createAggregationSQL(String tablenameStats, String tablenameTempAggregation) {
+	public static String createSQL_AggregateStats(String tablenameStats, String tablenameTempAggregation) {
 
 		String sqlAggregateTempStats =  HSRFiles.readPackageResource(HSRDBInterface.PACKAGE_RESOURCES, "sql_createTempAggregatedStatistics.sql");
 		
@@ -562,7 +563,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	/***********************************************************************
 	 * Returns an insert statement 
 	 ***********************************************************************/
-	public boolean insertIntoDatabase(DBInterface db, String tableName) {
+	public boolean insertIntoDatabase(DBInterface db, int testID, String tableName) {
 
 		if(db == null || tableName == null) { return false; }
 		
@@ -570,6 +571,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	
 		ArrayList<Object> valueList = new ArrayList<>();
 		
+		valueList.add(testID);
 		valueList.add(time);
 		valueList.add(type.toString());
 		valueList.add(test);

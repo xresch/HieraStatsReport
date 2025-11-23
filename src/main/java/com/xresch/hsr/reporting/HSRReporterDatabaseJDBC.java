@@ -17,7 +17,8 @@ import com.xresch.hsr.stats.HSRRecordStats;
 public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 
 	private DBInterface db;
-	private HSRDBInterface gtronDB;
+	private HSRDBInterface hsrDB;
+	private int testID = -1;
 	
 	/****************************************************************************
 	 * 
@@ -38,12 +39,12 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 		
 		db = DBInterface.createDBInterface(uniqueName, driverName, jdbcURL, username, password);
 		
-		gtronDB = this.getGatlytronDB(db, tableNamePrefix);
+		hsrDB = this.getGatlytronDB(db, tableNamePrefix);
 
-		gtronDB.initializeDB();
+		hsrDB.initializeDB();
 		
 		if(HSRConfig.isAgeOut()) {
-			gtronDB.ageOutStatistics();
+			hsrDB.ageOutStatistics();
 		}
 		
 	}
@@ -62,15 +63,16 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
-		gtronDB.reportRecords(records);
+		hsrDB.reportRecords(testID, records);
 	}
 	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportTestSettings(ArrayList<HSRTestSettings> testsettings) {
-		gtronDB.reportTestSettings(testsettings);
+	public void firstReport(ArrayList<HSRTestSettings> testsettings) {
+		testID = hsrDB.insertTestGetPrimaryKey();
+		hsrDB.reportTestSettings(testID, testsettings);
 	}
 	
 	/****************************************************************************
@@ -78,7 +80,7 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void terminate() {
-		gtronDB.reportTestSettingsEndTime();
+		hsrDB.reportEndTime(testID);
 		
 		db.closeAll(); // fixes exception on test end
 	}

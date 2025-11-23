@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
@@ -26,10 +27,12 @@ public class HSRDBInterface {
 	private DBInterface db;
 	
 	public final String tablenamePrefix;
+	public final String tablenameTests;
 	public final String tablenameStats;
 	public final String tablenameTestsettings;
 	public final String tablenameTempAggregation;
 	
+	private String sqlCreateTableTests;
 	private String sqlCreateTableStats;
 	private String sqlCreateTableTestSettings;
 	private String sqlAggregateStats;
@@ -38,7 +41,24 @@ public class HSRDBInterface {
 	static { HSRFiles.addAllowedPackage(PACKAGE_RESOURCES); }
 	
 
-	private static final String PROCEDURE_AGGREGATE_PERC = "AGGREGATE_PERC";
+	//private static final String PROCEDURE_AGGREGATE_PERC = "AGGREGATE_PERC";
+	
+	private static final String sqlCreateTableTemplate = """
+			CREATE TABLE IF NOT EXISTS {tablename} (
+			    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+			  , execid VARCHAR(4096)
+			  , time BIGINT
+			  , endtime BIGINT
+			  , name VARCHAR(65536)
+			  , properties VARCHAR(65536)
+			)"""
+			;
+	
+	private static String sqlInsertIntoTemplate = """
+			INSERT INTO {tablename}
+				(execid, time, endtime, name, properties)
+				VALUES (?,?,?,?,?)"""
+			;
 	
 	/************************************************************************
 	 * 
@@ -47,15 +67,30 @@ public class HSRDBInterface {
 	 ************************************************************************/
 	public HSRDBInterface(DBInterface db, String tablenamePrefix) {
 		
+		//-----------------------------------
+		// Set table names
 		this.db = db;
 		this.tablenamePrefix = tablenamePrefix;
+		this.tablenameTests = tablenamePrefix+"_tests";
 		this.tablenameStats = tablenamePrefix+"_stats";
 		this.tablenameTestsettings = tablenamePrefix+"_testsettings";
 		this.tablenameTempAggregation = tablenamePrefix+"_temp_aggregation";
-
-		this.setCreateTableSQLStats( HSRRecordStats.getSQLCreateTableTemplate(tablenameStats) );
-		this.setCreateTableSQLTestSettings( HSRTestSettings.getSQLCreateTableTemplate(tablenameTestsettings) );
-		this.setAggregateSQL( HSRRecordStats.createAggregationSQL(tablenameStats, tablenameTempAggregation) );
+		
+		//-----------------------------------
+		// Add defaults SQLs, can be overridden
+		// if a DB does not support this flavor
+		this.setSQLCreateTableTests( 		HSRDBInterface.createSQL_CreateTableTests(tablenameTests) );
+		this.setSQLCreateTableStats( 		HSRRecordStats.createSQL_CreateTableStats(tablenameStats) );
+		this.setSQLCreateTableTestSettings( HSRTestSettings.createSQL_CreateTableTestSettings(tablenameTestsettings) );
+		this.setSQLAggregateStats( 			HSRRecordStats.createSQL_AggregateStats(tablenameStats, tablenameTempAggregation) );
+	}
+	
+	/***********************************************************************
+	 * Returns a SQL Create Table statement for the statistics table
+	 * with the provided table name inserted.
+	 ***********************************************************************/
+	public static String createSQL_CreateTableTests(String tableName) {
+		return sqlCreateTableTemplate.replace("{tablename}", tableName);
 	}
 	
 	/****************************************************************************
@@ -67,6 +102,7 @@ public class HSRDBInterface {
 		
 		//---------------------------
 		// CREATE TABLES
+		db.preparedExecute(sqlCreateTableTests);
 		db.preparedExecute(sqlCreateTableStats);
 		db.preparedExecute(sqlCreateTableTestSettings);
 		
@@ -83,9 +119,31 @@ public class HSRDBInterface {
 //			/* Do nothing */
 //		}
 		
-		//String createProcedure =  GatlytronFiles.readPackageResource(PACKAGE_RESOURCES, "createProcedureAggregatePerc.sql");
+		//String createProcedure =  HSR.Files.readPackageResource(PACKAGE_RESOURCES, "createProcedureAggregatePerc.sql");
 
 		//db.preparedExecute(createProcedure);
+		
+	}
+	
+	/***********************************************************************
+	 * Insert into database.
+	 ***********************************************************************/
+	public int insertTestGetPrimaryKey() {
+		
+		if(tablenameTests == null) { return -1; }
+
+		String insertSQL = sqlInsertIntoTemplate.replace("{tablename}", tablenameTests);
+	
+		ArrayList<Object> valueList = new ArrayList<>();
+		
+		//(execid, time, endtime, name, properties)
+		valueList.add(HSRConfig.EXECUTION_ID);
+		valueList.add(HSRConfig.STARTTIME_MILLIS);
+		valueList.add(null); //report nothing for endtime
+		valueList.add(HSR.getTest());
+		valueList.add(HSR.JSON.toJSON(HSRConfig.getProperties()));
+	
+		return db.preparedInsertGetKey(insertSQL, "id", valueList.toArray());
 		
 	}
 
@@ -107,10 +165,10 @@ public class HSRDBInterface {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(int testID, ArrayList<HSRRecordStats> records) {
 		
 		for(HSRRecordStats record : records ) {
-			record.insertIntoDatabase(db, tablenameStats);
+			record.insertIntoDatabase(db, testID, tablenameStats);
 		}
 
 	}
@@ -118,27 +176,37 @@ public class HSRDBInterface {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public void reportTestSettings(ArrayList<HSRTestSettings> testsettings) {
+	public void reportTestSettings(int testid, ArrayList<HSRTestSettings> testsettings) {
 		
 		ArrayList<HSRTestSettings> testSettingsList = HSRConfig.getTestSettings();
 		
 		for(HSRTestSettings usecase : testSettingsList ) {
-			usecase.insertIntoDatabase(db, tablenameTestsettings);
+			usecase.insertIntoDatabase(db, testid, tablenameTestsettings);
 		}
 	}
 	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public void reportTestSettingsEndTime() {
+	public void reportEndTime(int testid) {
 		
 		long endTime = System.currentTimeMillis();
 		
-		String sqlUpdateTime = "UPDATE "+tablenameTestsettings
+		//----------------------
+		// Test Settings
+		String sqlUpdateTestsettings = "UPDATE "+tablenameTestsettings
 				+ " SET endtime = "+endTime
-				+ " WHERE execid = '"+HSRConfig.EXECUTION_ID+"'";
+				+ " WHERE testid = '"+testid+"'";
 		
-		db.preparedExecute(sqlUpdateTime);
+		db.preparedExecute(sqlUpdateTestsettings);
+		
+		//----------------------
+		// Test Settings
+		String sqlUpdateTests = "UPDATE "+tablenameTests
+				+ " SET endtime = "+endTime
+				+ " WHERE testid = '"+testid+"'";
+		
+		db.preparedExecute(sqlUpdateTests);
 		
 	}
 	
@@ -218,7 +286,7 @@ public class HSRDBInterface {
 		//--------------------------------------------
 		// Create Temp Table
 		String createTempTable = 
-				HSRRecordStats.getSQLCreateTableTemplate(tablenameTempAggregation);
+				HSRRecordStats.createSQL_CreateTableStats(tablenameTempAggregation);
 
 		db.preparedExecute(createTempTable);
 		
@@ -360,11 +428,20 @@ public class HSRDBInterface {
 	// GETTERS & SETTERS
 	//###########################################################################################
 
+	public String getCreateTableSQLTests() {
+		return sqlCreateTableTests;
+	}
+	
+	public void setSQLCreateTableTests(String sql) {
+		this.sqlCreateTableTests = sql;
+	}
+	
+	
 	public String getCreateTableSQLStats() {
 		return sqlCreateTableStats;
 	}
 
-	public void setCreateTableSQLStats(String statsSQL) {
+	public void setSQLCreateTableStats(String statsSQL) {
 		this.sqlCreateTableStats = statsSQL;
 	}
 
@@ -372,7 +449,7 @@ public class HSRDBInterface {
 		return sqlCreateTableTestSettings;
 	}
 
-	public void setCreateTableSQLTestSettings(String createTableSQLTestSettings) {
+	public void setSQLCreateTableTestSettings(String createTableSQLTestSettings) {
 		this.sqlCreateTableTestSettings = createTableSQLTestSettings;
 	}
 	
@@ -380,7 +457,7 @@ public class HSRDBInterface {
 		return sqlAggregateStats;
 	}
 	
-	public void setAggregateSQL(String aggregateSQL) {
+	public void setSQLAggregateStats(String aggregateSQL) {
 		this.sqlAggregateStats = aggregateSQL;
 	}
 	

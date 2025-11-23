@@ -562,6 +562,13 @@ public class HSRStatsEngine {
 		
 		if(groupedRecordsInterval.isEmpty()) { return; }
 		
+		//-------------------------------
+		// First Report
+		if(isFirstReport) {
+			isFirstReport = false;
+			doFirstReport();
+		}
+		
 		//----------------------------------------
 		// Create User Records
 
@@ -756,13 +763,6 @@ public class HSRStatsEngine {
 		//----------------------------------
 		// Print Raw
 		HSRConfig.writeToRawDataLog(rawLog.toString());
-		
-		//-------------------------------
-		// Report Test Settings
-		if(isFirstReport) {
-			isFirstReport = false;
-			sendTestSettingsToDBReporter();
-		}
 		
 	}
 
@@ -1100,14 +1100,14 @@ public class HSRStatsEngine {
 	 * Send the test settings to Database Reporters.
 	 * 
 	 ***************************************************************************/
-	private static void sendTestSettingsToDBReporter() {
+	private static void doFirstReport() {
 		
 		//-------------------------
 		// Send Clone of list to each Reporter
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			if(reporter instanceof HSRReporterDatabase) {
 				logger.debug("Send TestSettings Data to: "+reporter.getClass().getName());
-				((HSRReporterDatabase)reporter).reportTestSettings(HSRConfig.getTestSettings());
+				((HSRReporterDatabase)reporter).firstReport(HSRConfig.getTestSettings());
 			}
 		}
 		

@@ -22,6 +22,8 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	private DBInterface db;
 	HSRDBInterface hsrDB;
 	
+	private int testID = -1;
+	
 	/****************************************************************************
 	 * 
 	 * @param servername name of the database server
@@ -57,15 +59,16 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
-		hsrDB.reportRecords(records);
+		hsrDB.reportRecords(testID, records);
 	}
 	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportTestSettings(ArrayList<HSRTestSettings> testsettings) {
-		hsrDB.reportTestSettings(testsettings);
+	public void firstReport(ArrayList<HSRTestSettings> testsettings) {
+		testID = hsrDB.insertTestGetPrimaryKey();
+		hsrDB.reportTestSettings(testID, testsettings);
 	}
 	
 	/****************************************************************************
@@ -82,7 +85,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void terminate() {
-		hsrDB.reportTestSettingsEndTime();
+		hsrDB.reportEndTime(testID);
 		
 		db.closeAll(); // fixes exception on test end
 	}

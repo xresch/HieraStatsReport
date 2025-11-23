@@ -12,6 +12,6 @@ import com.xresch.hsr.base.HSRTestSettings;
  **************************************************************************************************************/
 public abstract class HSRReporterDatabase implements HSRReporter {
 
-	public abstract void reportTestSettings(ArrayList<HSRTestSettings> testsettings);
+	public abstract void firstReport(ArrayList<HSRTestSettings> testsettings);
 	
 }
