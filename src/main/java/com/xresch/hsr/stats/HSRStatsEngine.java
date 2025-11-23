@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +49,7 @@ public class HSRStatsEngine {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HSRStatsEngine.class);
 	
-	private static final Object SYNC_LOCK = new Object();
+	private static final Object SYNC_LOCK_STOP = new Object();
 
 	//=========================================
 	// Tree Maps
@@ -273,15 +274,20 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static void stop() {
 		
-		if(!isStopped) {
-			isStopped = true;
+		synchronized (SYNC_LOCK_STOP) {
 			
-			schedulerStatsEngine.shutdown();
-			threadSystemInfo.interrupt();
+			if(!isStopped) {
 			
-			aggregateAndReport();
-			generateSummaryReport();
-			terminateReporters();
+				schedulerStatsEngine.shutdown();
+				threadSystemInfo.interrupt();
+			
+				aggregateAndReport();
+				generateSummaryReport();
+				terminateReporters();
+			
+				isStopped = true;
+			}		
+		
 		}
 		
 	}
@@ -294,7 +300,7 @@ public class HSRStatsEngine {
 
 		String id = record.getStatsIdentifier();
 		
-		synchronized (SYNC_LOCK) {
+		synchronized (groupedRecordsInterval) {
 			if( !groupedRecordsInterval.containsKey(id) ) {
 				groupedRecordsInterval.put(id, new ArrayList<>() );
 			}
@@ -581,7 +587,7 @@ public class HSRStatsEngine {
 		ArrayList<HSRRecordStats> statsRecordList = new ArrayList<>();
 		
 		TreeMap<String, ArrayList<HSRRecord> > groupedRecordsCurrent;
-		synchronized (SYNC_LOCK) {
+		synchronized (groupedRecordsInterval) {
 			groupedRecordsCurrent = groupedRecordsInterval;
 			groupedRecordsInterval = new TreeMap<>();
 		}
@@ -1007,10 +1013,12 @@ public class HSRStatsEngine {
 	 * Send the records to the Reporters, resets the existingRecords.
 	 * 
 	 ***************************************************************************/
-	private static void sendRecordsToReporter( ArrayList<HSRRecordStats> finalRecords ){
+	private static void sendRecordsToReporter( ArrayList<HSRRecordStats> finalRecords){
 		
 		//-------------------------
 		// Send Clone of list to each Reporter
+		//CountDownLatch latch = new CountDownLatch(HSRConfig.getReporterList().size());
+		
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			ArrayList<HSRRecordStats> clone = new ArrayList<>();
 			clone.addAll(finalRecords);
@@ -1021,10 +1029,12 @@ public class HSRStatsEngine {
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
+
 						if(!isStopped) { // prevent some exceptions
 							logger.debug("Report data to: "+reporter.getClass().getName());
 							reporter.reportRecords(clone);
 						}
+
 					}
 				}).start();
 				
@@ -1032,6 +1042,13 @@ public class HSRStatsEngine {
 				logger.error("Exception while reporting data.", e);
 			}
 		}
+		//-------------------------
+		// Wait for Completion
+//		try {
+//			latch.await();
+//		} catch (InterruptedException e) {
+//			logger.error("Waiting for coutndown interrupted.", e);
+//		}
 
 	}
 	

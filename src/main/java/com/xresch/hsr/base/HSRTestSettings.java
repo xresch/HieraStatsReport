@@ -32,6 +32,7 @@ public class HSRTestSettings {
 			+ "		  , test VARCHAR(4096) \r\n"
 			+ "		  , usecase VARCHAR(4096) \r\n"
 			+ "		  , settings VARCHAR(32768) \r\n"
+			+ "		  , FOREIGN KEY (testid) REFERENCES {parentTablename} (id) ON DELETE CASCADE"
 			+ ")"
 			;
 	
@@ -53,8 +54,11 @@ public class HSRTestSettings {
 	/***********************************************************************
 	 * Returns a SQL template for creating the database table.
 	 ***********************************************************************/
-	public static String createSQL_CreateTableTestSettings(String tableName) {
-		return sqlCreateTableTemplate.replace("{tablename}", tableName);
+	public static String createSQL_CreateTableTestSettings(String tableName, String parentTablename) {
+		return sqlCreateTableTemplate
+					.replace("{tablename}", tableName)
+					.replace("{parentTablename}", parentTablename)
+					;
 	}
 	
 	/***********************************************************************

@@ -82,8 +82,8 @@ public class HSRDBInterface {
 		// Add defaults SQLs, can be overridden
 		// if a DB does not support this flavor
 		this.setSQLCreateTableTests( 		HSRDBInterface.createSQL_CreateTableTests(tablenameTests) );
-		this.setSQLCreateTableStats( 		HSRRecordStats.createSQL_CreateTableStats(tablenameStats) );
-		this.setSQLCreateTableTestSettings( HSRTestSettings.createSQL_CreateTableTestSettings(tablenameTestsettings) );
+		this.setSQLCreateTableStats( 		HSRRecordStats.createSQL_CreateTableStats(tablenameStats, tablenameTests) );
+		this.setSQLCreateTableTestSettings( HSRTestSettings.createSQL_CreateTableTestSettings(tablenameTestsettings, tablenameTests) );
 		this.setSQLAggregateStats( 			HSRRecordStats.createSQL_AggregateStats(tablenameStats, tablenameTempAggregation) );
 	}
 	
@@ -303,7 +303,7 @@ public class HSRDBInterface {
 		//--------------------------------------------
 		// Create Temp Table
 		String createTempTable = 
-				HSRRecordStats.createSQL_CreateTableStats(tablenameTempAggregation);
+				HSRRecordStats.createSQL_CreateTableStats(tablenameTempAggregation, tablenameTests);
 
 		db.preparedExecute(createTempTable);
 		
@@ -318,7 +318,7 @@ public class HSRDBInterface {
 						, newGranularity
 					);
 		
-
+		
 		//--------------------------------------------
 		// Delete Old Stats in stats table
 		String sqlDeleteOldStats = 

@@ -256,7 +256,10 @@ public class HSRRecordStats {
 
 	
 	private static String csvHeaderTemplate = fieldNamesJoined+","+valueNamesJoined;
-	private static String sqlCreateTableTemplate = "CREATE TABLE IF NOT EXISTS {tablename} "+sqlTableColumnDefinitions;
+	private static String sqlCreateTableTemplate = "CREATE TABLE IF NOT EXISTS {tablename} "
+															+sqlTableColumnDefinitions.substring(0, sqlTableColumnDefinitions.length() - 1) // remove ")" 
+															+", FOREIGN KEY (testid) REFERENCES {parentTablename} (id) ON DELETE CASCADE "
+															+")";
 			
 	
 	private static String sqlInsertIntoTemplate = "INSERT INTO {tablename} "+sqlTableColumnNames
@@ -459,8 +462,11 @@ public class HSRRecordStats {
 	 * Returns a SQL Create Table statement for the statistics table
 	 * with the provided table name inserted.
 	 ***********************************************************************/
-	public static String createSQL_CreateTableStats(String tableName) {
-		return sqlCreateTableTemplate.replace("{tablename}", tableName);
+	public static String createSQL_CreateTableStats(String tableName, String parentTablename) {
+		return sqlCreateTableTemplate
+				.replace("{tablename}", tableName)
+				.replace("{parentTablename}", parentTablename)
+				;
 	}
 	
 	/***********************************************************************
