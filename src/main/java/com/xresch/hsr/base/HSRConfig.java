@@ -74,6 +74,25 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static int reportingIntervalSec = 15; 
 	
 	/******************************************************************
+	 * Sets the reporting interval of HSR.
+	 * 
+	 * @param reportingInterval number of seconds for the reporting
+	 * used to aggregate statistics and reporting them to the various
+	 * reporters.
+	 * 
+	 ******************************************************************/
+	public static void setInterval(int reportingInterval) {
+		reportingIntervalSec = reportingInterval;
+	}
+	
+	/******************************************************************
+	 * Returns the report interval in seconds.
+	 ******************************************************************/
+	public static int getInterval() {
+		return reportingIntervalSec;
+	}
+	
+	/******************************************************************
 	 * Starts HSR and the reporting engine.
 	 * 
 	 * @param reportingInterval number of seconds for the reporting
@@ -81,10 +100,10 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 * reporters.
 	 * 
 	 ******************************************************************/
-	public static void enable(int reportingInterval) {
+	public static void enable() {
 		if(!isEnabled) {
 			isEnabled = true;
-			reportingIntervalSec = reportingInterval;
+			
 			
 			//----------------------------
 			// Add Default Log Interceptor
@@ -94,7 +113,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			
 			//----------------------------
 			// Add Default Properties
-			HSRConfig.addProperty("[HSR] reportingInterval", reportingInterval + " sec");
+			HSRConfig.addProperty("[HSR] reportingInterval", reportingIntervalSec + " sec");
 			HSRConfig.addProperty("[HSR] timeStartMillis", "" + STARTTIME_MILLIS);
 			HSRConfig.addProperty("[HSR] timeStartTimestamp", HSR.Time.formatMillisAsTimestamp(STARTTIME_MILLIS));
 			HSRConfig.addProperty("[HSR] enableStatsProcessMemory", "" + enableStatsProcessMemory);
@@ -110,7 +129,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			
 			//----------------------------
 			// Churn up the engines! VROOM!!!
-			HSRStatsEngine.start(reportingInterval);
+			HSRStatsEngine.start(reportingIntervalSec);
 		}
 	}
 	
@@ -390,12 +409,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		return debug;
 	}
 	
-	/******************************************************************
-	 * Returns the report interval in seconds.
-	 ******************************************************************/
-	public static int getAggregationInterval() {
-		return reportingIntervalSec;
-	}
 	
 	/******************************************************************
 	 * Toggle if statistics for the process memory should be collected.

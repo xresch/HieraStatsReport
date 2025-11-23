@@ -311,7 +311,7 @@ public class HSRRecordStats {
 		this.pathRecord = record.getPathRecord().intern();
 		this.pathFull = record.getPathFull().intern();
 		this.code = record.code().intern();
-		this.granularity = HSRConfig.getAggregationInterval();
+		this.granularity = HSRConfig.getInterval();
 		this.statsIdentifier = record.getStatsIdentifier().intern();
 
 	}

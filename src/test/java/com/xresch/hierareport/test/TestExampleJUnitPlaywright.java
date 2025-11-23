@@ -40,7 +40,8 @@ public class TestExampleJUnitPlaywright {
 	  
 	//--------------------------
 	// HSR Config
-	HSRConfig.enable(5);
+	HSRConfig.setInterval(5);
+	HSRConfig.enable();
 	HSRConfig.addReporter(new HSRReporterSysoutCSV(" | "));
 	
 	//--------------------------
