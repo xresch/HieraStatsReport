@@ -76,8 +76,8 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
-		// TODO Auto-generated method stub
 		
+		hsrDB.reportSLA(testID, slaForRecords);
 	}
 	
 	/****************************************************************************

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
@@ -51,6 +52,7 @@ public class HSRDBInterface {
 			  , endtime BIGINT
 			  , name VARCHAR(65536)
 			  , properties VARCHAR(65536)
+			  , sla VARCHAR(65536)
 			)"""
 			;
 	
@@ -204,9 +206,24 @@ public class HSRDBInterface {
 		// Test Settings
 		String sqlUpdateTests = "UPDATE "+tablenameTests
 				+ " SET endtime = "+endTime
-				+ " WHERE testid = '"+testid+"'";
+				+ " WHERE id = '"+testid+"'";
 		
 		db.preparedExecute(sqlUpdateTests);
+		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void reportSLA(int testid, JsonObject sla) {
+		
+		//----------------------
+		// Test Settings
+		String sqlUpdateTests = "UPDATE "+tablenameTests
+				+ " SET sla = ?"
+				+ " WHERE id = '"+testid+"'";
+		
+		db.preparedExecute(sqlUpdateTests, HSR.JSON.toJSON(sla) );
 		
 	}
 	

@@ -1,7 +1,10 @@
 package com.xresch.hsr.reporting;
 
 import java.util.ArrayList;
+import java.util.TreeMap;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.database.DBInterface;
@@ -73,6 +76,15 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	public void firstReport(ArrayList<HSRTestSettings> testsettings) {
 		testID = hsrDB.insertTestGetPrimaryKey();
 		hsrDB.reportTestSettings(testID, testsettings);
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
+		
+		hsrDB.reportSLA(testID, slaForRecords);
 	}
 	
 	/****************************************************************************
