@@ -273,7 +273,7 @@ public class HSRRecordStats {
 		//-----------------------------------
 		// Parse Message
 		// Intern Strings to reduce memory overhead
-		this.time = System.nanoTime() / 1_000_000;
+		this.time = System.currentTimeMillis();
 		this.type = stats.type;
 		this.status = stats.status;
 		this.state = stats.state;
@@ -300,7 +300,7 @@ public class HSRRecordStats {
 		//-----------------------------------
 		// Parse Message
 		// Intern Strings to reduce memory overhead
-		this.time = System.nanoTime() / 1_000_000;
+		this.time = System.currentTimeMillis();
 		this.type = record.type();
 		this.status = record.status();
 		this.state = record.status().state();

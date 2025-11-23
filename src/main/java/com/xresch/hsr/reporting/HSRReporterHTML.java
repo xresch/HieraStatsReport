@@ -80,7 +80,7 @@ public class HSRReporterHTML implements HSRReporter {
     	
     	data.addProperty("test", HSR.getTest());
     	data.addProperty("starttime", HSRConfig.STARTTIME_MILLIS);
-		data.addProperty("endtime", System.nanoTime() / 1_000_000);
+		data.addProperty("endtime", System.currentTimeMillis());
 		
     	data.add("properties", HSR.JSON.toJSONElement(properties) );
     	data.add("testsettings", HSR.JSON.toJSONElement(testSettings) );

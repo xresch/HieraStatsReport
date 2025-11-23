@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.xresch.hsr.base.HSR;
+
 /**************************************************************************************************************
  * This class holds one single raw record ready to be aggregated.
  * 
@@ -27,8 +29,10 @@ public class HSRRecord {
 	private HSRRecordType type = HSRRecordType.Unknown;
 	private String name = null;  // name of this item
 	private String statsIdentifier = null;
-	private long startMillis = -1;
-	private long endTimeMillis = -1;
+
+	private long startTimeNanos = -1;
+	private long endTimeNanos = -1;
+	
 	private HSRRecordStatus status = HSRRecordStatus.Success;
 	private String code = "";
 	private HSRSLA sla;
@@ -127,9 +131,9 @@ public class HSRRecord {
 			, String recordName
 			){
 		
-		long now = System.nanoTime() / 1_000_000;
-		startTime(now); 
-		endTime(now);  // setting end = start, for items that do not measure time
+		long now = System.nanoTime();
+		startTimeNanos(now); 
+		endTimeNanos(now);  // setting end = start, for items that do not measure time
 		
 		type(type);
 		name(recordName);
@@ -168,9 +172,9 @@ public class HSRRecord {
 			, String recordName
 			){
 		
-		long now = System.nanoTime() / 1_000_000;
-		startTime(now); 
-		endTime(now);  // setting end = start, for items that do not measure time
+		long now = System.nanoTime();
+		startTimeNanos(now); 
+		endTimeNanos(now);  // setting end = start, for items that do not measure time
 		
 		parent(parent);
 		
@@ -195,9 +199,9 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		long now = System.nanoTime() / 1_000_000;
-		startTime(now); 
-		endTime(now);  // setting end = start, for items that do not measure time
+		long now = System.nanoTime();
+		startTimeNanos(now); 
+		endTimeNanos(now);  // setting end = start, for items that do not measure time
 		
 		parent(parent);
 		name(recordName);
@@ -225,9 +229,9 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		long now = System.nanoTime() / 1_000_000;
-		startTime(now); 
-		endTime(now);  // setting end = start, for items that do not measure time
+		long now = System.nanoTime();
+		startTimeNanos(now); 
+		endTimeNanos(now);  // setting end = start, for items that do not measure time
 		
 		type(type);
 		
@@ -247,8 +251,8 @@ public class HSRRecord {
 	 * @param usecase the name of the usecase (Use Case etc...)
 	 * @param pathlist the pathlist that are defining the hierarchy
 	 * @param name the name of this record (e.g. Step name)
-	 * @param startTimestamp the start time of this record in epoch millis
-	 * @param endTimeMillis the end time of this record in epoch millis
+	 * @param startTimeNanos the start time retrieved with System.nanoTime()
+	 * @param endTimeNanos the end time retrieved with System.nanoTime()
 	 * @param status the status of this record
 	 * @param code custom code of this record
 	 * @param message custom message of this record
@@ -260,8 +264,8 @@ public class HSRRecord {
 			, String usecase
 			, List<String> pathlist
 			, String recordName
-			, long startTimestamp
-			, long endTimestamp
+			, long startTimeNanos
+			, long endTimeNanos
 			, HSRRecordStatus status
 			, String responseCode
 			, String message
@@ -279,8 +283,8 @@ public class HSRRecord {
 		status(status);
 		code(responseCode);
 		
-		startTime(startTimestamp); 
-		endTime(endTimestamp); 
+		startTimeNanos(startTimeNanos); 
+		endTimeNanos(endTimeNanos); 
 
 		value(value); 
 				
@@ -400,23 +404,24 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord startTime(long startTimeMillis) {
-		this.startMillis = startTimeMillis;
+	public HSRRecord startTimeNanos(long startTimeNanos) {
+		this.startTimeNanos = startTimeNanos;
+
 		return this;
 	}
 	
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public long startTime() {
-		return startMillis;
+	public long startTimeNanos() {
+		return startTimeNanos;
 	}
 
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public HSRRecord endTime(long endTimeMillis) {
-		this.endTimeMillis = endTimeMillis;
+	public HSRRecord endTimeNanos(long endTimeNanos) {
+		this.endTimeNanos = endTimeNanos;
 		return this;
 	}
 	
@@ -424,8 +429,8 @@ public class HSRRecord {
 	/******************************************************************
 	 * 
 	 ******************************************************************/
-	public long endTime() {
-		return endTimeMillis;
+	public long endTimeNanos() {
+		return endTimeNanos;
 	}
 
 	/******************************************************************
@@ -535,10 +540,10 @@ public class HSRRecord {
 	 ***********************************************************************************/
 	public HSRRecord end(){
 		
-		long endMillis = System.nanoTime()  / 1_000_000;
-		this.endTime(endMillis);
+		long endNanos = System.nanoTime() ;
+		this.endTimeNanos(endNanos);
 		
-		long duration = (endMillis - startMillis);
+		long duration = (endNanos - startTimeNanos) / 1_000_000;
 		this.value(new BigDecimal(duration));
 		
 		return this;
@@ -615,8 +620,8 @@ public class HSRRecord {
 			.append( status.state() ).append(sep)
 			.append( status ).append(sep)
 			.append( code ).append(sep)
-			.append( startMillis ).append(sep)
-			.append( endTimeMillis ).append(sep)
+			.append( HSR.Time.nanoTimeToMillis(startTimeNanos) ).append(sep)
+			.append( HSR.Time.nanoTimeToMillis(endTimeNanos) ).append(sep)
 			.append( usecase.replace(sep, "_") ).append(sep)
 			.append( getPath(PATH_SEP).replace(sep, "_") ).append(sep)
 			.append( name.replace(sep, "_").replaceAll("\r\n|\n", " ") ).append(sep)

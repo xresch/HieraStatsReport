@@ -31,6 +31,9 @@ public class HSRTime {
 	
 	private static TimeZone machineTimezone = TimeZone.getDefault();
 			
+	private static final long baseMillis = System.currentTimeMillis();
+	private static final long baseNanos  = System.nanoTime();
+	
 	private static DateTimeFormatter formatterTimestamp = DateTimeFormatter.ofPattern(HSRTime.FORMAT_TIMESTAMP).withZone(machineTimezone.toZoneId());
 	private static DateTimeFormatter formatterISODate = DateTimeFormatter.ofPattern(HSRTime.FORMAT_ISO8601_DATE).withZone(machineTimezone.toZoneId());
 	
@@ -310,6 +313,13 @@ public class HSRTime {
 	
 	TimeZone timeZone = TimeZone.getTimeZone(ZoneId.systemDefault());
 	
+	/********************************************************************************************
+	 * Converts a value from System.nanoTime() into a value of System.currentTimeMillis();
+	 * 
+	 ********************************************************************************************/
+	public static long nanoTimeToMillis(long nanoTime) {
+	    return baseMillis + (nanoTime - baseNanos) / 1_000_000;
+	}
 	
 	/********************************************************************************************
 	 * Returns TimeZone for for offset minutes.

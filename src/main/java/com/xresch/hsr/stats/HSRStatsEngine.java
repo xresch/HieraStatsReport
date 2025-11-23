@@ -581,7 +581,7 @@ public class HSRStatsEngine {
 		
 		//----------------------------------------
 		// Iterate Groups
-		long timeMillis = System.nanoTime() / 1_000_000; // make sure every record has the exact time, needed for proper stacked charts
+		long timeMillis = System.currentTimeMillis(); // make sure every record has the exact time, needed for proper stacked charts
 		StringBuilder rawLog = new StringBuilder();
 		
 		for(Entry<String, ArrayList<HSRRecord>> entry : groupedRecordsCurrent.entrySet()) {
@@ -838,7 +838,7 @@ public class HSRStatsEngine {
 
 		//----------------------------------------
 		// Iterate Grouped Stats
-		long reportTime = System.nanoTime() / 1_000_000;
+		long reportTime = System.currentTimeMillis();
 		
 		for(Entry<String, ArrayList<HSRRecordStats>> entry : groupedStats.entrySet()) {
 			
@@ -990,7 +990,7 @@ public class HSRStatsEngine {
 		
 		//-------------------------------
 		// Add Endtime to Properties
-		long endtime = System.nanoTime() / 1_000_000;
+		long endtime = System.currentTimeMillis();
 		HSRConfig.addProperty("[HSR] timeEndMillis", "" + endtime);
 		HSRConfig.addProperty("[HSR] timeEndTimestamp", "" + HSR.Time.formatMillisAsTimestamp(endtime) );
 		

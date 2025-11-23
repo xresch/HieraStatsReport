@@ -68,7 +68,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	//----------------------
 	// Test Properties
 	public static final String EXECUTION_ID = UUID.randomUUID().toString();
-	public static final long STARTTIME_MILLIS = System.nanoTime() / 1_000_000;
+	public static final long STARTTIME_MILLIS = System.currentTimeMillis();
 	
 	private static boolean isEnabled = false; 
 	private static int reportingIntervalSec = 15; 
