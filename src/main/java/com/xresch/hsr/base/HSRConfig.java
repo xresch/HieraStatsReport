@@ -73,6 +73,9 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static boolean isEnabled = false; 
 	private static int reportingIntervalSec = 15; 
 	
+	private static Object SYNC_LOCK_TERMINATION = new Object(); 
+	private static boolean isTerminated = false; 
+	
 	/******************************************************************
 	 * Sets the reporting interval of HSR.
 	 * 
@@ -503,25 +506,34 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			return;
 		}
 		
-		logger.info("Terminating HieraStatsReport");
-		
-		//--------------------------------
-		// Stop Stats Engine
-		try {
-			HSRStatsEngine.stop();
-		} catch (Exception e) {
-			logger.error("Error while stopping HSRStatsEngine.", e);
-		}
-		
-		//--------------------------------
-		// Close Raw Log Writer
-		if(rawDataLogWriter != null) {
-			try {
-				rawDataLogWriter.flush();
-				rawDataLogWriter.close();
-			} catch (IOException e) {
-				// swallow the exception to not scare the lovely users. ^^'
+		synchronized (SYNC_LOCK_TERMINATION) {
+			
+			if(isTerminated) {
+				return;
 			}
+		
+			logger.info("Terminating HieraStatsReport");
+			
+			//--------------------------------
+			// Stop Stats Engine
+			try {
+				HSRStatsEngine.stop();
+			} catch (Exception e) {
+				logger.error("Error while stopping HSRStatsEngine.", e);
+			}
+			
+			//--------------------------------
+			// Close Raw Log Writer
+			if(rawDataLogWriter != null) {
+				try {
+					rawDataLogWriter.flush();
+					rawDataLogWriter.close();
+				} catch (IOException e) {
+					// swallow the exception to not scare the lovely users. ^^'
+				}
+			}
+			
+			isTerminated = true;
 		}
 		
 	}	
