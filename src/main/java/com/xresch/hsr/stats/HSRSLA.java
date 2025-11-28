@@ -51,6 +51,15 @@ public class HSRSLA implements Expressionable<BigDecimal> {
 	/******************************************************************************
 	 * Constructor
 	 ******************************************************************************/
+	public HSRSLA(HSRMetric metric, Operator operator, Number value){
+
+		this(metric, operator,  new BigDecimal(value.toString()));
+		
+	}
+	
+	/******************************************************************************
+	 * Constructor
+	 ******************************************************************************/
 	public HSRSLA(HSRMetric metric, Operator operator, BigDecimal value){
 		
 		this.isBooleanExpression = true;
