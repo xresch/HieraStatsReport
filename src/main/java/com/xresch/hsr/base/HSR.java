@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
+import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 import com.xresch.hsr.stats.HSRSLA;
 import com.xresch.hsr.stats.HSRStatsEngine;
+import com.xresch.hsr.stats.HSRExpression.Operator;
 import com.xresch.hsr.utils.HSRCSV;
 import com.xresch.hsr.utils.HSRFiles;
 import com.xresch.hsr.utils.HSRJson;
@@ -296,7 +298,19 @@ public class HSR {
 	 * @param sla the sla rule that should be evaluated for this record.
 	 * @return the created record 
 	 ***********************************************************************************/
+	public static HSRRecord start(String name, HSRMetric metric, Operator operator, int value){
+		return startItem(HSRRecordType.Step, name, new HSRSLA(metric, operator, value) );
+	}
+	
+	/***********************************************************************************
+	 * Starts a new step, sets it as the active item and returns it to be able to set 
+	 * further details.
+	 * @param name the name for the record, should be unique in your test.
+	 * @param sla the sla rule that should be evaluated for this record.
+	 * @return the created record 
+	 ***********************************************************************************/
 	public static HSRRecord start(String name, HSRSLA sla){
+		
 		return startItem(HSRRecordType.Step, name, sla);
 	}
 	
