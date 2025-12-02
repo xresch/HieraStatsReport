@@ -87,7 +87,7 @@ public class HSRText {
 	 *******************************************************************/
 	public static Matcher getRegexMatcherCached(String regex, String textToMatch) {
 				
-		return getRegexPatternCached(regex, textToMatch).matcher(textToMatch);
+		return getRegexPatternCached(regex).matcher(textToMatch);
 	}
 	
 	/*******************************************************************
@@ -95,7 +95,7 @@ public class HSRText {
 	 * Pattern.MULTILINE and Pattern.DOTALL.
 	 * 
 	 *******************************************************************/
-	public static Pattern getRegexPatternCached(String regex, String textToMatch) {
+	public static Pattern getRegexPatternCached(String regex) {
 		
 		if(!regexPatternCache.containsKey(regex)) {
 			Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
@@ -244,6 +244,18 @@ public class HSRText {
 		}
 		
 		return results;
+	}
+	
+	
+	/*******************************************************************
+	 * Regex replace function that caches the regex pattern to not 
+	 * compile it each and every time.
+	 *******************************************************************/
+	public static String replaceAll(String string, String regex, String replacement ) {
+		
+		if(string == null) return null;
+		
+		return getRegexMatcherCached(regex, string).replaceAll(replacement);
 	}
 	
 	/*******************************************************************
