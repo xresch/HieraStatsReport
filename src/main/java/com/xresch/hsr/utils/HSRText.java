@@ -21,6 +21,8 @@ public class HSRText {
 	
 	private static SimpleCache<String, Pattern> regexPatternCache = new SimpleCache<>(10000);
 	
+	private static Pattern NEWLINE_PATTERN = Pattern.compile("\r\n|\n");
+	
 	public enum CheckType {
 		  CONTAINS
 		, DOES_NOT_CONTAIN
@@ -242,6 +244,16 @@ public class HSRText {
 		}
 		
 		return results;
+	}
+	
+	/*******************************************************************
+	 * 
+	 *******************************************************************/
+	public static String replaceNewlines(String string, String replacement ) {
+		
+		if(string == null) return null;
+		
+		return NEWLINE_PATTERN.matcher(string).replaceAll(replacement);
 	}
 	
 	/*******************************************************************
