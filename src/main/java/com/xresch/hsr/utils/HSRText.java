@@ -104,10 +104,37 @@ public class HSRText {
 	}
 	
 	/*******************************************************************
+	 * For example, to extract the first part separated by "-" of an id:
+	 * <ul>
+	 * 		<li><b>ID:&nbsp;</b>420f2d3d-ed2d-4749-94e</li>
+	 * 		<li><b>Method Call:&nbsp;</b>extractRegexFirst("-?([^-]+)", 0, ID )</li>
+	 * 		<li><b>Result:&nbsp;</b>420f2d3d</li>
+	 * </ul>
+	 * 
+	 * @param regex the regular expression that contains regex groups
+	 * @param groupIndex the index of the group, first group is 0
+	 * @param valueToSearch the text to search through
+	 * 
+	 * @return String the first match, or empty string if not found, never null
+	 *******************************************************************/
+	public static String extractRegexFirst(String regex, int groupIndex, String valueToSearch) {
+		
+		Matcher m = getRegexMatcherCached(regex, valueToSearch);
+		while (m.find()) {
+			
+			if(m.groupCount() > groupIndex && groupIndex >= -1) {
+				return m.group(groupIndex+1) ;
+			}
+		}
+		
+		return "";
+	}
+	
+	/*******************************************************************
 	 * For example, to extract the parts separated by "-" of an id:
 	 * <ul>
 	 * 		<li><b>ID:&nbsp;</b>420f2d3d-ed2d-4749-94e</li>
-	 * 		<li><b>Method Call:&nbsp;</b>extractAll("-?([^-]+)", 0, ID )</li>
+	 * 		<li><b>Method Call:&nbsp;</b>extractRegexAll("-?([^-]+)", 0, ID )</li>
 	 * 		<li><b>Result:&nbsp;</b>["420f2d3d", "ed2d", "4749", "94e"]</li>
 	 * </ul>
 	 * 
@@ -136,7 +163,7 @@ public class HSRText {
 	 * For example, to extract the parts separated by "-" of an id:
 	 * <ul>
 	 * 		<li><b>ID:&nbsp;</b>420f2d3d-ed2d-4749-94e</li>
-	 * 		<li><b>Method Call:&nbsp;</b>extractAll("-?([^-]+)", 0, ID )</li>
+	 * 		<li><b>Method Call:&nbsp;</b>extractRegexAllAsJson("-?([^-]+)", 0, ID )</li>
 	 * 		<li><b>Result:&nbsp;</b>["420f2d3d", "ed2d", "4749", "94e"]</li>
 	 * </ul>
 	 * 
@@ -159,6 +186,7 @@ public class HSRText {
 		
 		return result;
 	}
+	
 	
 	/*******************************************************************
 	 * For example, to extract the parts separated by "-" of an id:
