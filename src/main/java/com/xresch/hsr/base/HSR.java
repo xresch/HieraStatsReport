@@ -366,7 +366,6 @@ public class HSR {
 			actualSleep = measuredSleep(millis);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			logger.warn("Thread interrupted while waiting in HSR.pause().", e);
 		} finally {
 			
 			end().value();
@@ -406,7 +405,6 @@ public class HSR {
 			actualSleep = measuredSleep(millis);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			logger.warn("Thread interrupted while waiting in HSR.pause().", e);
 		} finally {
 			
 			//---------------------------------
