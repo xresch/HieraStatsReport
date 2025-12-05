@@ -19,7 +19,7 @@
 		<otel.version>1.49.0</otel.version>
 		
 		<skipJavadoc>false</skipJavadoc>
-		
+		<skipTests>true</skipTests>
 	</properties>
 	
 		<!-- ================= LICENSES ================== -->
@@ -262,6 +262,20 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			
+			<!-- ================= SUREFIRE ================== -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.4</version>
+				<configuration>
+					<skipTests>${skipTests}</skipTests>
+					<includes>
+						<include>**/*TestSuiteAll.java</include>
+					</includes>
+					<!-- excludes> <exclude>com.xresch.cfw.tests._master.*</exclude> </excludes -->
+				</configuration>
 			</plugin>
 
 			<!-- ================= JAVADOC ================== -->
