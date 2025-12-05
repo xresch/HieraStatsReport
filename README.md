@@ -453,6 +453,26 @@ HSR.start("999 The Unending Item");
 HSR.endAllOpen(HSRRecordStatus.Aborted);
 ```
 
+# Wait Time and Pauses
+If you use `Thread.sleep()` between `HSR.start*()` and `HSR.end*()` the sleep time will be added to the measurement.
+Use the `HSR.pause()` methods to make pauses that will be removed from the time measurement.
+
+```java
+//-------------------------------
+// 
+HSR.start("MyMetric");
+
+	// this will be included in the metric time
+	Thread.sleep(HSR.Random.integer(10, 20));
+	
+	// these pauses will be removed from the time measurements
+	HSR.pause(53);
+	HSR.pause(50, 100);
+	HSR.pause("Wait 100ms", 100);
+	HSR.pause("Wait 100 - 200ms", 100, 200);
+HSR.end();
+```
+
 # Reporting user counts
 As the HSR framework was created to be used for load testing, it is shipped with the following methods to keep track of the amount of users.
 

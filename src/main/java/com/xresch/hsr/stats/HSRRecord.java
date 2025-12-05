@@ -39,6 +39,7 @@ public class HSRRecord {
 	
 	
 	private BigDecimal value = null;
+	private BigDecimal correction = BigDecimal.ZERO; // corrections for the value like pauses etc...
 	
 	private String logString = null;
 	
@@ -395,10 +396,55 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
+	 * Returns the value with all corrections applied.
 	 * 
 	 ******************************************************************/
 	public BigDecimal value() {
-		return value;
+		return value.add(correction);
+	}
+	
+	/******************************************************************
+	 * Adds a correction to this value. Multiple calls to this method
+	 * will cause all corrections to be summed together.
+	 * 
+	 * @param currection the corrective value that should be added to 
+	 * the value, either positive or negative
+	 ******************************************************************/
+	public HSRRecord correction(long correction) {
+		return this.correction( new BigDecimal(correction) );
+	}
+	
+	/******************************************************************
+	 * Adds a correction to this value. Multiple calls to this method
+	 * will cause all corrections to be summed together.
+	 * 
+	 * @param currection the corrective value that should be added to 
+	 * the value, either positive or negative
+	 ******************************************************************/
+	public HSRRecord correction(int correction) {
+		return this.correction( new BigDecimal(correction) );
+	}
+	
+	/******************************************************************
+	 * Adds a correction to this value. Multiple calls to this method
+	 * will cause all corrections to be summed together. 
+	 * 
+	 * @param currection the corrective value that should be added to 
+	 * the value, either positive or negative
+	 ******************************************************************/
+	public HSRRecord correction(BigDecimal correction) {
+
+		if(correction != null) {	
+			this.correction = this.correction.add(correction);
+		}
+		return this;
+	}
+	
+	/******************************************************************
+	 * 
+	 ******************************************************************/
+	public BigDecimal correction() {
+		return correction;
 	}
 
 	/******************************************************************
@@ -625,7 +671,7 @@ public class HSRRecord {
 			.append( usecase.replace(sep, "_") ).append(sep)
 			.append( getPath(PATH_SEP).replace(sep, "_") ).append(sep)
 			.append( name.replace(sep, "_").replaceAll("\r\n|\n", " ") ).append(sep)
-			.append( value )
+			.append( this.value() )
 			;
 		
 		logString = builder.toString();

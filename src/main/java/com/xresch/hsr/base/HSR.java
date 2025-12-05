@@ -335,7 +335,108 @@ public class HSR {
 	public static HSRRecord startWait(String name, HSRSLA sla){
 		return startItem(HSRRecordType.Wait, name, sla);
 	}	
+	
+	/***********************************************************************************
+	 * Pauses the current thread to wait for the specified amount of time.
+	 * The time spent in this pause will be removed from parent items.
+	 * Adds a metric to the HSR report of type "Wait".
+	 * 
+	 * @param minMillis minimum time to pause
+	 * @param maxMillis maximum time to pause
+	 * @return nothing
+	 ***********************************************************************************/
+	public static void pause(String name, long minMillis, long maxMillis){
+		pause(name, HSR.Random.longInRange(minMillis, maxMillis));
+	}
+	
+	/***********************************************************************************
+	 * Pauses the current thread to wait for the specified amount of time.
+	 * The time spent in this pause will be removed from parent items.
+	 * Adds a metric to the HSR report of type "Wait".
+	 * 
+	 * @param millis time to pause
+	 * @return nothing
+	 ***********************************************************************************/
+	public static void pause(String name, long millis){
 		
+		long actualSleep = millis;
+		
+		startItem(HSRRecordType.Wait, name, null);
+		try {
+			actualSleep = measuredSleep(millis);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			logger.warn("Thread interrupted while waiting in HSR.pause().", e);
+		} finally {
+			
+			end().value();
+
+			//---------------------------------
+			// Remove wait time from parents
+			for(HSRRecord current : openItems()) {
+				current.correction( -1 * actualSleep );
+			}
+		}
+		
+	}	
+	
+	/***********************************************************************************
+	 * Pauses the current thread to wait for the specified amount of time.
+	 * The time spent in this pause will be removed from parent items.
+	 * 
+	 * @param minMillis minimum time to pause
+	 * @param maxMillis maximum time to pause
+	 * @return nothing
+	 ***********************************************************************************/
+	public static void pause(long minMillis, long maxMillis){
+		pause(HSR.Random.longInRange(minMillis, maxMillis));
+	}
+	
+	/***********************************************************************************
+	 * Pauses the current thread to wait for the specified amount of time.
+	 * The time spent in this pause will be removed from parent items.
+	 * 
+	 * @param millis time to pause
+	 * @return nothing
+	 ***********************************************************************************/
+	public static void pause(long millis){
+		
+		long actualSleep = millis;
+		try {
+			actualSleep = measuredSleep(millis);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			logger.warn("Thread interrupted while waiting in HSR.pause().", e);
+		} finally {
+			
+			//---------------------------------
+			// Remove wait time from parents
+			for(HSRRecord current : openItems()) {
+				current.correction( -1 * actualSleep );
+
+			}
+		}
+		
+	}
+	
+	/***********************************************************************************
+	 * Pauses the current thread to sleep and returns the amount of milliseconds that
+	 * have been slept.
+	 * 
+	 * @param millis time to pause
+	 * @return nothing
+	 * 
+	 ***********************************************************************************/
+	private static long measuredSleep(long millis) throws InterruptedException {
+	    
+		long start = System.nanoTime();
+			Thread.sleep(millis);
+	    long duration = System.nanoTime() - start;
+	    
+	    return duration / 1_000_000;
+
+	}
+				
 	
 	/***********************************************************************************
 	 * Starts a new item, sets it as the active group and returns it to be able to set 
