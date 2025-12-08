@@ -1,7 +1,6 @@
 # HieraStatsReport
 HieraStatsReport ("Hierachical Statistics Report") is a small tool that was created to report test results for load tests as HTML, CSV, JSON, into Databases and other targets with the option to be extended for custom reporting.
 
-THIS PROJECT JUST STARTED AND IS UNDER CONSTRUCTION! :D
 
 # Notes on Usage
 - **Summary Report:** Is generated based on all previous aggregated datapoints. For Example:
@@ -16,7 +15,20 @@ THIS PROJECT JUST STARTED AND IS UNDER CONSTRUCTION! :D
 
 * **Everything comes to an end():** Everything that is started(HSR.start*) needs to be ended(HSR.end*). If things are not properly ended, you might get strange results or lose part of your data. If you catch or throw exceptions, make sure to call an end()-method in the finally block or end it before throwing the exception.
 
-# Logging
+# Maven Dependency
+Following is the maven dependency of HSR:
+
+```java
+<!-- https://mvnrepository.com/artifact/com.xresch/hsr -->
+<dependency>
+    <groupId>com.xresch</groupId>
+    <artifactId>hsr</artifactId>
+    <version>#.#.#</version>
+</dependency>
+```
+
+
+#Logging
 
 ### Log Levels
 The HSR framework is using Logback for logging. It provides methods to set log levels for packages in code.
@@ -82,6 +94,13 @@ HSRConfig.statsNetworkIO();
 Reporters are the way of getting data to where you want it to be.
 HSR ships with various default reporters, or you can create your own reporter class.
 Reporters are registered with `HSRConfig.addReporter()` and should be done before calling `HSRConfig.enable()`.
+
+### Disable Summary Reports
+You can disable summary reports by setting the following property:
+
+```java
+HSRConfig.disableSummaryReports(true);
+```
 
 ### Sysout Reporter
 To get a real time view on your data, you can log the metrics to the console using the default SysoutReporters, best to only use one at the time:

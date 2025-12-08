@@ -59,7 +59,7 @@ public class HSRStatsEngine {
 	private static TreeMap<String, ArrayList<HSRRecord> > groupedRecordsInterval = new TreeMap<>();
 	
 	// key is based on hashCode() which is the StatsIdentifier, value are all Stats that are part of the group
-	// these are used for making reports over the full test duration
+	// these are used for making summary reports over the full test duration
 	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
 
 	// key is record name, will be added the first time the sla is encountered
@@ -277,7 +277,9 @@ public class HSRStatsEngine {
 		synchronized (SYNC_LOCK_STOP) {
 			
 			if(!isStopped) {
-			
+				
+				isStopped = true; // do this first to avoid errors caused by race conditions
+				
 				schedulerStatsEngine.shutdown();
 				threadSystemInfo.interrupt();
 			
@@ -285,7 +287,7 @@ public class HSRStatsEngine {
 				generateSummaryReport();
 				terminateReporters();
 			
-				isStopped = true;
+				
 			}		
 		
 		}
@@ -752,15 +754,17 @@ public class HSRStatsEngine {
 		
 		//-------------------------------
 		// Add To Grouped Stats
-		for(HSRRecordStats value : statsRecordList) {
-			String statsId = value.statsIdentifier();
-			
-			if( !groupedStats.containsKey(statsId) ) {
-				groupedStats.put(statsId,  new ArrayList<>());
+		if( ! HSRConfig.disableSummaryReports() ) {
+			for(HSRRecordStats value : statsRecordList) {
+				String statsId = value.statsIdentifier();
+				
+				if( !groupedStats.containsKey(statsId) ) {
+					groupedStats.put(statsId,  new ArrayList<>());
+				}
+				
+				groupedStats.get(statsId).add(value);
+				
 			}
-			
-			groupedStats.get(statsId).add(value);
-			
 		}
 		//-------------------------------
 		// Report Stats
@@ -834,11 +838,13 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static void generateSummaryReport() {
 
+		//----------------------------------------
+		// Check if summary reports should be written
+		if( HSRConfig.disableSummaryReports() ) { return; }
 		if(groupedStats.isEmpty()) { return; }
 
 		//----------------------------------------
-		// Steal Reference to not block writing
-		// new records
+		// Prepare Arrays
 		ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
 		JsonArray finalRecordsArray = new JsonArray();
 

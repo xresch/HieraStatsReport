@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
 
@@ -28,6 +29,8 @@ public interface HSRReporter {
 	
 	/******************************************************************************************
 	 * This method will be called once at the end of the test.
+	 * This method will not be called if summary reports got disabled with 
+	 * HSRConfig.disableSummaryReports(true).
 	 * 
 	 * @param summaryRecords the final statistics over the whole test
 	 * @param summaryRecordsWithSeries the final statistics as a JsonArray

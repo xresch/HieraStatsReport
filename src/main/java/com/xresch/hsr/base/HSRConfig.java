@@ -38,26 +38,32 @@ public class HSRConfig {
 	
 private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
+	//----------------------
+	// Data Structures
 	private static ArrayList<HSRReporter> reporterList = new ArrayList<>();
 	private static ArrayList<HSRTestSettings> testsettingsList = new ArrayList<>();
 	
 	private static TreeMap<String,String> properties = new TreeMap<>();
-
-	private static boolean debug = false;
 	
+	//----------------------
+	// Hooks & Interceptors
+	protected static HSRHooks hooks = new HSRHooks();
 	private static boolean isLogInterceptorSet = false;
 	
+	//----------------------
+	// System Stats
 	private static boolean enableStatsProcessMemory = true;
 	private static boolean enableStatsCPU = true;
 	private static boolean enableStatsHostMemory= true;
 	private static boolean enableStatsDiskUsage = true;
 	private static boolean enableStatsDiskIO = true;
 	private static boolean enableStatsNetworkIO = true;
-	
+
+	//----------------------
+	// Database
 	private static boolean databaseAgeOut = false;
 	private static HSRAgeOutConfig databaseAgeOutConfig = new HSRAgeOutConfig(); // use defaults
 	
-	protected static HSRHooks hooks = new HSRHooks();
 	
 	//----------------------
 	// Raw Data
@@ -66,11 +72,14 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static BufferedWriter rawDataLogWriter = null;
 	
 	//----------------------
-	// Test Properties
+	// Report Properties
 	public static final String EXECUTION_ID = UUID.randomUUID().toString();
 	public static final long STARTTIME_MILLIS = System.currentTimeMillis();
 	
+	private static boolean debug = false;
 	private static boolean isEnabled = false; 
+	private static boolean disableSummaryReports = false; 
+
 	private static int reportingIntervalSec = 15; 
 	
 	private static Object SYNC_LOCK_TERMINATION = new Object(); 
@@ -136,6 +145,24 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		}
 	}
 	
+	/******************************************************************
+	 * Sets if summaries should be reported or not.
+	 * This will stop the StatsEngine from collecting the aggregated metrics
+	 * until the engine is stopped, therefore reducing memory usage.
+	 * 
+	 ******************************************************************/
+	public static void disableSummaryReports(boolean disableSummaryReports) {
+		HSRConfig.disableSummaryReports = disableSummaryReports;
+	}
+	
+	/******************************************************************
+	 * Returns the value of the disableSummaryReports setting.
+	 * @return boolean
+	 * 
+	 ******************************************************************/
+	public static boolean disableSummaryReports() {
+		return HSRConfig.disableSummaryReports;
+	}
 	/******************************************************************
 	 * Adds a property to the report.
 	 * These properties can be saved by different reporters at the end
