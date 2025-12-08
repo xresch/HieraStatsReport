@@ -27,6 +27,14 @@ Following is the maven dependency of HSR:
 </dependency>
 ```
 
+# Enable HSR
+To enable the reporting of collected metrics, set an interval and enable HSR:
+
+```java
+HSRConfig.setInterval(15); // 15 seconds
+HSRConfig.enable();
+```
+
 
 #Logging
 
@@ -50,7 +58,7 @@ If you want to change this behaviour, call the following method before you enabl
 // Add Default Log Interceptor
 HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.ERROR));
 [...]
-HSRConfig.enable(15);
+HSRConfig.enable();
 
 ```
 
