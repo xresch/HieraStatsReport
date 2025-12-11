@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.xresch.hsr.database.HSRAgeOutConfig;
 import com.xresch.hsr.reporting.HSRReporter;
+import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRStatsEngine;
 import com.xresch.hsr.utils.HSRLogInterceptorDefault;
 
@@ -85,6 +86,16 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	private static Object SYNC_LOCK_TERMINATION = new Object(); 
 	private static boolean isTerminated = false; 
 	
+	//----------------------
+	// Thread Local Settings
+	static InheritableThreadLocal<Boolean> disablePauses = new InheritableThreadLocal<>() { 
+		@Override
+	    protected Boolean initialValue() {
+	        return false;
+	    }
+	};
+	
+	
 	/******************************************************************
 	 * Sets the reporting interval of HSR.
 	 * 
@@ -146,6 +157,26 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * Toggles if pauses created with HSR.pause() methods should be 
+	 * pausing or should be ignored.
+	 * This applies to the current thread and all the thread it spawns, 
+	 * what allows to only turn of pauses in certain cases.
+	 * 
+	 * @param disablePauses true if pauses should be disabled
+	 ******************************************************************/
+	public static void disablePauses(boolean disablePauses) {
+		HSRConfig.disablePauses.set(disablePauses);
+	}
+	
+	/******************************************************************
+	 * Returns the value of the disableSummaryReports setting.
+	 * @return boolean
+	 * 
+	 ******************************************************************/
+	public static boolean disablePauses() {
+		return HSRConfig.disablePauses.get();
+	}
+	/******************************************************************
 	 * Sets if summaries should be reported or not.
 	 * This will stop the StatsEngine from collecting the aggregated metrics
 	 * until the engine is stopped, therefore reducing memory usage.
@@ -163,6 +194,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	public static boolean disableSummaryReports() {
 		return HSRConfig.disableSummaryReports;
 	}
+	
 	/******************************************************************
 	 * Adds a property to the report.
 	 * These properties can be saved by different reporters at the end

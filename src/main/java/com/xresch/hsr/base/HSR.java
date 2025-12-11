@@ -359,24 +359,25 @@ public class HSR {
 	 ***********************************************************************************/
 	public static void pause(String name, long millis){
 		
-		long actualSleep = millis;
-		
-		startItem(HSRRecordType.Wait, name, null);
-		try {
-			actualSleep = measuredSleep(millis);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		} finally {
+		if( ! HSRConfig.disablePauses() ) {
+			long actualSleep = millis;
 			
-			end().value();
-
-			//---------------------------------
-			// Remove wait time from parents
-			for(HSRRecord current : openItems()) {
-				current.correction( -1 * actualSleep );
+			startItem(HSRRecordType.Wait, name, null);
+			try {
+				actualSleep = measuredSleep(millis);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			} finally {
+				
+				end().value();
+	
+				//---------------------------------
+				// Remove wait time from parents
+				for(HSRRecord current : openItems()) {
+					current.correction( -1 * actualSleep );
+				}
 			}
 		}
-		
 	}	
 	
 	/***********************************************************************************
@@ -400,21 +401,22 @@ public class HSR {
 	 ***********************************************************************************/
 	public static void pause(long millis){
 		
-		long actualSleep = millis;
-		try {
-			actualSleep = measuredSleep(millis);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		} finally {
-			
-			//---------------------------------
-			// Remove wait time from parents
-			for(HSRRecord current : openItems()) {
-				current.correction( -1 * actualSleep );
-
+		if( ! HSRConfig.disablePauses() ) {
+			long actualSleep = millis;
+			try {
+				actualSleep = measuredSleep(millis);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			} finally {
+				
+				//---------------------------------
+				// Remove wait time from parents
+				for(HSRRecord current : openItems()) {
+					current.correction( -1 * actualSleep );
+	
+				}
 			}
 		}
-		
 	}
 	
 	/***********************************************************************************
