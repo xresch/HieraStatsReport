@@ -1,5 +1,7 @@
 package com.xresch.hsr.base;
 
+import java.util.ArrayList;
+
 import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
@@ -12,13 +14,50 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
  **************************************************************************************************************/
 public class HSRHooks {
 	
+	// packages to skip in the stack trace to get more meaningful information and reduce overhead
+	protected static ArrayList<String> skippedPackageList = new ArrayList<String>();
+	protected static int bottomStackElements = 3;
+	protected static int maxStackElements = 10;
 	
 	/*****************************************************************************************
 	 * You may call this an empty constructor, I call it the reincarnation of characters that
 	 * have been slaughtered by the mighty Lord of Digital Erasure.
 	 * 
 	 *****************************************************************************************/
-	public HSRHooks(){ }
+	public HSRHooks(){
+		HSRHooks.addSkippedPackage("com.xresch");
+		HSRHooks.addSkippedPackage("org.apache");
+		HSRHooks.addSkippedPackage("com.google");
+		HSRHooks.addSkippedPackage("java.");
+	}
+	
+	/*****************************************************************************************
+	 * Add a package that should be skipped in exception stack traces when creating metric
+	 * names for exceptions.
+	 * The checks will be done based on a startsWith(packageName) evaluation.
+	 * @param packageName a package like "com.myproject.awesomeapp"
+	 *****************************************************************************************/
+	public static void addSkippedPackage(String packageName) {
+		HSRHooks.skippedPackageList.add(packageName);
+	}
+	
+	/*****************************************************************************************
+	 * Defines the amount of stack elements at the bottom of the stack that should be shown 
+	 * in exception stack traces.
+	 * @param bottomStackElements number of  bottom elements to be shown in stack traces
+	 *****************************************************************************************/
+	public static void bottomStackElements(int bottomStackElements) {
+		HSRHooks.bottomStackElements = bottomStackElements;
+	}
+	/*****************************************************************************************
+	 * Defines the maximum amount of stack elements that should be shown in exception stack
+	 * traces. This count also includes any bottomStackElements.
+	 * 
+	 * @param maxStackElements max number of elements to be shown in stack traces
+	 *****************************************************************************************/
+	public static void maxStackElements(int maxStackElements) {
+		HSRHooks.maxStackElements = maxStackElements;
+	}
 	
 	/*****************************************************************************************
 	 * This method can be overridden to execute code whenever an item is started with a
@@ -81,36 +120,66 @@ public class HSRHooks {
 		builder.append(e.getMessage());
 		
 		StackTraceElement[] stacktrace = e.getStackTrace();
-		boolean foundHSRPackage = false;
-		boolean foundNonHSRPackage = false;
+		int appendedCount = 0;
 		
-		for(int i = 0; i < stacktrace.length; i++) {
+		int stacksize = stacktrace.length;
+		for(int i = 0; i < stacksize; i++) {
+			
 			StackTraceElement element = stacktrace[i];
-			builder.append("\n\tat " + element.toString());
 			
 			//--------------------------
-			// First find a HSR Package
-			// Then find a no-HSR Package
-			if( ! foundHSRPackage ) {
-				if( element.getClassName().contains("com.xresch.hsr") ) {
-					foundHSRPackage = true;
+			// Always show first 3 elements
+			if( i < bottomStackElements ) { 
+				builder.append("\n\tat ").append(element.toString());
+				appendedCount++;
+				continue;
+			}else {
+				
+				//--------------------------
+				// Skip any Skippables
+				boolean keepSkipping = true;
+				int skipCount = 0;
+				
+				while(keepSkipping && i < stacksize ){
+					
+					String classname = element.getClassName();
+					
+					boolean isSkipped = false;
+					for(String skipPackage : skippedPackageList) {
+						if( classname.startsWith(skipPackage) ) {
+							skipCount++;
+							isSkipped = true;
+							break;
+						}
+					}
+					
+					keepSkipping = isSkipped;
+					i++;
+					if(i < stacksize) {
+						element = stacktrace[i];
+					}
 				}
-			}else if( ! foundNonHSRPackage ) {
-				if( ! element.getClassName().contains("com.xresch.hsr") ) {
-					foundNonHSRPackage = true;
+				
+				//--------------------------
+				// Add [... # skipped ...]
+				if(skipCount > 0) {
+					builder.append("\n\tat [... ").append(skipCount).append(" skipped ...]");
 				}
+				
+				//--------------------------
+				// Keep Appending
+				builder.append("\n\tat ").append(element.toString());
+				appendedCount++;
 			}
 			
 			//--------------------------
 			// Stop adding elements
 			// min 3 max 10
-			if(i >= 9
-			|| (i >= 2 && foundHSRPackage && foundNonHSRPackage)
-			){
+			if(appendedCount >= maxStackElements){
 				break;
 			}
 		}
-		
+
 		
 		return builder.toString();
 	}

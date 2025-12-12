@@ -261,6 +261,17 @@ This will add part of the exception stack trace to the report.
 HSR.addException(new Exception("This is an exception."));
 ```
 
+By default, the 3 bottom stacktrace elements are included and a total of 10 elements that are not skipped. 
+You can adjust the amount of stack elements you want to see and add additional packages that should be skipped using the following methods:
+
+```java
+HSRHooks.addSkippedPackage("com.mypackage");
+HSRHooks.bottomStackElements(6); // default is 3
+HSRHooks.maxStackElements(20); // default is 10
+```
+
+
+
 ### Status: Success or Fail
 You can set success or fail for your metrics by using `HSR.end(boolean)`.
 In the following example, also an error message and an exception are added to the step.
