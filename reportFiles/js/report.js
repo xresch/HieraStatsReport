@@ -330,12 +330,12 @@ const CUSTOMIZERS = {
 	, "nok_p99": customizerStatsNumber
 	, "nok_sla": customizerSLA
 	
-	, "success": customizerStatsNumber
-	, "failed": customizerStatsNumber
-	, "skipped": customizerStatsNumber
-	, "aborted": customizerStatsNumber
-	, "none": customizerStatsNumber
-	, "failrate": customizerStatsNumber
+	, "success": customizerStatsNumberStatuses
+	, "failed": customizerStatsNumberStatuses
+	, "skipped": customizerStatsNumberStatuses
+	, "aborted": customizerStatsNumberStatuses
+	, "none": customizerStatsNumberStatuses
+	, "failrate": customizerStatsNumberStatuses
 	
 	// calculated and added in javascript 
 	, "Range": CFW.customizer.number
@@ -430,7 +430,38 @@ function customizerSLA(record, value, rendererName, fieldname){
 function customizerTextValues(record, value, rendererName, fieldname){
 	return '<span class="maxvw-20 maxvw-20 word-wrap-prewrap word-break-word pr-2">'+value+'</span>';
 }
+
+/**************************************************************************************
+ * The main customizer for statistical values.
+ *************************************************************************************/
+function customizerStatsNumberStatuses(record, value, rendererName, fieldname){
+	//----------------------
+	// Check input
+	if(value == null){ return ''; }
 	
+	//----------------------
+	// Color for Field
+	let color = "green";
+	switch(fieldname){
+		case 'success': 	color = "green"; break;
+		case 'skipped': 	color = "yellow"; break;
+		case 'aborted': 	color = "orange"; break;
+		case 'failed': 		color = "red"; break;
+		case 'failrate': 	color = "red"; break;
+		case 'none': 		color = "gray"; break;
+	}
+	
+	let chartLink = customizerStatsNumber(record, value, rendererName, fieldname);
+	
+	if(value == 0){
+		return chartLink;
+	}
+	
+	let coloredSpan = $('<span class="status bg-cfw-'+color+'">');
+	coloredSpan.append(chartLink);
+	
+	return coloredSpan;
+}
 /**************************************************************************************
  * The main customizer for statistical values.
  *************************************************************************************/
@@ -2672,11 +2703,26 @@ function drawTable(target, data, showFields, typeFilterArray){
 							renderdef: {
 								merge: false,
 								data: _.filter(data, function(o){ return o.ok_sla != null; } ),
-								visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "failrate", "Rule", "ok_sla", "status_over_time"),
+								visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "failrate", "Rule", "status_over_time", "ok_sla"),
 								customizers: Object.assign({}, CUSTOMIZERS, {
 									  "Rule": function(record){ return slaForRecord(record); }
 									, "status_over_time": customizerStatusBartSLA
 								}),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
+						
+						{	
+							label: 'Analysis: Statuses',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								//data: _.filter(data, function(o){ return o.ok_sla != null; } ),
+								visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "failrate", "success", "skipped", "aborted", "failed", "none", "ok_sla"),
+								//customizers: Object.assign({}, CUSTOMIZERS, {
+								//}),
 								rendererSettings: {
 									table: {filterable: false, narrow: true, stickyheader: true},
 								},
@@ -2689,7 +2735,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 							renderdef: {
 								merge: false,
 								data: _.filter(data, function(o){ return o.failrate != null &&  o.failrate > 0; } ),
-								visiblefields: FIELDS_BASE_COUNTS.concat("total_count", "failed", "ok_sla", "failrate", "failure_over_time"),
+								visiblefields: FIELDS_BASE_COUNTS.concat("total_count", "failed", "failrate", "failure_over_time", "ok_sla"),
 								customizers: Object.assign({}, CUSTOMIZERS, {
 									"failure_over_time": function(record, value, rendererName, fieldname){
 											return customizerSparkchartStats(record, value, rendererName, fieldname
@@ -2703,6 +2749,8 @@ function drawTable(target, data, showFields, typeFilterArray){
 								},
 							}
 						},
+						
+						
 						
 						
 						{	label: 'Panels',
@@ -2731,13 +2779,18 @@ function drawTable(target, data, showFields, typeFilterArray){
 								visiblefields: null
 							}
 						},
-						{	label: 'JSON',
-							name: 'json',
-							renderdef: {}
-						},
+						// freezes UI when lots of data
+//						{	label: 'JSON',
+//							name: 'json',
+//							renderdef: {}
+//						},
 						{	label: 'Text Table',
 							name: 'texttable',
-							renderdef: {}
+							renderdef: {
+								rendererSettings: {
+									texttable: { maxwidth: 90 },
+								}
+							}
 						}
 					],
 				},
