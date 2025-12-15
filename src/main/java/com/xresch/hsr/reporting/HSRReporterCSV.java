@@ -54,6 +54,8 @@ public class HSRReporterCSV implements HSRReporter {
 			String header = HSRRecordStats.getCSVHeader(separator)+"\r\n";
 			Files.deleteIfExists(path);
 			
+			Files.createDirectories(path.getParent());
+			
 			Files.write(path, header.getBytes() 
 					, StandardOpenOption.WRITE
 					, StandardOpenOption.CREATE

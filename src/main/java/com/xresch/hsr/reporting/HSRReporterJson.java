@@ -62,6 +62,7 @@ public class HSRReporterJson implements HSRReporter {
 		try {
 			Path path = Path.of(filepath);
 			Files.deleteIfExists(path);
+			Files.createDirectories(path.getParent());
 			
 			BufferedWriter writer = new BufferedWriter(new FileWriter(filepath, true));
 		    
