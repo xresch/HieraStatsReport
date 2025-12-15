@@ -16,11 +16,12 @@ public class HSRHooks {
 	
 	// packages to skip in the stack trace to get more meaningful information and reduce overhead
 	protected static ArrayList<String> skippedPackageList = new ArrayList<String>();
+	
 	protected static int bottomStackElements = 3;
 	protected static int maxStackElements = 10;
 	
 	/*****************************************************************************************
-	 * You may call this an empty constructor, I call it the reincarnation of characters that
+	 * You may call this a constructor, I call it the reincarnation of characters that
 	 * have been slaughtered by the mighty Lord of Digital Erasure.
 	 * 
 	 *****************************************************************************************/
