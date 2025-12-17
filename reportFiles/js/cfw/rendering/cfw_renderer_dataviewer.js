@@ -30,6 +30,8 @@ function cfw_renderer_dataviewer(renderDef) {
 			download: false, 
 			// Toggle if the menu should include a store button for the data
 			store: false, 
+			// Toggle if the menu should include a print button for the data
+			print: false, 
 			// Defines how the pagination should be rendered
 			pagination: 'both', // either 'both' | 'top' | 'botton' | 'none' | true | false 
 			// The initial page to be drawn.
@@ -221,9 +223,6 @@ function cfw_renderer_dataviewer_fireChange(dataviewerIDOrJQuery, pageToRender) 
 	// Initialize
 	let params = cfw_renderer_dataviewer_createParams(dataviewerIDOrJQuery, pageToRender);
 	
-	//let dataviewerDiv = params.dataviewerDiv ;
-	//let targetDiv = params.targetDiv ;
-	//let dataviewerID = params.dataviewerID ;
 	let settingsDiv = params.settingsDiv ;
 	let finalRenderDef = params.finalRenderDef ;
 	let settings = params.settings ;
@@ -250,8 +249,72 @@ function cfw_renderer_dataviewer_fireChange(dataviewerIDOrJQuery, pageToRender) 
 	}
 	
 	//=====================================================
-	// Create sorting function
+	// Get Render Results
+	if(settings.datainterface.url == null){
+		cfw_renderer_dataviewer_filterAndSort(params);
+		cfw_renderer_dataviewer_renderPage(params);
+	}else{
+		
+		//-------------------------------------
+		// Dynamic
+		let httpParams = {};
+		httpParams[settings.datainterface.actionparam] = "fetchpartial";
+		httpParams[settings.datainterface.sizeparam] = pageSize;
+		httpParams[settings.datainterface.pageparam] = pageToRender;
+		httpParams[settings.datainterface.filterqueryparam] = filterquery;
+		httpParams[settings.datainterface.itemparam] = settings.datainterface.item;
+		httpParams[settings.datainterface.sortbyparam] = sortbyFields;
+		httpParams[settings.datainterface.sortascendingparam] = (sortbyDirection == 'desc') ? false : true;
+
+		for(key in settings.datainterface.customparams){
+			httpParams[key] = settings.datainterface.customparams[key];
+		}
+		
+		CFW.http.getJSON(settings.datainterface.url, httpParams, function(data){
+			
+			if(data.payload != null){
+				let dataToRender = data.payload;
+				let totalRecords = (dataToRender.length > 0) ? dataToRender[0][settings.datainterface.totalrowsfield] : 0;
+				
+				//----------------------------------
+				// Call preprocess function
+				if(settings.datainterface.preprocess != null){
+					settings.datainterface.preprocess(dataToRender);
+				}
+				params.totalRecords = totalRecords;
+				params.dataToRender = dataToRender;
+				cfw_renderer_dataviewer_renderPage(params);
+				
+				
+			}
+		}
+	);
+	}
 	
+	//----------------------------------
+	// Callback
+	if(settings.postprocess != null){
+		settings.postprocess($(dataviewerIDOrJQuery));
+	}
+			
+}
+
+/******************************************************************
+ * 
+ ******************************************************************/
+function cfw_renderer_dataviewer_filterAndSort(params) {
+	
+	let finalRenderDef = params.finalRenderDef ;
+	let settings = params.settings ;
+	let filterquery = params.filterquery ;
+	let sortbyFields = params.sortbyFields ;
+	let sortbyDirection = params.sortbyDirection ;
+	let offset = params.offset ;
+	let pageSize = params.pageSize;
+	
+	//=====================================================
+	// Create sorting function
+
 	//default to "asc" if undefined
 	let sortDirectionArray = [];
 	let sortFunctionArray = [];
@@ -304,123 +367,56 @@ function cfw_renderer_dataviewer_fireChange(dataviewerIDOrJQuery, pageToRender) 
 			}
 		);
 	}
-
 	
-	//=====================================================
-	// Get Render Results
-	if(settings.datainterface.url == null){
-
-		//-------------------------------------
-		// Static 
-		if(CFW.utils.isNullOrEmpty(filterquery)){
-			
-			//---------------------------------
-			// Sort
-			let sortedData = finalRenderDef.data;
-			if(settings.sortable && sortbyFields != null){
-				sortedData = _.orderBy(sortedData, sortFunctionArray, sortDirectionArray);
-			}
-			
-			//---------------------------------
-			// Pagination
-			let totalRecords = sortedData.length;
-			let dataToRender = _.slice(sortedData, offset, offset+pageSize);
-			if(pageSize == -1
-			|| settings.pagination == 'none'
-			|| settings.pagination == false ){
-				// reset to unpaginated 
-				dataToRender = sortedData;
-			}
-			params.totalRecords = totalRecords;
-			params.dataToRender = dataToRender;
-			cfw_renderer_dataviewer_renderPage(params);
-		}else{
-			
-			//---------------------------------
-			// Filter
-			filterquery = filterquery.toLowerCase();
-			
-			let regex = null;
-			if(filterquery.indexOf("*") > -1){
-				regex =  new RegExp(filterquery.replace(/\*/g, '.*'));
-			}
-
-			let filteredData = _.filter(finalRenderDef.data, function(o) { 
-				let jsonString = JSON.stringify(o).toLowerCase();
-				
-				return ( 
-				  (regex == null && jsonString.indexOf(filterquery) > -1)
-				  || (regex != null && regex.test(jsonString) )
-			  );
-
-			});
-			
-			//---------------------------------
-			// Sort
-			let sortedData = filteredData;
-			if(settings.sortable && sortbyFields != null){
-				sortedData = _.orderBy(sortedData, sortFunctionArray, sortDirectionArray);
-			}
-			
-			//---------------------------------
-			// Pagination
-			let totalRecords = sortedData.length;
-			let dataToRender = _.slice(sortedData, offset, offset+pageSize);
-			if(pageSize == -1
-			|| settings.pagination == 'none'
-			|| settings.pagination == false ){
-				dataToRender = sortedData;
-			}	
-			params.totalRecords = totalRecords;
-			params.dataToRender = dataToRender;
-			cfw_renderer_dataviewer_renderPage(params);
-		}
-	}else{
+	//-------------------------------------
+	// In Browser Data 
+	let sortedData = finalRenderDef.data;
+	
+	//---------------------------------
+	// Filter
+	if( ! CFW.utils.isNullOrEmpty(filterquery) ){
 		
-		//-------------------------------------
-		// Dynamic
-		let httpParams = {};
-		httpParams[settings.datainterface.actionparam] = "fetchpartial";
-		httpParams[settings.datainterface.sizeparam] = pageSize;
-		httpParams[settings.datainterface.pageparam] = pageToRender;
-		httpParams[settings.datainterface.filterqueryparam] = filterquery;
-		httpParams[settings.datainterface.itemparam] = settings.datainterface.item;
-		httpParams[settings.datainterface.sortbyparam] = sortbyFields;
-		httpParams[settings.datainterface.sortascendingparam] = (sortbyDirection == 'desc') ? false : true;
-
-		for(key in settings.datainterface.customparams){
-			httpParams[key] = settings.datainterface.customparams[key];
-		}
+		filterquery = filterquery.toLowerCase();
 		
-		CFW.http.getJSON(settings.datainterface.url, httpParams, function(data){
-			
-			if(data.payload != null){
-				let dataToRender = data.payload;
-				let totalRecords = (dataToRender.length > 0) ? dataToRender[0][settings.datainterface.totalrowsfield] : 0;
-				
-				//----------------------------------
-				// Call preprocess function
-				if(settings.datainterface.preprocess != null){
-					settings.datainterface.preprocess(dataToRender);
-				}
-				params.totalRecords = totalRecords;
-				params.dataToRender = dataToRender;
-				cfw_renderer_dataviewer_renderPage(params);
-				
-				
-			}
+		let regex = null;
+		if(filterquery.indexOf("*") > -1){
+			regex =  new RegExp(filterquery.replace(/\*/g, '.*'));
 		}
-	);
+
+		let filteredData = _.filter(finalRenderDef.data, function(o) { 
+			let jsonString = JSON.stringify(o).toLowerCase();
+			
+			return ( 
+			  (regex == null && jsonString.indexOf(filterquery) > -1)
+			  || (regex != null && regex.test(jsonString) )
+		  );
+
+		});
+		
+		sortedData = filteredData;
+		
 	}
 	
-	//----------------------------------
-	// Callback
-	if(settings.postprocess != null){
-		settings.postprocess($(dataviewerIDOrJQuery));
+	//---------------------------------
+	// Sort
+	if(settings.sortable && sortbyFields != null){
+		sortedData = _.orderBy(sortedData, sortFunctionArray, sortDirectionArray);
 	}
-			
+	
+	//---------------------------------
+	// Pagination
+	let totalRecords = sortedData.length;
+	let dataToRender = _.slice(sortedData, offset, offset+pageSize);
+	if(pageSize == -1
+	|| settings.pagination == 'none'
+	|| settings.pagination == false ){
+		// reset to unpaginated 
+		dataToRender = sortedData;
+	}
+	params.totalRecords = totalRecords;
+	params.dataToRender = dataToRender;
+	
 }
-
 /******************************************************************
  * 
  ******************************************************************/
@@ -557,7 +553,7 @@ function cfw_renderer_dataviewer_createMenuHTML(dataviewerID, renderDef, datavie
 	}
 	
 	//--------------------------------------
-	// Display As
+	// Store Button
 
 	if(dataviewerSettings.store){
 		
@@ -570,8 +566,9 @@ function cfw_renderer_dataviewer_createMenuHTML(dataviewerID, renderDef, datavie
 			+'</div>'
 			;
 	}
+	
 	//--------------------------------------
-	// Display As
+	// Download Button
 	if(dataviewerSettings.download){
 		
 		html += 
@@ -585,6 +582,20 @@ function cfw_renderer_dataviewer_createMenuHTML(dataviewerID, renderDef, datavie
 	}
 	
 	//--------------------------------------
+	// Print Button
+	if(dataviewerSettings.print){
+		
+		html += 
+			'<div class="float-right ml-2">'
+				+'<label for="printButton">&nbsp;</label>'
+				+'<div name="printButton">'
+					+cfw_renderer_dataviewer_createPrintButtonHTML(dataviewerID)
+				+'</div>'
+			+'</div>'
+			;
+	}
+	
+	//--------------------------------------
 	// Display As
 	if(dataviewerSettings.renderers.length > 1){
 		
@@ -592,7 +603,7 @@ function cfw_renderer_dataviewer_createMenuHTML(dataviewerID, renderDef, datavie
 			+'	<label for="displayas">Display As:&nbsp;</label>'
 			+'	<select name="displayas" class="dataviewer-displayas form-control form-control-sm" '+onchangeAttribute+'>'
 		
-			for(index in dataviewerSettings.renderers){
+			for(let index in dataviewerSettings.renderers){
 				var renderer = dataviewerSettings.renderers[index];
 				var selected = (index == selectedRendererIndex) ? 'selected' : '';
 				
@@ -692,7 +703,7 @@ function cfw_renderer_dataviewer_createPageListItem(dataviewerID, page, label, i
 function cfw_renderer_dataviewer_triggerDownload(dataviewerID, renderer) {
 	
 	let dataviewerDiv = $("#"+dataviewerID);
-	let renderDef = dataviewerDiv.data('renderDef');
+	let renderDef = _.cloneDeep(dataviewerDiv.data('renderDef'));
 	renderDef.visiblefields = null;
 	
 	let renderedResult = CFW.render.getRenderer(renderer).render(renderDef);
@@ -718,6 +729,152 @@ function cfw_renderer_dataviewer_triggerDownload(dataviewerID, renderer) {
 		break;
 
 	}
+}
+
+/******************************************************************
+ * 
+ ******************************************************************/
+function cfw_renderer_dataviewer_triggerPrint(dataviewerID) {
+	
+	//----------------------------
+	// Get Render Def
+	let dataviewerDiv = $("#"+dataviewerID);
+	let renderDef = _.cloneDeep(dataviewerDiv.data('renderDef'));
+	
+	//----------------------------
+	// Get Dataviewer Params
+	var params = cfw_renderer_dataviewer_createParams(dataviewerDiv, 1);
+	params.settings.menu = false;
+	params.settings.pagination = false;
+	cfw_renderer_dataviewer_filterAndSort(params);
+	
+	//----------------------------
+	// Prepare Final Def
+	let finalDef = params.finalRenderDef;
+	rendererName = params.rendererName.trim().toLowerCase();
+	finalDef.data = params.dataToRender;
+	
+	//----------------------------
+	// Prepare Print Options
+	let printOptions = $(`
+	<div class="form-group row ml-1">  
+		<label class="col-sm-3 col-form-label" for="cfw-print-title">Page Title:</label>   
+		<div class="col-sm-9 d-flex">
+			<div class="cfw-field-wrapper">
+				<input type="text" class="form-control" placeholder="Page Title(Optional)" id="cfw-print-title" onkeydown="return event.key != 'Enter';" value="Report" >
+			</div>
+		</div>
+	</div>
+	<div class="form-group row ml-1">  
+		<label class="col-sm-3 col-form-label" for="cfw-print-description">Description:</label>   
+		<div class="col-sm-9 d-flex">
+			<div class="cfw-field-wrapper">
+				<input type="text" class="form-control" placeholder="Description(Optional)" id="cfw-print-description" onkeydown="return event.key != 'Enter';" value="Data exported from EMP." >
+			</div>
+		</div>
+	</div>
+	<div class="form-group row ml-1">  
+			<label class="col-sm-3 col-form-label" for="cfw-print-landscape">Landscape:</label>   
+			<div class="col-sm-9 d-flex">
+				<div class="cfw-field-wrapper">
+					<input type="checkbox" class="" id="cfw-print-landscape" onkeydown="return event.key != 'Enter';">
+				</div>
+			</div>
+		</div>
+	`);
+	
+	//==============================================
+	// Create Buttons
+	let noneButton = $('<button class=" btn btn-sm btn-primary mb-3">None</button>');
+	noneButton.click(
+		function() {
+			$('#cfw-print-columnlist input').prop('checked', false);
+		});
+	let allButton = $('<button class="btn btn-sm btn-primary mb-3 mr-1">All</button>');
+	allButton.click(
+		function() {
+			$('#cfw-print-columnlist input').prop('checked', true);
+		});
+	//----------------------------
+	// Prepare Checkbox Options
+	let renderer = CFW.render.getRenderer(rendererName);
+	renderer.prepareDefinition(finalDef);
+
+	let checkboxWrapper = $('<div id="cfw-print-columnlist">');
+	let checkboxArray = [];
+	
+	for(let i in finalDef.visiblefields){
+		fieldname = finalDef.visiblefields[i];
+		fieldnameSafe = fieldname.replace('"', '\"'); 
+		
+		let label = $('<label for="'+fieldnameSafe+'">'+fieldname+'</label>')
+		let checkbox = $('<input id="'+fieldnameSafe+'" name="'+fieldnameSafe+'" type="checkbox" checked="checked">')
+		checkbox.data("fieldname", fieldname);
+		
+		let labelledBox = $('<div>');
+		
+		labelledBox.append(checkbox);
+		labelledBox.append(label);
+		checkboxWrapper.append(labelledBox);
+		
+		checkboxArray.push(checkbox);
+		
+	}
+	
+	//==============================================
+	// Create Button
+	let button = $('<button class="col-3 btn btn-sm btn-primary mt-3">Create Print View</button>');
+	button.click(
+		function() {
+			//----------------------------
+			// Get Visible Fields
+			let title = $('#cfw-print-title').val();
+			let description = $('#cfw-print-description').val();
+			let doLandscape = $('#cfw-print-landscape').prop('checked');
+			//----------------------------
+			// Get Visible Fields
+			let visibles = []
+			for(let i in checkboxArray){
+				let box = checkboxArray[i];
+				if(box.prop('checked') == true){
+					visibles.push(box.data('fieldname'));
+				}
+			}
+			finalDef.visiblefields = visibles;
+			
+			let renderResult = renderer.render(finalDef);
+
+			let printView = CFW.ui.createPrintView(title, description, doLandscape);
+			printView.append(renderResult);
+		});
+		
+	//==============================================
+	// Show the Modal
+	
+	let allWrapper = $('<div>');
+	allWrapper.append('<h4>Print Options:</h4>');
+	allWrapper.append(printOptions);
+	allWrapper.append('<h4>Select Columns:</h4>');
+	allWrapper.append(noneButton);
+	allWrapper.append(allButton);
+	allWrapper.append(checkboxWrapper);
+	allWrapper.append(`
+		<p class="mt-3"><b class="text-cfw-red">IMPORTANT:&nbsp;</b>After creating the print view in Chrome or Edge:</p>
+		<ul> 
+			<li><b>Print Dialog:&nbsp;</b>Use Ctrl+P to open the print dialog.</li>
+			<li><b>Save PDF:&nbsp;</b>Choose &quot;Save As PDF&quot; and not &quot;Microsoft Print to PDF&quot;.</li>
+			<li><b>Cut Off Data:&nbsp;</b>If data is cut off on the right: Under &quot;More Settings &gt;&gt; Scale&quot; choose Custom and adjust the percentage.</li>
+			<li><b>Missing Colors:&nbsp;</b>If colors are not shown: Enable &quot;More Settings &gt;&gt; Options &gt;&gt; Background Graphics&quot;.</li>
+			<li><b>No Charts:&nbsp;</b> This feature does not support charts in print views.</li>
+		</ul>
+		</p>`);
+	allWrapper.append(button);
+	
+	CFW.ui.showModalMedium(
+			  "Create Print View"
+			, allWrapper
+			);
+
 }
 
 /******************************************************************
@@ -756,6 +913,25 @@ function cfw_renderer_dataviewer_createDownloadButtonHTML(dataviewerID) {
 		+'</div>';
 		
 	return dropdownHTML;
+
+}
+
+/******************************************************************
+ * 
+ ******************************************************************/
+function cfw_renderer_dataviewer_createPrintButtonHTML(dataviewerID) {
+	
+	var buttonID = 'printdataMenuButton'+CFW.utils.randomString(12);
+	
+	var printbuttonHTML = 
+		  '<button  type="button" class="btn btn-sm btn-primary"'
+				+' id="'+buttonID+'" '
+				+' onclick="cfw_renderer_dataviewer_triggerPrint(\''+dataviewerID+'\')">'
+		+ '  <i class="fas fa-print"></i>'
+		+ '</button>'
+		;
+		
+	return printbuttonHTML;
 
 }
 
@@ -815,7 +991,7 @@ function cfw_renderer_dataviewer_createSortSelectHTML(dataviewerSettings, render
 
 			let ascendingHTML = ""; 
 			let descendingHTML = ""; 
-			for(index in sortoptions){
+			for(let index in sortoptions){
 				let fieldName = sortoptions[index];
 				let fielLabel = renderDef.getLabel(fieldName, CFW_RENDER_NAME_DATAVIEWER);
 				
@@ -849,7 +1025,7 @@ function cfw_renderer_dataviewer_createSortSelectHTML(dataviewerSettings, render
 	if( ! Array.isArray(sortoptions) && typeof sortoptions == 'object'){
 			let ascendingHTML = ""; 
 			let descendingHTML = ""; 
-			let isFirst = true;
+			let index = 0;
 			for(let fielLabel in sortoptions){
 				let fieldValue = sortoptions[fielLabel];
 				
@@ -861,7 +1037,7 @@ function cfw_renderer_dataviewer_createSortSelectHTML(dataviewerSettings, render
 				
 				let selectedAsc = '';
 				let selectedDesc = '';
-				if(isFirst && selectedSortbyFields == null){
+				if(index == 0 && selectedSortbyFields == null){
 					selectedAsc = 'selected';
 				}else{
 					if(sortbyFields == selectedSortbyFields){
@@ -885,7 +1061,7 @@ function cfw_renderer_dataviewer_createSortSelectHTML(dataviewerSettings, render
 					
 				ascendingHTML += '<option value="'+sortbyFields+'" data-direction="'+sortbyDirections+'" '+selectedAsc+'>&uarr; '+fielLabel+'</option>';
 				descendingHTML += '<option value="'+sortbyFields+'" data-direction="'+sortbyDirectionsDesc+'" '+selectedDesc+'>&darr; '+fielLabel+'</option>';
-				isFirst = false;
+				index++;
 			}
 		
 			html += ascendingHTML + descendingHTML;

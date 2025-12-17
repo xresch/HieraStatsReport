@@ -504,6 +504,7 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 			rendererSettings:{
 				  dataviewer:{
 					download: true,
+					print: true,
 					sortable: true,
 					renderers: CFW.render.createDataviewerDefaults()
 				}
@@ -720,10 +721,49 @@ function loadData(){
 	FILELIST = dedupArray(FILELIST);
 
 	//------------------------------------------
-	// Concatenate all data into DATA
+	// Concatenate all data into var DATA
 	loadDataScript(0);
 	
+	//------------------------------------------
+	// Adding full path CSS
+	// this is needed for print view to render properly
+	var url = CFW.http.getURLPath(); url = url.substring(0,url.lastIndexOf("/"));
+	
+	loadCSS(url+"/css/bootstrap-theme-bootstrap.css", "print");
+	loadCSS(url+"/css/cfw.css", "print");
+	loadCSS(url+"/css/font-awesome.css", "print");
+	loadCSS(url+"/css/report.css", "print");
 
+}
+
+
+/**************************************************************************************
+ * Load CSS file.
+ *************************************************************************************/
+function loadCSS(cssPath, media) {
+	loadLink(cssPath, 'stylesheet', 'text/css', media)
+}
+	
+/**************************************************************************************
+ * Load CSS file.
+ *************************************************************************************/
+function loadLink(linkPath, rel, type, media) {
+    
+	const link = document.createElement('link');
+    link.href = linkPath;
+    link.rel = rel;
+	if(type != null){ link.type = type; }
+	if(media != null){ link.media = media; }
+
+    link.onload = function () {
+        console.log("✅ Link Loaded: " + linkPath);
+    };
+
+    link.onerror = function () {
+        console.error("❌ Failed to load link: " + linkPath);
+    };
+
+    document.head.appendChild(link);
 }
 
 /******************************************************************
@@ -2130,6 +2170,7 @@ function showRecordDetails(statsid){
 		rendererSettings:{
 			  dataviewer:{
 				download: true,
+				print: true,
 				sortable: true,
 				defaultsize: 10,
 				renderers: CFW.render.createDataviewerDefaults()
@@ -2393,7 +2434,7 @@ function drawSummaryPage(target){
 			, "status_over_time": customizerStatusBartSLA
 		}),
 		rendererSettings: {
-			dataviewer:{ storeid: "table-summary-sla", download: true, sortable: true, sortoptions: defaultSortOptions() },
+			dataviewer:{ storeid: "table-summary-sla", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
 			table: {filterable: false, narrow: true, stickyheader: true},
 		},
 	}
@@ -2421,7 +2462,7 @@ function drawSummaryPage(target){
 			}
 		}),
 		rendererSettings: {
-			dataviewer:{ storeid: "table-summary-boxplots", download: true, sortable: true, sortoptions: defaultSortOptions() },
+			dataviewer:{ storeid: "table-summary-boxplots", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
 			table: {filterable: false, narrow: true, stickyheader: true},
 		},
 	}						
@@ -2449,7 +2490,7 @@ function drawSummaryPage(target){
 			}
 		}),
 		rendererSettings: {
-			dataviewer:{ storeid: "table-summary-failure", download: true, sortable: true, sortoptions: defaultSortOptions() },
+			dataviewer:{ storeid: "table-summary-failure", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
 			table: {filterable: false, narrow: true, stickyheader: true},
 		},
 	}
@@ -2554,6 +2595,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 			titlefields: ['pathrecord', 'ok_sla'],
 			titleformat: "{0} {1}",
 			visiblefields: showFields,
+			
 			labels: FIELDLABELS,
 			customizers: CUSTOMIZERS,
 			actions: ACTION_BUTTONS,
@@ -2569,6 +2611,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 				dataviewer:{
 					storeid: "table-"+filterID,
 					download: true,
+					print: true,
 					sortable: true,
 					sortoptions: defaultSortOptions(),
 					renderers: [
