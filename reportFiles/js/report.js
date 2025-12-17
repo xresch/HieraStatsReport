@@ -2077,6 +2077,25 @@ function showRecordDetails(statsid){
 	resultDiv.append(chartCounts);
 	
 	//--------------------------
+	// Chart: Statuses
+	let chartStatuses = $('<div class="row">');
+	drawChartByFields(
+		  chartStatuses
+		, datapoints
+		, []
+		, ["success", "skipped", "aborted", "failed", "none"]
+		, { 
+			  charttype: 'bar' 
+			, height: "30vh"
+			, stacked: true
+			, colors: ["limegreen", "yellow", "orange", "red", "gray"]
+		}
+	);
+
+	resultDiv.append('<h3>Statuses<h3>');
+	resultDiv.append(chartStatuses);
+	
+	//--------------------------
 	// Chart: Failure Rate
 	let chartFailrate = $('<div class="row">');
 	drawChartByFields(
@@ -2090,10 +2109,11 @@ function showRecordDetails(statsid){
 			, ymax: 100
 			, colors: ["red"]
 		}
-	);;
+	);
 	
 	resultDiv.append('<h3>Failure Rate [%]<h3>');
 	resultDiv.append(chartFailrate);
+	
 
 	//--------------------------
 	// Chart Min / Avg / Max
@@ -2293,7 +2313,7 @@ function drawSummaryPage(target){
 		chartStatuses.append('<h5>Statuses<h5>');
 		drawChartByFields(
 			  chartStatuses
-			, clonedRecord
+			, _.filter(clonedRecord, function(o){ return o.success != null; } )
 			, []
 			, ["success","skipped", "aborted", "failed", "none"]
 			, { 
@@ -2306,7 +2326,7 @@ function drawSummaryPage(target){
 		row.append(chartStatuses);
 		
 		//--------------------------
-		// Chart: Statuses
+		// Chart: Messages
 		let chartMessages = $('<div class="col-3">');
 		chartMessages.append('<h5>Messages<h5>');
 		drawChartByFields(
