@@ -30,11 +30,13 @@ public class HSRDBInterface {
 	public final String tablenamePrefix;
 	public final String tablenameTests;
 	public final String tablenameStats;
+	public final String tablenameStatsSummary;
 	public final String tablenameTestsettings;
 	public final String tablenameTempAggregation;
 	
 	private String sqlCreateTableTests;
 	private String sqlCreateTableStats;
+	private String sqlCreateTableStatsSummary;
 	private String sqlCreateTableTestSettings;
 	private String sqlAggregateStats;
 	
@@ -75,6 +77,7 @@ public class HSRDBInterface {
 		this.tablenamePrefix = tablenamePrefix;
 		this.tablenameTests = tablenamePrefix+"_tests";
 		this.tablenameStats = tablenamePrefix+"_stats";
+		this.tablenameStatsSummary = tablenamePrefix+"_stats_summary";
 		this.tablenameTestsettings = tablenamePrefix+"_testsettings";
 		this.tablenameTempAggregation = tablenamePrefix+"_temp_aggregation";
 		
@@ -83,6 +86,7 @@ public class HSRDBInterface {
 		// if a DB does not support this flavor
 		this.setSQLCreateTableTests( 		HSRDBInterface.createSQL_CreateTableTests(tablenameTests) );
 		this.setSQLCreateTableStats( 		HSRRecordStats.createSQL_CreateTableStats(tablenameStats, tablenameTests) );
+		this.setSQLCreateTableStatsSummary( HSRRecordStats.createSQL_CreateTableStats(tablenameStatsSummary, tablenameTests) );
 		this.setSQLCreateTableTestSettings( HSRTestSettings.createSQL_CreateTableTestSettings(tablenameTestsettings, tablenameTests) );
 		this.setSQLAggregateStats( 			HSRRecordStats.createSQL_AggregateStats(tablenameStats, tablenameTempAggregation) );
 	}
@@ -106,6 +110,7 @@ public class HSRDBInterface {
 		// CREATE TABLES
 		db.preparedExecute(sqlCreateTableTests);
 		db.preparedExecute(sqlCreateTableStats);
+		db.preparedExecute(sqlCreateTableStatsSummary);
 		db.preparedExecute(sqlCreateTableTestSettings);
 		
 		//---------------------------
@@ -171,6 +176,17 @@ public class HSRDBInterface {
 		
 		for(HSRRecordStats record : records ) {
 			record.insertIntoDatabase(db, testID, tablenameStats);
+		}
+
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void reportRecordsSummary(int testID, ArrayList<HSRRecordStats> records) {
+		
+		for(HSRRecordStats record : records ) {
+			record.insertIntoDatabase(db, testID, tablenameStatsSummary);
 		}
 
 	}
@@ -461,6 +477,10 @@ public class HSRDBInterface {
 
 	public void setSQLCreateTableStats(String statsSQL) {
 		this.sqlCreateTableStats = statsSQL;
+	}
+	
+	public void setSQLCreateTableStatsSummary(String statsSummarySQL) {
+		this.sqlCreateTableStatsSummary = statsSummarySQL;
 	}
 
 	public String getCreateTableSQLTestSettings() {

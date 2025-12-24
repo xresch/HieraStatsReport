@@ -85,6 +85,7 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
 		
 		hsrDB.reportSLA(testID, slaForRecords);
+		hsrDB.reportRecordsSummary(testID, summaryRecords);
 	}
 	
 	/****************************************************************************

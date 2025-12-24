@@ -469,6 +469,7 @@ public class HSRRecordStats {
 				;
 	}
 	
+	
 	/***********************************************************************
 	 * Returns a humongous SQL for aggregating SQL.
 	 * Here is an example:
