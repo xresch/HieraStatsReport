@@ -566,7 +566,7 @@ public class HSR {
 			return itemToEnd;
 			
 		}else{
-			logger.warn("HSR.end(): Everything already ended, there is nothing more to end.");
+			logger.debug("HSR.end(): Everything already ended, there is nothing more to end.");
 			return new HSRRecord(HSRRecordType.MessageInfo, activeItem.get(), "Prevent NullPointerException");
 		}
 		
