@@ -15,6 +15,10 @@ HieraStatsReport ("Hierachical Statistics Report") is a small tool that was crea
 
 * **Everything comes to an end():** Everything that is started(HSR.start*) needs to be ended(HSR.end*). If things are not properly ended, you might get strange results or lose part of your data. If you catch or throw exceptions, make sure to call an end()-method in the finally block or end it before throwing the exception.
 
+* **Config and Scopes:** Configuration is done through the class HSRConfig. Configurations have two different scopes:
+	- **Global:** Is set globally for any thread accessing HSR.
+	- **Propagated:** Is set for the current thread and every thread that is spawned by that thread.
+  
 # Maven Dependency
 Following is the maven dependency of HSR:
 

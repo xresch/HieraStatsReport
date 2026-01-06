@@ -97,6 +97,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Sets the reporting interval of HSR.
 	 * 
 	 * @param reportingInterval number of seconds for the reporting
@@ -109,6 +111,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Returns the report interval in seconds.
 	 ******************************************************************/
 	public static int getInterval() {
@@ -116,6 +119,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Starts HSR and the reporting engine.
 	 * 
 	 * @param reportingInterval number of seconds for the reporting
@@ -157,6 +162,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Propagated (Inheritable Thread Local) <br>
+	 * 
 	 * Toggles if pauses created with HSR.pause() methods should be 
 	 * pausing or should be ignored.
 	 * This applies to the current thread and all the thread it spawns, 
@@ -169,6 +176,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Propagated (Inheritable Thread Local) <br>
+	 * 
 	 * Returns the value of the disableSummaryReports setting.
 	 * @return boolean
 	 * 
@@ -177,6 +186,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		return HSRConfig.disablePauses.get();
 	}
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Sets if summaries should be reported or not.
 	 * This will stop the StatsEngine from collecting the aggregated metrics
 	 * until the engine is stopped, therefore reducing memory usage.
@@ -187,6 +198,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Returns the value of the disableSummaryReports setting.
 	 * @return boolean
 	 * 
@@ -196,6 +209,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Adds a property to the report.
 	 * These properties can be saved by different reporters at the end
 	 * of a test.
@@ -205,6 +220,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Returns a clone of the list of properties
 	 ******************************************************************/
 	public static TreeMap<String,String> getProperties() {
@@ -212,6 +228,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Add reporters to the list.
 	 ******************************************************************/
 	public static void addReporter(HSRReporter reporter) {
@@ -220,6 +237,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Returns the list of the reporters.
 	 * 
 	 ******************************************************************/
@@ -229,6 +247,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * For internal use only.
 	 * Adds Test settings to the 
 	 ******************************************************************/
@@ -238,6 +257,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Set a custom HSRHooks class to hook into the system.
 	 * 
 	 ******************************************************************/
@@ -246,7 +266,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
-	 * Returns the list of usecases.
+	 * <b>Scope:</b> Global <br>
+	 * Returns the list of test settings.
 	 * 
 	 ******************************************************************/
 	@SuppressWarnings("unchecked")
@@ -256,6 +277,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * 
 	 ******************************************************************/
 	public static boolean isRawDataToSysout() {
@@ -263,6 +285,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Enable or disable writing raw data to sysout.
 	 ******************************************************************/
 	public static void setRawDataToSysout(boolean rawDataToSysout) {
@@ -270,6 +293,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Set the log path for raw data.
 	 * Will also activate the logging of raw data.
 	 ******************************************************************/
@@ -284,6 +308,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * 
 	 ******************************************************************/
 	public static String getRawDataLogPath() {
@@ -291,6 +316,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Return true if raw data logs should be written
 	 ******************************************************************/
 	public static boolean isWriteRawDataLog() {
@@ -316,6 +342,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Sets the level of the logback root logger.
 	 ******************************************************************/
 	public static void setLogLevelRoot(Level level) {
@@ -327,6 +354,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Sets the level of the logback of the selected logger.
 	 ******************************************************************/
 	public static void setLogLevel(Level level, String loggerName) {
@@ -340,6 +368,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Sets a TurboFilter to logback that can be used to intercept
 	 * logs. This method has to be called before HSRConfig.enable().
 	 ******************************************************************/
@@ -356,7 +385,9 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
     private static final String APPENDER_NAME = "ROOT-ROLLING-FILE";
 	
     /******************************************************************
-     * No log file will be written until this method has been called.
+     * <b>Scope:</b> Global <br>
+	 * 
+	 * No log file will be written until this method has been called.
      * Therefore, it is recommended to call this method as soon as possible.
      ******************************************************************/
     public static void setLogFilePath(String logFilePath) {
@@ -413,6 +444,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		
 
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Enable age out of data that was reported to Databases.
 	 * Default is false.
 	 * This must be called before constructors of DB Reporters are called
@@ -426,6 +459,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * 
 	 ******************************************************************/
 	public static boolean isAgeOut() {
@@ -433,6 +467,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Sets the age out config.
 	 * Only takes effect if AgeOut has been enabled.
 	 * 
@@ -444,6 +480,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Sets the age out config.
 	 * Only takes effect if AgeOut has been enabled.
 	 * 
@@ -456,6 +494,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggles certain debug information.
 	 * You can use this to also toggle your own debug logs by
 	 * retrieving this values using the isDebug()-method.
@@ -471,8 +511,23 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		return debug;
 	}
 	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
+	 * Toggle if system usage statistics should be collected.
+	 ******************************************************************/
+	public static void toggleSystemStats(boolean isEnabled) {
+		statsCPU(isEnabled);
+		statsDiskIO(isEnabled);
+		statsDiskUsage(isEnabled);
+		statsHostMemory(isEnabled);
+		statsProcessMemory(isEnabled);
+		statsNetworkIO(isEnabled);
+	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggle if statistics for the process memory should be collected.
 	 ******************************************************************/
 	public static void statsProcessMemory(boolean isEnabled) {
@@ -480,6 +535,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Return if statistics for the process memory should be collected.
 	 ******************************************************************/
 	public static boolean statsProcessMemory() {
@@ -487,6 +544,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggle if statistics for the host memory should be collected.
 	 ******************************************************************/
 	public static void statsHostMemory(boolean isEnabled) {
@@ -494,6 +553,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Return if statistics for the host memory should be collected.
 	 ******************************************************************/
 	public static boolean statsHostMemory() {
@@ -501,6 +562,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggle if statistics for the CPU Usage should be collected.
 	 ******************************************************************/
 	public static void statsCPU(boolean isEnabled) {
@@ -508,6 +571,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Return if statistics for the CPU Usage should be collected.
 	 ******************************************************************/
 	public static boolean statsCPU() {
@@ -515,6 +580,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggle if statistics for the Disk Usage should be collected.
 	 ******************************************************************/
 	public static void statsDiskUsage(boolean isEnabled) {
@@ -522,6 +589,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Return if statistics for the Disk Usage should be collected.
 	 ******************************************************************/
 	public static boolean statsDiskUsage() {
@@ -529,6 +598,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggle if statistics for the Disk I/O should be collected.
 	 ******************************************************************/
 	public static void statsDiskIO(boolean isEnabled) {
@@ -536,12 +607,16 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Return if statistics for the Disk I/O should be collected.
 	 ******************************************************************/
 	public static boolean statsDiskIO() {
 		return enableStatsDiskIO;
 	}
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggle if statistics for the Network I/O should be collected.
 	 ******************************************************************/
 	public static void statsNetworkIO(boolean isEnabled) {
@@ -549,6 +624,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Return if statistics for the Network I/O should be collected.
 	 ******************************************************************/
 	public static boolean statsNetworkIO() {
@@ -556,6 +633,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	}
 	
 	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Terminates HieraStatsReport.
 	 * 
 	 ******************************************************************/
