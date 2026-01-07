@@ -306,9 +306,11 @@ public class HSRStatsEngine {
 			if( !groupedRecordsInterval.containsKey(id) ) {
 				groupedRecordsInterval.put(id, new ArrayList<>() );
 			}
+			
+			groupedRecordsInterval.get(id).add(record);
 		}
 		
-		groupedRecordsInterval.get(id).add(record);
+		
 		
 	}
 	
