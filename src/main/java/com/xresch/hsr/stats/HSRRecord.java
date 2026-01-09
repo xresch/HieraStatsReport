@@ -679,8 +679,8 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
-	 * Returns the full path of the record including pathlist:
-	 *   {test} / {usecase} / {path} / {metricName}
+	 * Returns the full path of the record including test name:
+	 *   {test} / {path} / {metricName}
 	 ******************************************************************/
 	public String getPathFull() {
 		
@@ -712,10 +712,6 @@ public class HSRRecord {
 	public String getPathRecord() {
 		
 		if(pathRecordCached == null) {
-			if(pathlist.isEmpty()) {
-				return name.replace(PATH_SEP_TRIMMED, "_")
-			   ;
-			}
 			
 			pathRecordCached = getPath(PATH_SEP)
 			 + PATH_SEP 

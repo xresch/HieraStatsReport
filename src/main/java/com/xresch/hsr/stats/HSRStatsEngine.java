@@ -566,9 +566,11 @@ public class HSRStatsEngine {
 	/***************************************************************************
 	 * Aggregates the raw records into statistics and sends the statistical
 	 * records to the reporters.
+	 * This method is normally triggered on an interval, you don't have to
+	 * call it manually.
 	 * 
 	 ***************************************************************************/
-	private static void aggregateAndReport() {
+	public static void aggregateAndReport() {
 		
 		if(groupedRecordsInterval.isEmpty()) { return; }
 		
@@ -768,6 +770,11 @@ public class HSRStatsEngine {
 				
 			}
 		}
+		
+		//-------------------------------
+		// Sort
+		statsRecordList.sort(null);
+		
 		//-------------------------------
 		// Report Stats
 		sendRecordsToReporter(statsRecordList);
@@ -1007,6 +1014,10 @@ public class HSRStatsEngine {
 		long endtime = System.currentTimeMillis();
 		HSRConfig.addProperty("[HSR] timeEndMillis", "" + endtime);
 		HSRConfig.addProperty("[HSR] timeEndTimestamp", "" + HSR.Time.formatMillisAsTimestamp(endtime) );
+		
+		//-------------------------------
+		// Sort
+		finalRecords.sort(null);
 		
 		//-------------------------------
 		// Report Stats

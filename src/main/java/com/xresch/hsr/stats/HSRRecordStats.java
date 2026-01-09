@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import com.google.gson.JsonObject;
+import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
@@ -20,7 +21,7 @@ import com.xresch.hsr.utils.HSRFiles;
  * @author Reto Scheiwiller, (c) Copyright 2025
  * @license EPL-License
  **************************************************************************************************************/
-public class HSRRecordStats {
+public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	
 	//private static final Logger logger = LoggerFactory.getLogger(GatlytronRecordStats.class);
 	
@@ -625,6 +626,18 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
     public boolean equals(Object obj) {
         return obj.hashCode() == this.hashCode();
     }
+	
+	/***********************************************************************
+	 * Order by Path and Record
+	 ***********************************************************************/
+	@Override
+	public int compareTo(HSRRecordStats o) {
+
+		return HSR.Text.compareStringsAlphanum(
+						this.pathRecord
+						, o.pathRecord
+					);
+	}
 	
 	/***********************************************************************
 	 * Returns the time of this record.
