@@ -69,7 +69,8 @@ public class HSRStatsEngine {
 	//=========================================
 	// Thread Management
 	//=========================================
-	private static boolean isStopped;
+	private static boolean isStopped = false;
+	private static boolean isShutdownHookRegistered = false;
 	private static ScheduledExecutorService schedulerStatsEngine;
 	private static Thread threadSystemInfo;
 	private static boolean isFirstReport = true;
@@ -104,6 +105,13 @@ public class HSRStatsEngine {
 	 *  
 	 ***************************************************************************/
 	public static void start(int reportInterval) {
+		
+		//--------------------------------------
+		// Reset
+		isStopped = false;
+		groupedRecordsInterval = new TreeMap<>();
+		groupedStats = new TreeMap<>();
+		slaCollection = new TreeMap<>();
 		
 		//--------------------------------------
 		// Only Start once
@@ -257,16 +265,21 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	private static void registerShutdownHook() {
 		
-	    Runtime.getRuntime().addShutdownHook(new Thread()
-        {
-            @Override
-            public void run()
-            {
-            	System.out.println("Initialize Shutdown.");
-            	HSRStatsEngine.stop();
-            	return;
-            }
-        });
+		if( !isShutdownHookRegistered ) {
+		   
+			Runtime.getRuntime().addShutdownHook(new Thread()
+	        {
+	            @Override
+	            public void run()
+	            {
+	            	System.out.println("Initialize Shutdown.");
+	            	HSRStatsEngine.stop();
+	            	return;
+	            }
+	        });
+		    
+		    isShutdownHookRegistered = true;
+		}
 	}
 	
 	/***************************************************************************
@@ -287,6 +300,9 @@ public class HSRStatsEngine {
 				generateSummaryReport();
 				terminateReporters();
 			
+				//reset values
+				schedulerStatsEngine = null;
+				isFirstReport = true;
 				
 			}		
 		

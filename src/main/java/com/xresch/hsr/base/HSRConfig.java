@@ -130,8 +130,9 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 ******************************************************************/
 	public static void enable() {
 		if(!isEnabled) {
-			isEnabled = true;
 			
+			isEnabled = true;
+			isTerminated = false;
 			
 			//----------------------------
 			// Add Default Log Interceptor
@@ -234,6 +235,24 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	public static void addReporter(HSRReporter reporter) {
 		logger.info("Adding Reporter: " + reporter.getClass().getSimpleName());
 		reporterList.add(reporter);
+	}
+	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * Add reporters to the list.
+	 ******************************************************************/
+	public static void removeReporter(HSRReporter reporter) {
+		logger.info("Removing Reporter: " + reporter.getClass().getSimpleName());
+		reporterList.remove(reporter);
+	}
+	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * Add reporters to the list.
+	 ******************************************************************/
+	public static void clearReporters() {
+		logger.info("Removing all Reporters");
+		reporterList.clear();
 	}
 	
 	/******************************************************************
@@ -671,6 +690,11 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 				}
 			}
 			
+			//--------------------------------
+			// Reset Stuff
+			HSR.reset();
+			
+			isEnabled = false;
 			isTerminated = true;
 		}
 		

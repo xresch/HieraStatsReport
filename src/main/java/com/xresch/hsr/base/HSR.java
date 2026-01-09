@@ -189,7 +189,23 @@ public class HSR {
 	}
 	
 	
-	
+	/***********************************************************************************
+	 * 
+	 ***********************************************************************************/
+	public static void reset(){
+		areThreadLocalsInitialized.set(null);
+		rootItem.set(null);
+		activeItem.set(null);
+		openItems.set(null);
+		
+		usersActive.clear();
+		usersStarted.clear();
+		usersStopped.clear();
+		
+		testname = "";
+		
+		initializeThreadLocals();
+	}
 	/***********************************************************************************
 	 * 
 	 ***********************************************************************************/
