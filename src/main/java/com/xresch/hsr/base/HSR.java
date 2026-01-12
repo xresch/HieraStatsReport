@@ -683,6 +683,16 @@ public class HSR {
 	/***********************************************************************************
 	 * Add a item to the report without the need of starting and ending it.
 	 ***********************************************************************************/
+	public static HSRRecord addException(Throwable e, String customMessage){	
+		if(e == null) { return null; }
+		
+		String message = customMessage + " / " +HSRConfig.hooks.createExceptionItemName(e);
+		return addItem(HSRRecordType.Exception, message).status(HSRRecordStatus.None);
+	}
+	
+	/***********************************************************************************
+	 * Add a item to the report without the need of starting and ending it.
+	 ***********************************************************************************/
 	public static HSRRecord addException(Throwable e){	
 		if(e == null) { return null; }
 		

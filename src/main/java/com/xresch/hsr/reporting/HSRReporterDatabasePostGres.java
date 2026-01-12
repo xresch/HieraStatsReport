@@ -3,13 +3,18 @@ package com.xresch.hsr.reporting;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecordStats;
+
+import ch.qos.logback.classic.Logger;
 
 /**************************************************************************************************************
  * This reporter stores the data in a Postgres Database.
@@ -18,7 +23,9 @@ import com.xresch.hsr.stats.HSRRecordStats;
  * @license EPL-License
  **************************************************************************************************************/
 public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
-
+	
+	private static Logger logger = (Logger) LoggerFactory.getLogger(HSRReporterDatabasePostGres.class.getName());
+	
 	private DBInterface db;
 	HSRDBInterface hsrDB;
 	
@@ -43,23 +50,37 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 		
 		String uniqueName = servername + port + dbName;
 		
-		db = DBInterface.createDBInterfacePostgres(uniqueName, servername, port, dbName, username, password);
-		
-		hsrDB = new HSRDBInterface(db, tableNamePrefix);
-		hsrDB.initializeDB();
-		
-		if(HSRConfig.isAgeOut()) {
-			hsrDB.ageOutStatistics();
+		try {
+			db = DBInterface.createDBInterfacePostgres(uniqueName, servername, port, dbName, username, password);
+
+			hsrDB = new HSRDBInterface(db, tableNamePrefix);
+			hsrDB.initializeDB();
+			
+			if(HSRConfig.isAgeOut()) {
+				hsrDB.ageOutStatistics();
+			}
+		}catch(Throwable e) {
+			logger.error("Error while connecting to the database.", e);
+			HSR.addException(e, "Error while connecting to the database.");
 		}
 		
 	}			
 
+
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public boolean isConnected() {
+		return db != null && hsrDB != null;
+	}
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
-		hsrDB.reportRecords(testID, records);
+		if(isConnected()) {
+			hsrDB.reportRecords(testID, records);
+		}
 	}
 	
 	/****************************************************************************
@@ -67,8 +88,10 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void firstReport(ArrayList<HSRTestSettings> testsettings) {
-		testID = hsrDB.insertTestGetPrimaryKey();
-		hsrDB.reportTestSettings(testID, testsettings);
+		if(isConnected()) {
+			testID = hsrDB.insertTestGetPrimaryKey();
+			hsrDB.reportTestSettings(testID, testsettings);
+		}
 	}
 	
 	/****************************************************************************
@@ -76,9 +99,10 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
-		
-		hsrDB.reportSLA(testID, slaForRecords);
-		hsrDB.reportRecordsSummary(testID, summaryRecords);
+		if(isConnected()) {
+			hsrDB.reportSLA(testID, slaForRecords);
+			hsrDB.reportRecordsSummary(testID, summaryRecords);
+		}
 	}
 	
 	/****************************************************************************
@@ -86,9 +110,12 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 ****************************************************************************/
 	@Override
 	public void terminate() {
-		hsrDB.reportEndTime(testID);
-		
-		db.closeAll(); // fixes exception on test end
+		if(isConnected()) {
+			hsrDB.reportEndTime(testID);
+		}
+		if(db != null) {
+			db.closeAll(); // fixes exception on test end
+		}
 	}
 
 }
