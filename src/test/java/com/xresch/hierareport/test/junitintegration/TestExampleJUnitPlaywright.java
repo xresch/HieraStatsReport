@@ -1,4 +1,4 @@
-package com.xresch.hierareport.test;
+package com.xresch.hierareport.test.junitintegration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

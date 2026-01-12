@@ -548,6 +548,15 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * 
+	 * Disables the collection of system usage statistics.
+	 ******************************************************************/
+	public static void disableSystemStats() {
+		toggleSystemStats(false);
+	}
+	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Toggle if system usage statistics should be collected.
 	 ******************************************************************/
 	public static void toggleSystemStats(boolean isEnabled) {
@@ -558,6 +567,8 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 		statsProcessMemory(isEnabled);
 		statsNetworkIO(isEnabled);
 	}
+	
+
 	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
