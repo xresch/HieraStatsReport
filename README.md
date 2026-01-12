@@ -648,3 +648,55 @@ public static void measureHTTPCall(CloseableHttpClient httpClient, HttpUriReques
 	}
 }
 ```
+
+# Generating Random Data
+HSR comes with a built-in Random-Library that assists you in creating various test data.
+Here is an example that creates some random user data using `HSR.Random`:
+
+```java
+JsonArray customData = new JsonArray();
+	
+for(int i = 0 ; i < 100; i++) {
+	
+	//------------------------
+	// Create Data
+	String firstname = HSR.Random.firstnameOfGod();
+	String lastname = HSR.Random.lastnameSweden();
+	String location = HSR.Random.mythicalLocation();
+	
+	JsonObject countryData = HSR.Random.countryData();
+	String country = countryData.get("Country").getAsString();
+	String countryCode = countryData.get("CountryCode").getAsString();
+	String capital = countryData.get("Capital").getAsString();
+	
+	String username = (firstname.charAt(0) +"."+ lastname).toLowerCase();
+	String email = (firstname +"."+ lastname + "@" + location.replace(" ", "-") + "." +countryCode).toLowerCase();
+
+	JsonObject address = new JsonObject();
+	address.addProperty("street", HSR.Random.street());
+	address.addProperty("city", capital);
+	address.addProperty("zipcode", HSR.Random.integer(10000, 99999));
+	address.addProperty("country", country);
+	
+	//------------------------
+	// Create Object
+	JsonObject object = new JsonObject();
+	
+	object.addProperty("id", i);
+	object.addProperty("username", username);
+	object.addProperty("firstname", firstname);
+	object.addProperty("lastname", lastname);
+	object.addProperty("email", email);
+	object.addProperty("age", PFR.Random.integer(18, 111));
+	object.addProperty("active", PFR.Random.bool());
+	object.addProperty("score", PFR.Random.bigDecimal(33, 100, 1));
+	object.add("address", address);
+	
+	//------------------------
+	// Add To Array
+	customData.add(object);
+}
+
+PFRDataSource userData = PFR.Data.newSourceJsonArray("customData", customData)
+											.build();
+```

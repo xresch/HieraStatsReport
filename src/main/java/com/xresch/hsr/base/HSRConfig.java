@@ -121,6 +121,21 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * 
+	 * Resets the state of the engine and prepares is for another 
+	 * execution;
+	 * 
+	 * @param 
+	 * 
+	 ******************************************************************/
+	public static void reset() {
+		testsettingsList.clear();
+		properties.clear();
+		hooks = new HSRHooks();
+	}
+	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * 
 	 * Starts HSR and the reporting engine.
 	 * 
 	 * @param reportingInterval number of seconds for the reporting
@@ -693,6 +708,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			//--------------------------------
 			// Reset Stuff
 			HSR.reset();
+			HSRConfig.reset();
 			
 			isEnabled = false;
 			isTerminated = true;
