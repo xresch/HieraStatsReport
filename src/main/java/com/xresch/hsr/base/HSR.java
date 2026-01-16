@@ -202,7 +202,8 @@ public class HSR {
 		usersStarted.clear();
 		usersStopped.clear();
 		
-		testname = "";
+		// Cannot do that, as it will not work
+		// testname = "";
 		
 		initializeThreadLocals();
 	}
