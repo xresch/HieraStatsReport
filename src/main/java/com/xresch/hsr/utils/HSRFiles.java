@@ -583,7 +583,7 @@ public class HSRFiles {
 	 * INTERNAL: Used to keep a maximum amount of timestamped folders
 	 * 
 	 ***********************************************************************/
-    private static void cleanupOldTimestampedFolders(Path rootPath, int historyCount) throws IOException {
+    private static void cleanupOldTimestampedFolders(Path rootPath, int historyCount) {
         
     	try (Stream<Path> stream = Files.list(rootPath)) {
             List<Path> timestampedDirs = stream
@@ -601,6 +601,8 @@ public class HSRFiles {
                 Path oldest = timestampedDirs.remove(0);
                 deleteRecursively(oldest);
             }
+        }catch(IOException e) {
+        	logger.error("Error while cleaning up oldest timestamped folder.", e);
         }
     }
 
