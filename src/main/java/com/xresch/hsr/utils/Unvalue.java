@@ -526,7 +526,15 @@ public class Unvalue implements Comparable<Unvalue> {
 	/******************************************************************************************************
 	 * It is recommended to use isInteger() first to make sure number value is really a Integer.
 	 ******************************************************************************************************/
-	public Integer getAsInteger() {
+	public Integer getAsInteger() {		
+		return getAsInt();
+
+	}
+	
+	/******************************************************************************************************
+	 * It is recommended to use isInteger() first to make sure number value is really a Integer.
+	 ******************************************************************************************************/
+	public Integer getAsInt() {
 			
 		Number number = this.getAsNumber();
 		
