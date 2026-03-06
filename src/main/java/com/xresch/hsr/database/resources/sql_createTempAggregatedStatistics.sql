@@ -6,8 +6,8 @@ SELECT
     , ? AS "granularity"
     {valuesAggregation}
 FROM {originalTableName}
-WHERE 
-	"time" >= ? 
+WHERE "testid" = ?
+AND	"time" >= ? 
 AND "time" < ? 
 AND "granularity" < ?
 GROUP BY "testid", {namesWithoutTimeOrGranularity}

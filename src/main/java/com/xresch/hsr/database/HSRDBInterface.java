@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
@@ -291,23 +292,23 @@ public class HSRDBInterface {
 	 * 
 	 * @return true if successful, false otherwise
 	 ****************************************************************/
-	private boolean aggregateStatistics(Long startTime, Long endTime, int newGranularity) {
-				
+	private boolean aggregateStatistics(Long startTime, Long endTime, int testid, int newGranularity) {
+					
 		db.transactionStart();
 		boolean success = true;
 		int cacheCounter = 0;
 		
 		//--------------------------------------------
 		// Check if there is anything to aggregate
-		
 		String sql = 
 				  " SELECT COUNT(*) FROM " + tablenameStats
-				  + " WHERE time >= ?"
+				  + " WHERE testid = ?"
+				  + " AND time >= ?"
 				  + " AND time < ?" 
 				  + " AND granularity < ?;"
 				  ;
 		
-		ResultSet result = db.preparedExecuteQuery(sql, startTime, endTime, newGranularity);
+		ResultSet result = db.preparedExecuteQuery(sql, testid, startTime, endTime, newGranularity);
 		
 		int count =  new HSRResultSetConverter(db, result).getFirstAsCount();
 
@@ -325,10 +326,10 @@ public class HSRDBInterface {
 		
 		//--------------------------------------------
 		// Aggregate Statistics in Temp Table
-		
 		success &= db.preparedExecute(
 						  sqlAggregateStats
 						, newGranularity
+						, testid
 						, startTime
 						, endTime
 						, newGranularity
@@ -374,10 +375,8 @@ public class HSRDBInterface {
 
 		db.transactionEnd(success);
 		
-		logger.debug(">>> AgeOut Success: "+success+" for "+HSRTime.formatMillisAsTimestamp(startTime) + " to "+ HSRTime.formatMillisAsTimestamp(endTime));
-		
-		
 		return success;
+
 	}
 	
 	/****************************************************************************
@@ -409,28 +408,68 @@ public class HSRDBInterface {
 
 
 			//--------------------------
-			// Get Start Time
-			// Cannot take oldest as start time, as it might offset deep into 
-			// the timerange that still should be kept
-			Long startTime = HSRTimeUnit.s.offset(oldest, +1);
+			// Get TestIDs
+			String sqlGetTestIDs = 
+					  " SELECT DISTINCT testid FROM " + tablenameStats
+					  + " WHERE time >= ?"
+					  + " AND time < ?" 
+					  + " AND granularity < ?;"
+					  ;
 			
-			while(startTime > oldest) {
-				startTime = HSRTimeUnit.s.offset(startTime, -granularitySec);
+			ResultSet testIDResult = db.preparedExecuteQuery(sqlGetTestIDs, oldest, youngest, granularitySec);
+			
+			ArrayList<Integer> testIDs = new HSRResultSetConverter(db, testIDResult).toIntegerArrayList("testid");
+			
+			//--------------------------------------------
+			// Iterate Tests and aggregate them
+			
+			for(int testid : testIDs) {
+				
+				String sqlGetTestTimeframe = 
+						  """ 
+							SELECT 
+								  MIN("time") AS "oldest" 
+						   		, MAX("time") AS "youngest"
+						  	FROM %s
+						    WHERE testid = ?;
+						  """.formatted(tablenameStats)
+						  ;
+				
+				ResultSet timeframeResult = db.preparedExecuteQuery(sqlGetTestTimeframe, testid);
+				JsonArray timeframeArray = new HSRResultSetConverter(db, timeframeResult).toJSONArray();
+				JsonObject timeframeObject = timeframeArray.get(0).getAsJsonObject();
+				long testOldest = timeframeObject.get("oldest").getAsLong();
+				long testYoungest = timeframeObject.get("youngest").getAsLong();
+				
+				//--------------------------
+				// Get Start Time
+				// Cannot take oldest as start time, as it might offset deep into 
+				// the timerange that still should be kept
+				Long startTime = HSRTimeUnit.s.offset(testOldest, +1);
+				
+				while(startTime > testOldest) {
+					startTime = HSRTimeUnit.s.offset(startTime, -granularitySec);
+				}
+				
+				//--------------------------
+				// Iterate with offsets
+				Long endTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
+				
+				
+				boolean success = true;
+				// do-while to execute at least once, else would not work if (endTime - startTime) < granularity
+				do {
+	
+					success &= aggregateStatistics(startTime, endTime, testid, granularitySec);
+					startTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
+					endTime = HSRTimeUnit.s.offset(endTime, granularitySec);
+					
+					
+				} while(endTime < testYoungest);
+				
+				logger.info(">>> AgeOut Statistics for Test: "+testid+", Success: "+success+", Timeframe "+HSRTime.formatMillisAsTimestamp(startTime) + " to "+ HSRTime.formatMillisAsTimestamp(endTime));
+				
 			}
-			
-			//--------------------------
-			// Iterate with offsets
-			Long endTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
-			
-			// do-while to execute at least once, else would not work if (endTime - startTime) < granularity
-			do {
-
-				aggregateStatistics(startTime, endTime, granularitySec);
-				startTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
-				endTime = HSRTimeUnit.s.offset(endTime, granularitySec);
-
-			} while(endTime < youngest);
-
 		}
 		
 	}
