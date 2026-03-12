@@ -175,6 +175,37 @@ public class Unvalue implements Comparable<Unvalue> {
 	}
 	
 	/******************************************************************************************************
+	 * Creates a new value from a string while automatically detecting the data type from the string.
+	 * Data types that will be detected are null, number, boolean, string, JsonObject and JsonArray.
+	 * 
+	 * @param string to convert
+	 * @return Unvalue for string
+	 ******************************************************************************************************/
+	public static Unvalue newFromString(String string) {
+	
+		if(string == null) {	return newNull(); }
+		
+		if(string.isBlank()) {	return newString(string); }
+		
+		if( NumberUtils.isParsable(string) ) { return newNumber( new BigDecimal(string) ); }
+		
+		if( checkIsStringABoolean(string) ) { return newBoolean( Boolean.parseBoolean(string) ); }
+		
+		if(string.trim().startsWith("{")
+		|| string.trim().startsWith("[")) {
+			try {
+				JsonElement element = HSR.JSON.fromJson(string);
+				return newJson( element);
+			} catch (Exception e) {
+				return newString(string);
+			}
+		}
+		
+		return newString(string);
+		
+	}
+		
+	/******************************************************************************************************
 	 * Creates a new value from a string based on the type.
 	 * Enforces correct types by throwing nasty exceptions.
 	 ******************************************************************************************************/
@@ -439,12 +470,19 @@ public class Unvalue implements Comparable<Unvalue> {
 	 ******************************************************************************************************/
 	public static boolean checkIsJsonParsable(String string) {
 		
-		try {
-			JsonElement element = HSR.JSON.fromJson(string);
-			return true;
-		} catch (Exception e) {
-			return false;
+		String trimmed = string.trim();
+		
+		if(trimmed.startsWith("{")
+		|| trimmed.startsWith("[")) {
+			try {
+				JsonElement element = HSR.JSON.fromJson(string);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
 		}
+		
+		return false;
 				
 	}
 	
