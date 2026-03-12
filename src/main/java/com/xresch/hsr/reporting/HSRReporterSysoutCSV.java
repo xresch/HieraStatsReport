@@ -27,6 +27,13 @@ public class HSRReporterSysoutCSV implements HSRReporter {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
+	public void initialize() {
+		// nothing todo
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
 		
@@ -40,6 +47,7 @@ public class HSRReporterSysoutCSV implements HSRReporter {
 		
 		System.out.println(output.toString());
 	}
+	
 	
 	/****************************************************************************
 	 * 

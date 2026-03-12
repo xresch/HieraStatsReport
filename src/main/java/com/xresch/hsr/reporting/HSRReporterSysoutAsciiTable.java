@@ -35,6 +35,13 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
+	public void initialize() {
+		// nothing todo
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
 	@Override
 	public void reportRecords(ArrayList<HSRRecordStats> records) {
 		

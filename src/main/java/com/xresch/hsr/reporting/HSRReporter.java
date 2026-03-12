@@ -21,6 +21,16 @@ import com.xresch.hsr.stats.HSRRecordStats;
 public interface HSRReporter {
 
 	/******************************************************************************************
+	 * Will be called before the test run starts.
+	 * Files on disk, database structures etc... should all be created inside this method, not
+	 * in the constructor of the class.
+	 * This method might be called multiple times for the same instance, ensure you can handle 
+	 * that.
+	 * 
+	 ******************************************************************************************/
+	public void initialize();
+	
+	/******************************************************************************************
 	 * This method will be called periodically based on the report interval.
 	 * 
 	 * @param records aggregated record statistics
@@ -49,6 +59,8 @@ public interface HSRReporter {
 	/******************************************************************************************
 	 * Will be called after all the data has been reported.
 	 * Can be used to finish of whatever has to be finished off.
+	 * This method might be called multiple times for the same instance, ensure you can handle 
+	 * that.
 	 * 
 	 ******************************************************************************************/
 	public void terminate();

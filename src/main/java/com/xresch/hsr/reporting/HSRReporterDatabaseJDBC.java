@@ -26,6 +26,11 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 
 	private static Logger logger = (Logger) LoggerFactory.getLogger(HSRReporterDatabaseJDBC.class.getName());
 	
+	private String driverName;
+	private String jdbcURL;
+	private String tableNamePrefix;
+	private String username;
+	private String password;
 	
 	private DBInterface db;
 	private HSRDBInterface hsrDB;
@@ -45,24 +50,39 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 			, String tableNamePrefix
 			, String username
 			, String password) {
-				
-		String uniqueName = jdbcURL;
 		
-		try {
-			db = DBInterface.createDBInterface(uniqueName, driverName, jdbcURL, username, password);
-			
-			hsrDB = this.getHSRDBInterface(db, tableNamePrefix);
+		this.driverName       = driverName      ;
+		this.jdbcURL          = jdbcURL         ;
+		this.tableNamePrefix  = tableNamePrefix ;
+		this.username         = username        ;
+		this.password         = password        ;		
+		
+		
+	}
 	
-			hsrDB.initializeDB();
-			
-			if(HSRConfig.isAgeOut()) {
-				hsrDB.ageOutStatistics();
-			}
-		}catch(Throwable e) {
-			logger.error("Error while connecting to the database.", e);
-			HSR.addException(e, "Error while connecting to the database.");
-		}
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void initialize() {
 		
+		if(db == null) {
+			String uniqueName = jdbcURL;
+			
+			try {
+				db = DBInterface.createDBInterface(uniqueName, driverName, jdbcURL, username, password);
+				
+				hsrDB = this.getHSRDBInterface(db, tableNamePrefix);
+		
+				hsrDB.initializeDB();
+				
+				if(HSRConfig.isAgeOut()) {
+					hsrDB.ageOutStatistics();
+				}
+			}catch(Throwable e) {
+				logger.error("Error while connecting to the database.", e);
+				HSR.addException(e, "Error while connecting to the database.");
+			}
+		}
 	}
 	
 	/****************************************************************************

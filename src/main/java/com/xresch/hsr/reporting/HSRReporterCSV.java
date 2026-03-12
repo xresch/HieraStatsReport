@@ -41,8 +41,13 @@ public class HSRReporterCSV implements HSRReporter {
 		this.filepath = filepath;
 		this.separator = separator;
 		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void initialize() {
 		initializeCSVFile(filepath, separator);
-		
 	}
 	
 	/****************************************************************************

@@ -26,8 +26,15 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	
 	private static Logger logger = (Logger) LoggerFactory.getLogger(HSRReporterDatabasePostGres.class.getName());
 	
-	private DBInterface db;
-	HSRDBInterface hsrDB;
+	private String servername;
+	private int port;
+	private String dbName;
+	private String tableNamePrefix;
+	private String username;
+	private String password;
+	
+	private DBInterface db;         
+	HSRDBInterface hsrDB;           
 	
 	private int testID = -1;
 	
@@ -46,25 +53,42 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 			, String dbName
 			, String tableNamePrefix
 			, String username
-			, String password) {
+			, String password
+		){
 		
-		String uniqueName = servername + port + dbName;
+		this.servername       = servername      ;
+		this.port             = port            ;
+		this.dbName           = dbName          ;
+		this.tableNamePrefix  = tableNamePrefix ;
+		this.username         = username        ;
+		this.password         = password        ;
 		
-		try {
-			db = DBInterface.createDBInterfacePostgres(uniqueName, servername, port, dbName, username, password);
-
-			hsrDB = new HSRDBInterface(db, tableNamePrefix);
-			hsrDB.initializeDB();
+	}		
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void initialize() {
+		
+		if(db == null) {
 			
-			if(HSRConfig.isAgeOut()) {
-				hsrDB.ageOutStatistics();
+			String uniqueName = servername + port + dbName;
+			
+			try {
+				db = DBInterface.createDBInterfacePostgres(uniqueName, servername, port, dbName, username, password);
+	
+				hsrDB = new HSRDBInterface(db, tableNamePrefix);
+				hsrDB.initializeDB();
+				
+				if(HSRConfig.isAgeOut()) {
+					hsrDB.ageOutStatistics();
+				}
+			}catch(Throwable e) {
+				logger.error("Error while connecting to the database.", e);
+				HSR.addException(e, "Error while connecting to the database.");
 			}
-		}catch(Throwable e) {
-			logger.error("Error while connecting to the database.", e);
-			HSR.addException(e, "Error while connecting to the database.");
 		}
-		
-	}			
+	}
 
 
 	/****************************************************************************

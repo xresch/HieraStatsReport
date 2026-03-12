@@ -33,18 +33,39 @@ public class HSRReporterHTML implements HSRReporter {
 	private static final Logger logger = LoggerFactory.getLogger(HSRReporterHTML.class);
 	
 	private String directoryPath; // e.g. "./target/hieraReport"
+	private String finalDirectoryPath; // might get a number attached
 	private Path path;
+	
+	private int initCounter = 0;
 	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
 	public HSRReporterHTML(String directoryPath) {
 		
+		if(directoryPath.endsWith("/")
+		|| directoryPath.endsWith("\\")) {
+			directoryPath = directoryPath.substring(0, directoryPath.length()-1);
+		}
+		
 		this.directoryPath = directoryPath;
+		this.finalDirectoryPath = directoryPath;
+		    	
+	}
 	
-		logger.info("Cleanup report directory: "+directoryPath);
-    	HSRReportUtils.deleteRecursively(new File(directoryPath));	
-	    	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void initialize() {
+		
+		if(initCounter > 0) {
+			finalDirectoryPath = directoryPath + "_" + initCounter;
+		}
+		
+		logger.info("Cleanup report directory: "+finalDirectoryPath);
+    	HSRReportUtils.deleteRecursively(new File(finalDirectoryPath));	
+    	
+    	initCounter++;
 	}
 	
 	/****************************************************************************
@@ -72,7 +93,7 @@ public class HSRReporterHTML implements HSRReporter {
     	InputStream in = HSRReporterHTML.class.getClassLoader().getResourceAsStream("com/xresch/hsr/files/reportFiles.zip.txt");
     	ZipInputStream zipStream = new ZipInputStream(in);
 
-    	HSRReportUtils.extractZipFile(zipStream, directoryPath);
+    	HSRReportUtils.extractZipFile(zipStream, finalDirectoryPath);
     			
     	//-----------------------------------
     	// Make Data Object
@@ -90,7 +111,7 @@ public class HSRReporterHTML implements HSRReporter {
 		//-----------------------------------
 		// Add to data.js
 		String javascript = "DATA = DATA.concat(\n" + HSR.JSON.toJSON(data) + "\n);";
-		HSRReportUtils.writeStringToFile(directoryPath, "data.js", javascript);
+		HSRReportUtils.writeStringToFile(finalDirectoryPath, "data.js", javascript);
 		
 	}
 	

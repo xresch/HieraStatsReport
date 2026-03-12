@@ -114,6 +114,10 @@ public class HSRStatsEngine {
 		slaCollection = new TreeMap<>();
 		
 		//--------------------------------------
+		// Do every time
+		initializeReporters();
+		
+		//--------------------------------------
 		// Only Start once
 		if(schedulerStatsEngine == null) {
 			
@@ -1132,7 +1136,23 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * Aggregates the grouped statistics and makes one final report
+	 * Initializing Reporters
+	 * 
+	 ***************************************************************************/
+	public static void initializeReporters() {
+		
+		for(HSRReporter reporter : HSRConfig.getReporterList()) {
+			try {
+				logger.info("Initialize Reporter: "+reporter.getClass().getSimpleName());
+				reporter.initialize();
+			} catch (Throwable e) {
+				logger.warn("Error while initializing Reporter: "+e.getMessage(), e);
+			}
+		}
+	}
+	
+	/***************************************************************************
+	 * Terminates the reporters
 	 * 
 	 ***************************************************************************/
 	public static void terminateReporters() {

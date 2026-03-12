@@ -51,8 +51,15 @@ public class HSRReporterJson implements HSRReporter {
 			arrayComma = ",";
 		}
 		
-		writer = createFile(filepath, makeArray);
 		
+		
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public void initialize() {
+		writer = createFile(filepath, makeArray);
 	}
 	
 	/****************************************************************************
