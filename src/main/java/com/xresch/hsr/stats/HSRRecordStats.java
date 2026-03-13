@@ -29,28 +29,26 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	private HSRRecordType type;
 	private HSRRecordStatus status;
 	private HSRRecordState state;
+	
 	private String test;		// the name of the test
 	private String usecase;		// the name of the usecase
 	private String name;		// the name of the metric, one of the items in the lost metricNames
 	private String path;		// 
 	private String pathRecord;
-	private String pathFull;
 	private String code = "";
 	private int granularity;
 	private String statsIdentifier;
 	private HashMap<String, BigDecimal> values = new HashMap<>();
-	
-	private static final String ok = HSRRecordState.ok.toString();
-	private static final String ok_ = ok+"_";
-	
-	private static final String nok = HSRRecordState.nok.toString();
-	private static final String nok_ = nok+"_";
+
 	
 	private HSRSLA sla = null;
 	
 	/***********************************************************************
 	 * Lists of the names of the metrics 
 	 ***********************************************************************/
+	
+	private static final String FIELD_PATHRECORD = "pathrecord"; // separate as = path + name
+	
 	public enum RecordField {
 		  time("DECIMAL(19, 0)") // ANSI SQL for Long value
 		, type("VARCHAR(32)")
@@ -287,7 +285,6 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		this.name = stats.name;
 		this.path = stats.path;
 		this.pathRecord = stats.pathRecord;
-		this.pathFull = stats.pathFull;
 		this.code = stats.code;
 		this.granularity = stats.granularity;
 		this.statsIdentifier = stats.statsIdentifier;
@@ -295,6 +292,35 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		
 		this.values = new HashMap<>(stats.values);
 	}
+	
+	/***********************************************************************
+	 * Creates a new instance from a JsonObject.
+	 * 
+	 * @param stats another instance to clone
+	 ***********************************************************************/
+//	public HSRRecordStats(JsonObject recordStatsObject){	
+//		//-----------------------------------
+//		// Parse Message
+//		// Intern Strings to reduce memory overhead
+//		this.time 		= recordStatsObject.get(RecordField.time.toString())		.getAsLong();
+//		this.test 		= recordStatsObject.get(RecordField.test.toString())		.getAsString();
+//		this.usecase 	= recordStatsObject.get(RecordField.usecase.toString())		.getAsString();
+//		this.name  		= recordStatsObject.get(RecordField.name.toString())		.getAsString();
+//		this.path 		= recordStatsObject.get(RecordField.path.toString())		.getAsString();
+//		this.pathRecord = recordStatsObject.get(FIELD_PATHRECORD)					.getAsString();
+//		this.code 		= recordStatsObject.get(RecordField.code.toString())		.getAsString();
+//		this.granularity= recordStatsObject.get(RecordField.granularity.toString())	.getAsInt();
+//		this.statsIdentifier = HSRRecord.createStatsIdentifier(type, test, path, name, code);
+//		
+//		this.type = stats.type;
+//		this.status = stats.status;
+//		this.state = stats.state;
+//
+//		this.sla = stats.sla;
+//		
+//		this.values = new HashMap<>(stats.values);
+//	}
+	
 	/***********************************************************************
 	 * Creates a record containing request statistics.
 	 * 
@@ -314,7 +340,6 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		this.name = record.name().intern();
 		this.path = record.getPath().intern();
 		this.pathRecord = record.getPathRecord().intern();
-		this.pathFull = record.getPathFull().intern();
 		this.code = record.code().intern();
 		this.granularity = HSRConfig.getInterval();
 		this.statsIdentifier = record.getStatsIdentifier().intern();
@@ -427,10 +452,10 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		
 		object.addProperty(RecordField.time.toString(), 		time);
 		object.addProperty(RecordField.type.toString(), 		type.toString());
-		object.addProperty(RecordField.test.toString(), 	test);
-		object.addProperty(RecordField.usecase.toString(), 	usecase);
+		object.addProperty(RecordField.test.toString(), 		test);
+		object.addProperty(RecordField.usecase.toString(), 		usecase);
 		object.addProperty(RecordField.path.toString(), 		path);
-		object.addProperty("pathrecord", 						pathRecord);
+		object.addProperty(FIELD_PATHRECORD, 							pathRecord);
 		object.addProperty(RecordField.name.toString(), 		name);
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
@@ -735,14 +760,6 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 		return pathRecord;
 	}
 	
-	/******************************************************************
-	 * Returns the full path of the metric including test, usecase
-	 * and path:
-	 *   {test}.{usecase}.{path}.{name}
-	 ******************************************************************/
-	public String pathFull() {
-		return pathFull;
-	}
 	
 	/******************************************************************
 	 * Returns the granularity in seconds.

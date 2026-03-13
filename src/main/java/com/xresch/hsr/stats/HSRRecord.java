@@ -20,20 +20,22 @@ public class HSRRecord {
 	
 	private transient HSRRecord parent = null;
 	
+	// time - diff to HSRRecordStats
+	private HSRRecordType type = HSRRecordType.Unknown;
+	private HSRRecordStatus status = HSRRecordStatus.Success;
+	// state - diff to HSRRecordStats
 	private String test = "";
 	private String usecase = "";
+	private String name = null;  // name of this item
 	
 	private String pathRecordCached = null;
 	
 	private List<String> pathlist = new ArrayList<>();
-	private HSRRecordType type = HSRRecordType.Unknown;
-	private String name = null;  // name of this item
 	private String statsIdentifier = null;
 
 	private long startTimeNanos = -1;
 	private long endTimeNanos = -1;
 	
-	private HSRRecordStatus status = HSRRecordStatus.Success;
 	private String code = "";
 	private HSRSLA sla;
 	
@@ -604,15 +606,32 @@ public class HSRRecord {
 	public String getStatsIdentifier() {
 		
 		if(identityChanged || this.statsIdentifier == null) {
-			this.statsIdentifier = type.toString() + test + usecase;
-			
-			if( !this.pathlist.isEmpty() ) {
-				this.statsIdentifier += "/" + getPath("/");
-			}	
-			
-			//this.statsIdentifier += name + status.state() + code;
-			this.statsIdentifier += name + code;
+			this.statsIdentifier = createStatsIdentifier(type,test, getPath(), name, code );
 		}
+		
+		return statsIdentifier;
+	}
+	
+	/******************************************************************
+	 * Returns the string used for grouping the statistics.
+	 * 
+	 ******************************************************************/
+	public static String createStatsIdentifier(
+						  HSRRecordType type
+						, String test
+						, String path
+						, String name
+						, String code
+					){
+		
+		String statsIdentifier = 
+						  type.toString() 
+						+ test
+						+ HSRRecord.PATH_SEP 
+						+ path
+						+ name 
+						+ code
+						;
 		
 		return statsIdentifier;
 	}
