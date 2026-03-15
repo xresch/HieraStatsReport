@@ -294,7 +294,27 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	}
 	
 	/***********************************************************************
-	 * Creates a new instance from a JsonObject.
+	 * Creates a new instance from a JsonObject that was created with the
+	 * method HSRRecordStats.toJson(). Example JSON:
+	 * <pre><code>
+	 * {
+      "time": 1773585010551,
+      "type": "Step",
+      "test": "PFRTestExampleAgents",
+      "usecase": "UsecaseExampleSLA",
+      "path": "UsecaseExampleSLA",
+      "pathrecord": "UsecaseExampleSLA \u003E 040_SLA_P90_AND_AVG-NOK-AVG",
+      "name": "040_SLA_P90_AND_AVG-NOK-AVG",
+      "code": "",
+      "granularity": 15,
+      "sla": "( ok_p90 \u003C= 100 ) AND ( ok_avg \u003C= 50 )",
+      "ok_count": 3,
+      "ok_min": 50,	"ok_avg": 50,	"ok_max": 50,	"ok_stdev": 0,	"ok_p25": 50,	"ok_p50": 50,	"ok_p75": 50,	"ok_p90": 50,	"ok_p95": 50,	"ok_p99": 50,	"ok_sla": 1,
+      "nok_count": null,	"nok_min": null,	"nok_avg": null,	"nok_max": null,	"nok_stdev": null,	"nok_p25": null,	"nok_p50": null,	"nok_p75": null,	"nok_p90": null,	"nok_p95": null,	"nok_p99": null,	"nok_sla": 0,
+      "success": 3,	"failed": 0,	"skipped": 0,	"aborted": 0,	"none": 0,
+      "failrate": 0
+    },
+	 * </code></pre>
 	 * 
 	 * @param stats another instance to clone
 	 ***********************************************************************/
