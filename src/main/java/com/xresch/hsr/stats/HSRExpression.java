@@ -86,6 +86,7 @@ public class HSRExpression {
 	    }
 
 	}
+	
 	public interface Expressionable<T extends Comparable<T>> { public T determineValue(); }
 
 	/******************************************************************************
@@ -113,13 +114,16 @@ public class HSRExpression {
 	        this.operator = operator;
 	        this.right = right;
 	    }
+	    
+	    public BooleanExpression(T left, Operator operator, T right) {
+	    	this.left = new Expressionable<T>() { public T determineValue() { return left; } };
+	        this.operator = operator;
+	        this.right = new Expressionable<T>() { public T determineValue() { return right; } };
+	    }
 	
 	    @Override
 	    public boolean evaluate() {
 	    	
-	    	T leftValue = left.determineValue();
-	    	T rightvalue = right.determineValue();
-
 	        return operator.evaluate(left.determineValue(), right.determineValue());
 	    }
 
@@ -214,6 +218,19 @@ public class HSRExpression {
 												      T left
 												    , Operator operator
 												    , Expressionable<T> right
+												){
+	    return INSTANCE.new BooleanExpression<>(left, operator, right);
+	}
+	
+	/******************************************************************************
+	 * Creates a new Expression
+	 * @param stats
+	 * @return
+	 ******************************************************************************/
+	public static <T extends Comparable<T>> Expression of(
+												      T left
+												    , Operator operator
+												    , T right
 												){
 	    return INSTANCE.new BooleanExpression<>(left, operator, right);
 	}

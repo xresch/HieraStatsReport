@@ -63,10 +63,6 @@ public class HSRStatsEngine {
 	// key is based on hashCode() which is the StatsIdentifier, value are all Stats that are part of the group
 	// these are used for making summary reports over the full test duration
 	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
-
-	// key is record name, will be added the first time the sla is encountered
-	// used to add it to reports
-	private static TreeMap<String, HSRSLA> slaCollection = new TreeMap<>();
 	
 	//=========================================
 	// Thread Management
@@ -121,7 +117,7 @@ public class HSRStatsEngine {
 		isStopped = false;
 		groupedRecordsInterval = new TreeMap<>();
 		groupedStats = new TreeMap<>();
-		slaCollection = new TreeMap<>();
+		HSRSLA.cacheClear();
 		
 		//--------------------------------------
 		// Do every time
@@ -785,9 +781,7 @@ public class HSRStatsEngine {
 			if(sla != null) {
 				
 				String path = firstRecord.getPathRecord();
-				if(!slaCollection.containsKey(path)) {
-					slaCollection.put(path, sla);
-				}
+				HSRSLA.cacheAdd(path, sla);
 				
 				calculateSLA(statsRecord, sla);
 
@@ -824,6 +818,9 @@ public class HSRStatsEngine {
 		HSRConfig.writeToRawDataLog(rawLog.toString());
 		
 	}
+	
+
+	
 
 	
 	/***************************************************************************
@@ -854,8 +851,7 @@ public class HSRStatsEngine {
 	 * 
 	 ***************************************************************************/
 	public static void calculateSLA(HSRRecordStats statsRecord, HSRSLA sla) {
-		boolean slaMet = sla.setStats(statsRecord)
-								 .evaluate();
+		boolean slaMet = sla.evaluate(statsRecord);
 		
 		if(slaMet) {
 			statsRecord.setValue(HSRRecordState.ok, HSRMetric.sla, 1);
@@ -866,20 +862,6 @@ public class HSRStatsEngine {
 		}
 	}
 	
-	/***************************************************************************
-	 * Creates a JsonObject for the SLAs.
-	 * 
-	 ***************************************************************************/
-	public static JsonObject generateSLAObject() {
-		
-		JsonObject object = new JsonObject();
-		
-		for(Entry<String, HSRSLA> entry : slaCollection.entrySet()) {
-			object.addProperty(entry.getKey(), entry.getValue().toString());
-		}
-		
-		return object;
-	}
 	
 	/***************************************************************************
 	 * Aggregates the grouped statistics and makes one final report
@@ -1142,7 +1124,7 @@ public class HSRStatsEngine {
 		
 		//-------------------------
 		// List of SLAs
-		JsonObject slaForRecords = generateSLAObject();
+		JsonObject slaForRecords = HSRSLA.cacheGetAsJson();
 		
 		//-------------------------
 		// Send Clone of list to each Reporter

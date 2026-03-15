@@ -3,15 +3,15 @@ package com.xresch.hsr.stats;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
-import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
 import com.xresch.hsr.utils.HSRFiles;
 
@@ -27,8 +27,8 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	
 	private long time;
 	private HSRRecordType type;
-	private HSRRecordStatus status;
-	private HSRRecordState state;
+	//private HSRRecordStatus status;
+	//private HSRRecordState state;
 	
 	private String test;		// the name of the test
 	private String usecase;		// the name of the usecase
@@ -48,6 +48,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	 ***********************************************************************/
 	
 	private static final String FIELD_PATHRECORD = "pathrecord"; // separate as = path + name
+	private static final String FIELD_SLA = "sla"; // separate, JSON only, as stored in separate table in DB etc...
 	
 	public enum RecordField {
 		  time("DECIMAL(19, 0)") // ANSI SQL for Long value
@@ -278,8 +279,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		// Intern Strings to reduce memory overhead
 		this.time = System.currentTimeMillis();
 		this.type = stats.type;
-		this.status = stats.status;
-		this.state = stats.state;
+
 		this.test = stats.test;
 		this.usecase = stats.usecase;
 		this.name = stats.name;
@@ -298,31 +298,72 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	 * 
 	 * @param stats another instance to clone
 	 ***********************************************************************/
-//	public HSRRecordStats(JsonObject recordStatsObject){	
-//		//-----------------------------------
-//		// Parse Message
-//		// Intern Strings to reduce memory overhead
-//		this.time 		= recordStatsObject.get(RecordField.time.toString())		.getAsLong();
-//		this.test 		= recordStatsObject.get(RecordField.test.toString())		.getAsString();
-//		this.usecase 	= recordStatsObject.get(RecordField.usecase.toString())		.getAsString();
-//		this.name  		= recordStatsObject.get(RecordField.name.toString())		.getAsString();
-//		this.path 		= recordStatsObject.get(RecordField.path.toString())		.getAsString();
-//		this.pathRecord = recordStatsObject.get(FIELD_PATHRECORD)					.getAsString();
-//		this.code 		= recordStatsObject.get(RecordField.code.toString())		.getAsString();
-//		this.granularity= recordStatsObject.get(RecordField.granularity.toString())	.getAsInt();
-//		this.statsIdentifier = HSRRecord.createStatsIdentifier(type, test, path, name, code);
-//		
-//		this.type = stats.type;
-//		this.status = stats.status;
-//		this.state = stats.state;
-//
-//		this.sla = stats.sla;
-//		
-//		this.values = new HashMap<>(stats.values);
-//	}
+	public HSRRecordStats(JsonObject recordStatsObject){	
+		//-----------------------------------
+		// Parse Message
+		// Intern Strings to reduce memory overhead
+		this.time 		= recordStatsObject.get(RecordField.time.toString())		.getAsLong();
+		this.test 		= recordStatsObject.get(RecordField.test.toString())		.getAsString();
+		this.usecase 	= recordStatsObject.get(RecordField.usecase.toString())		.getAsString();
+		this.name  		= recordStatsObject.get(RecordField.name.toString())		.getAsString();
+		this.path 		= recordStatsObject.get(RecordField.path.toString())		.getAsString();
+		this.pathRecord = recordStatsObject.get(FIELD_PATHRECORD)					.getAsString();
+		this.code 		= recordStatsObject.get(RecordField.code.toString())		.getAsString();
+		this.granularity= recordStatsObject.get(RecordField.granularity.toString())	.getAsInt();
+		this.statsIdentifier = HSRRecord.createStatsIdentifier(type, test, path, name, code);
+		
+		//----------------------------
+		// Parse SLA Rule
+		JsonElement slaElement = recordStatsObject.get(FIELD_SLA);
+		if(slaElement != null && !slaElement.isJsonNull()) {
+
+			if( ! HSRSLA.cacheHas(pathRecord) ) {
+				String slaRule = slaElement.getAsString();
+				
+				// HSRSLA parsed = HSRSLA.parseRule(slaRule);
+				// HSRSLA.cacheAdd(pathRecord, parsed);
+			}	
+			
+			this.sla = HSRSLA.cacheGet(pathRecord);
+
+		}
+		
+		//----------------------------
+		// Get Type
+		String typeString = recordStatsObject.get(RecordField.type.toString()).getAsString();
+		this.type = HSRRecordType.valueOf(typeString);
+
+
+		//----------------------------
+		// OK-NOK Values
+		for(HSRRecordState state : HSRRecordState.values()) {
+			for(HSRMetric metric : HSRMetric.values()) {
+				if(metric.isOkNok()) {
+					JsonElement current = recordStatsObject.get(state + "_" + metric);
+					if(current != null && !current.isJsonNull()) {
+						this.setValue(state,metric, current.getAsBigDecimal());
+					}
+				}
+			}
+		}
+		
+		//----------------------------
+		// Non OK-NOK Values
+		for(HSRRecordState state : HSRRecordState.values()) {
+			for(HSRMetric metric : HSRMetric.values()) {
+				if(!metric.isOkNok()) {
+					JsonElement current = recordStatsObject.get(metric.toString());
+					if(current != null && !current.isJsonNull()) {
+						this.setValue(state, metric, current.getAsBigDecimal());
+					}
+				}
+			}
+		}
+		
+	}
 	
 	/***********************************************************************
-	 * Creates a record containing request statistics.
+	 * Creates a basics stats instance with the data of the record.
 	 * 
 	 * @param record a record to copy data from
 	 ***********************************************************************/
@@ -333,8 +374,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		// Intern Strings to reduce memory overhead
 		this.time = System.currentTimeMillis();
 		this.type = record.type();
-		this.status = record.status();
-		this.state = record.status().state();
+
 		this.test = record.test().intern();
 		this.usecase = record.usecase().intern();
 		this.name = record.name().intern();
@@ -459,6 +499,14 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		object.addProperty(RecordField.name.toString(), 		name);
 		object.addProperty(RecordField.code.toString(), 		code);
 		object.addProperty(RecordField.granularity.toString(), 	granularity);
+		
+		//----------------------------
+		// SLA
+		if(sla != null) {
+			object.addProperty(FIELD_SLA, 	sla.toString());
+		}else {
+			object.add(FIELD_SLA, JsonNull.INSTANCE);
+		}
 		
 		//----------------------------
 		// OK-NOK Values
@@ -627,9 +675,10 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 		// NOT okNok Metrics
 		for(HSRMetric metric : HSRMetric.values()) {
 			if(!metric.isOkNok()) {
-				valueList.add(this.getValue(state,metric));
+				valueList.add(this.getValue(null,metric));
 			}
 		}
+
 				
 		return db.preparedExecute(insertSQL, valueList.toArray());
 		
@@ -701,21 +750,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	public HSRRecordType type() {
 		return type;
 	}
-	
-	/***********************************************************************
-	 * Returns the status of this record.
-	 ***********************************************************************/
-	public HSRRecordStatus status() {
-		return status;
-	}
-	
-	/***********************************************************************
-	 * Returns the state of this record.
-	 ***********************************************************************/
-	public HSRRecordState state() {
-		return state;
-	}
-	
+		
 
 	/***********************************************************************
 	 * Returns the code of the record.

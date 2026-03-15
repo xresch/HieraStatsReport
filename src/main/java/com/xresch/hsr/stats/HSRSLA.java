@@ -1,7 +1,10 @@
 package com.xresch.hsr.stats;
 
 import java.math.BigDecimal;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
+import com.google.gson.JsonObject;
 import com.xresch.hsr.stats.HSRExpression.Expressionable;
 import com.xresch.hsr.stats.HSRExpression.Operator;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
@@ -18,7 +21,7 @@ import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
  * @author Reto Scheiwiller, (c) Copyright 2025
  * @license EPL-License
  **************************************************************************************************************/
-public class HSRSLA implements Expressionable<BigDecimal> {
+public class HSRSLA {
 	
 	//-----------------------------
 	// boolean expression
@@ -34,10 +37,9 @@ public class HSRSLA implements Expressionable<BigDecimal> {
 	private boolean isAnd;
 	private HSRSLA right;
 	
-	// The one previous in the and/or chain
-	private HSRSLA previous = null;
-	
-	private ThreadLocal<HSRRecordStats> stats = new ThreadLocal<>();
+	// key is either HSRRecord.getPathRecord() or HSRRecordStats.pathRecord(), will be added the first time the sla is encountered
+	// used to add it to reports
+	private static TreeMap<String, HSRSLA> slaCache = new TreeMap<>();
 	
 	/******************************************************************************
 	 * Constructor
@@ -75,7 +77,7 @@ public class HSRSLA implements Expressionable<BigDecimal> {
 	 ******************************************************************************/
 	private HSRSLA(HSRSLA left, boolean isAnd, HSRSLA right){
 		this.isBooleanExpression = false;
-		this.previous = left;
+
 		this.left = left;
 		this.isAnd = isAnd;
 		this.right = right;
@@ -101,7 +103,6 @@ public class HSRSLA implements Expressionable<BigDecimal> {
 	 ******************************************************************************/
 	public HSRSLA and(HSRMetric metric, Operator operator, int value) {
 		 HSRSLA other = new HSRSLA(metric, operator, value);
-		 other.previous = this;
 		 return new HSRSLA(this, true, other);
 	}
 	
@@ -112,73 +113,86 @@ public class HSRSLA implements Expressionable<BigDecimal> {
 	 ******************************************************************************/
 	public HSRSLA or(HSRMetric metric, Operator operator, int value) {
 		 HSRSLA other = new HSRSLA(metric, operator, value);
-		 other.previous = this;
 		 return new HSRSLA(this, false, other);
 	}
 	
 	/******************************************************************************
-	 * Evaluates the SLA
-	 * @param stats
+	 * Evaluates the SLA against the given Value
+	 * @param checkThis value to check if it fullfills the SLA
 	 * @return
 	 ******************************************************************************/
-	public boolean evaluate() {
+	public boolean evaluate(HSRRecordStats checkThis) {
 		
 		if(isBooleanExpression) {
-			return HSRExpression.of(this, operator, value).evaluate();
+			BigDecimal valueCheckThis = checkThis.getValue(state, metric);
+			return HSRExpression.of(valueCheckThis, operator, value).evaluate();
 		}else {
 			if(isAnd) {
-				return left.evaluate() && right.evaluate();
+				return left.evaluate(checkThis) && right.evaluate(checkThis);
 			}else {
-				return left.evaluate() || right.evaluate();
+				return left.evaluate(checkThis) || right.evaluate(checkThis);
 			}
 		}
 
 	}
 	
-	/******************************************************************************
-	 * Evaluates the SLA
-	 * @param stats
-	 * @return
-	 ******************************************************************************/
-	public HSRSLA setStats(HSRRecordStats stats) {
-		
-		// I am the statsholder if null
-		if(previous == null) { 
-			this.stats.set(stats); 
-		}else {
-			previous.setStats(stats);
+	
+	/***************************************************************************
+	 * Adds the sla Rule to the cache if not already present.
+	 * 
+	 * @param path either HSRRecord.getPathRecord() or HSRRecordStats.pathRecord()
+	 * @param sla 
+	 ***************************************************************************/
+	public static void cacheAdd(String path, HSRSLA sla) {
+		if(!slaCache.containsKey(path)) {
+			slaCache.put(path, sla);
 		}
-		return this;
 	}
-	/******************************************************************************
-	 * Returns the stats used in this evaluation.
-	 * Will 
-	 * @return stats
-	 ******************************************************************************/
-	public HSRRecordStats getStats() {
-
-		if(previous != null) { 
-			return previous.getStats();
-		}else {
-			return stats.get();
-		}
+	
+	/***************************************************************************
+	 * Returns the SLA Rule from the cache.
+	 * 
+	 * @param path either HSRRecord.getPathRecord() or HSRRecordStats.pathRecord()
+	 ***************************************************************************/
+	public static HSRSLA cacheGet(String path) {
 		
+		return slaCache.get(path);
 		
 	}
-
-	/******************************************************************************
-	 * Implementation of Expressionable interface.
-	 ******************************************************************************/
-	@Override
-	public BigDecimal determineValue() {
-		HSRRecordStats currentStats = this.getStats();
+	
+	/***************************************************************************
+	 * Returns true if the SLA Rule  is in the cache .
+	 * 
+	 * @param path either HSRRecord.getPathRecord() or HSRRecordStats.pathRecord()
+	 ***************************************************************************/
+	public static boolean cacheHas(String path) {
 		
-		if(currentStats != null) {
-			return currentStats.getValue(state, metric);
-		}
-
-		return null;
+		return slaCache.containsKey(path);
+		
 	}
+	
+	/***************************************************************************
+	 * Clears the SLA cache.
+	 ***************************************************************************/
+	public static void cacheClear() {
+		slaCache.clear();
+	}
+	
+	/***************************************************************************
+	 * Creates a JsonObject for the cached SLAs.
+	 * 
+	 ***************************************************************************/
+	public static JsonObject cacheGetAsJson() {
+		
+		JsonObject object = new JsonObject();
+		
+		for(Entry<String, HSRSLA> entry : slaCache.entrySet()) {
+			object.addProperty(entry.getKey(), entry.getValue().toString());
+		}
+		
+		return object;
+	}
+
 	
 	/******************************************************************************
 	 *

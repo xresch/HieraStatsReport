@@ -205,7 +205,6 @@ public class HSRReporterEMP implements HSRReporter {
 		JsonObject attributes = new JsonObject();
 		attributes.addProperty("type", record.type().toString());
 		attributes.addProperty("state", HSRRecordState.ok.toString());
-		attributes.addProperty("status", record.status().toString());
 		attributes.addProperty("path", record.path());
 		attributes.addProperty("usecase", record.usecase());
 		
