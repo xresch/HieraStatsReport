@@ -1,11 +1,13 @@
 package com.xresch.hsr.stats;
 
 import java.math.BigDecimal;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.JsonObject;
-import com.xresch.hsr.stats.HSRExpression.Expressionable;
+import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.stats.HSRExpression.Operator;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
@@ -23,6 +25,10 @@ import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
  **************************************************************************************************************/
 public class HSRSLA {
 	
+	//-----------------------------
+	// Parser Pattern
+    private static Pattern pattern = Pattern.compile("\\(\\s*(\\w+?)_(\\w+?)\\s*(==|!=|>=|<=|>|<)\\s*(\\d+)\\s*\\)");
+    
 	//-----------------------------
 	// boolean expression
 	private boolean isBooleanExpression = true;
@@ -191,6 +197,75 @@ public class HSRSLA {
 		}
 		
 		return object;
+	}
+	
+	
+	
+	
+	
+	/******************************************************************************
+	 * Parses a SLA Rule string into an instance of a Rule. 
+	 * Example Strings:
+	 * <ul>
+	 * 		<li>( ok_p90 <= 100 )</li>
+	 * 		<li>( ok_p90 <= 100 ) AND ( ok_avg <= 50 )</li>
+	 * 		<li>( ok_avg <= 50 ) OR ( ok_p90 <= 100 )</li>
+	 * 		<li>( ok_failrate < 10 )</li>
+	 * </ul>
+	 * 
+	 * @param rule string 
+	 ******************************************************************************/
+	public static HSRSLA parseRule(String rule) {
+
+	    rule = rule.trim();
+
+	    Matcher m = pattern.matcher(rule);
+
+	    HSRSLA result = null;
+	    boolean nextAnd = true;
+
+	    int pos = 0;
+
+	    while (m.find()) {
+
+	        String stateStr = m.group(1);
+	        String metricStr = m.group(2);
+	        String opStr = m.group(3);
+	        String valueStr = m.group(4);
+
+	        HSRRecordState state = HSRRecordState.valueOf(stateStr);
+	        HSRMetric metric = HSRMetric.valueOf(metricStr);
+	        Operator op = Operator.fromSymbol(opStr);
+
+	        HSRSLA expr = new HSRSLA(metric, op, new BigDecimal(valueStr));
+
+	        if(state == HSRRecordState.nok) {
+	            expr.nok();
+	        }
+
+	        if(result == null) {
+	            result = expr;
+	        } else {
+	            result = new HSRSLA(result, nextAnd, expr);
+	        }
+
+	        pos = m.end();
+
+	        // check following operator
+	        if(pos < rule.length()) {
+
+	            String tail = rule.substring(pos).trim();
+
+	            if(tail.startsWith("AND")) {
+	                nextAnd = true;
+	            } else if(tail.startsWith("OR")) {
+	                nextAnd = false;
+	            }
+
+	        }
+	    }
+
+	    return result;
 	}
 
 	

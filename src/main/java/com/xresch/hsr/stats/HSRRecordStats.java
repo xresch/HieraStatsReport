@@ -320,8 +320,8 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 			if( ! HSRSLA.cacheHas(pathRecord) ) {
 				String slaRule = slaElement.getAsString();
 				
-				// HSRSLA parsed = HSRSLA.parseRule(slaRule);
-				// HSRSLA.cacheAdd(pathRecord, parsed);
+				HSRSLA parsed = HSRSLA.parseRule(slaRule);
+				HSRSLA.cacheAdd(pathRecord, parsed);
 			}	
 			
 			this.sla = HSRSLA.cacheGet(pathRecord);
@@ -332,7 +332,6 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		// Get Type
 		String typeString = recordStatsObject.get(RecordField.type.toString()).getAsString();
 		this.type = HSRRecordType.valueOf(typeString);
-
 
 		//----------------------------
 		// OK-NOK Values
@@ -349,16 +348,15 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		
 		//----------------------------
 		// Non OK-NOK Values
-		for(HSRRecordState state : HSRRecordState.values()) {
-			for(HSRMetric metric : HSRMetric.values()) {
-				if(!metric.isOkNok()) {
-					JsonElement current = recordStatsObject.get(metric.toString());
-					if(current != null && !current.isJsonNull()) {
-						this.setValue(state, metric, current.getAsBigDecimal());
-					}
+		for(HSRMetric metric : HSRMetric.values()) {
+			if(!metric.isOkNok()) {
+				JsonElement current = recordStatsObject.get(metric.toString());
+				if(current != null && !current.isJsonNull()) {
+					this.setValue(null, metric, current.getAsBigDecimal());
 				}
 			}
 		}
+		
 		
 	}
 	

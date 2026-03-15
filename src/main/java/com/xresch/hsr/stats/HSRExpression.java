@@ -1,5 +1,8 @@
 package com.xresch.hsr.stats;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**************************************************************************************************************
  * Class to define SLAs that will be evaluated on aggregation of statistics.
  * Results will be stored in the columns ok_sla and nok_sla.
@@ -29,12 +32,36 @@ public class HSRExpression {
 	
 		private String symbol;
 		
+	    private static final HashMap<String, Operator> BY_SYMBOL = new HashMap<>();
+
+	    static {
+	        for (Operator op : values()) {
+	            BY_SYMBOL.put(op.symbol, op);
+	        }
+	    }
+		
+	    /********************************************
+	     *											*/
 		private Operator(String symbol) {
 			this.symbol = symbol;
 		}
 		
+		/********************************************
+	     *											*/
 		public String symbol() { return symbol; }
 		
+		/********************************************
+	     *											*/
+		 public static Operator fromSymbol(String symbol) {
+	        Operator op = BY_SYMBOL.get(symbol);
+	        if(op == null) {
+	            throw new IllegalArgumentException("Unknown operator: " + symbol);
+	        }
+	        return op;
+	    }
+		 
+		/********************************************
+		 *											*/
 	    @SuppressWarnings({ "rawtypes", "unchecked" })
 		public boolean evaluate(Comparable left, Comparable right) {
 	    	
