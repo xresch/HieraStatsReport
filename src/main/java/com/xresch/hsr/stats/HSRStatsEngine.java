@@ -53,6 +53,13 @@ public class HSRStatsEngine {
 
 	private static HSRStatsEngineHooks hooks = new HSRStatsEngineHooks();
 	
+	public record SummarizedStats(ArrayList<HSRRecordStats> finalRecords,  JsonArray finalRecordsJson) {};
+	
+	//=========================================
+	// Array Lists
+	//=========================================
+	private static ArrayList<HSRRecordStats> customRecordStats = new ArrayList<>();
+	
 	//=========================================
 	// Tree Maps
 	//=========================================
@@ -339,9 +346,21 @@ public class HSRStatsEngine {
 			
 			groupedRecordsInterval.get(id).add(record);
 		}
-		
-		
-		
+
+	}
+	
+	/***************************************************************************
+	 * Add a custom Record Stats that will be reported with the next reporting
+	 * interval.
+	 * This is useful when using HSRStatsEngineHooks.beforeAggregate() to register
+	 * custom statistics.
+	 * 
+	 * @param stats
+	 ***************************************************************************/
+	public static void addRecordStats(HSRRecordStats stats) {
+
+		customRecordStats.add(stats);
+
 	}
 	
 	
@@ -608,7 +627,8 @@ public class HSRStatsEngine {
 		
 		//--------------------------------------
 		// Check Has Data
-		if(groupedRecordsInterval.isEmpty()) { return; }
+		if(groupedRecordsInterval.isEmpty()
+		&& customRecordStats.isEmpty()) { return; }
 		
 		//-------------------------------
 		// First Report
@@ -789,6 +809,10 @@ public class HSRStatsEngine {
 			
 		}
 		
+		//-------------------------------
+		// Add custom statistics
+		statsRecordList.addAll(customRecordStats);
+		customRecordStats.clear();
 		
 		//-------------------------------
 		// Add To Grouped Stats
@@ -863,13 +887,15 @@ public class HSRStatsEngine {
 	}
 	
 	
+
+
 	/***************************************************************************
 	 * Aggregates the grouped statistics and makes one final report
 	 * 
+	 * @param groupedStats that should be summarized
+	 * @param doSumUsers true if users should be summed, false will calculate average
 	 ***************************************************************************/
-	public record SummarizedStats(ArrayList<HSRRecordStats> finalRecords,  JsonArray finalRecordsJson) {};
-	
-	public static SummarizedStats summarizeGroupedStats(TreeMap<String, ArrayList<HSRRecordStats>> groupedStats) {
+	public static SummarizedStats summarizeGroupedStats(TreeMap<String, ArrayList<HSRRecordStats>> groupedStats, boolean doSumUsers) {
 		//----------------------------------------
 				// Prepare Arrays
 				ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
@@ -953,8 +979,9 @@ public class HSRStatsEngine {
 									switch(recordMetric) {
 										case avg	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
 										case count	->	{	
-															if( ! type.isGauge() ) { value = HSR.Math.bigSum(metricValues, 0, true); }
-															else				   { value = HSR.Math.bigAvg(metricValues, 0, true); }
+															if( ! type.isGauge() ) 								{ value = HSR.Math.bigSum(metricValues, 0, true); }
+															else if( type == HSRRecordType.User && doSumUsers ) { value = HSR.Math.bigSum(metricValues, 0, true); }
+															else				   								{ value = HSR.Math.bigAvg(metricValues, 0, true); }
 														}
 										case max	->		value = HSR.Math.bigMax(metricValues);				
 										case min	->		value = HSR.Math.bigMin(metricValues);				
@@ -1051,7 +1078,7 @@ public class HSRStatsEngine {
 		if(groupedStats.isEmpty()) { return; }
 
 		
-		SummarizedStats summarized = summarizeGroupedStats(groupedStats);
+		SummarizedStats summarized = summarizeGroupedStats(groupedStats, false);
 		
 		//-------------------------------
 		// Report Stats

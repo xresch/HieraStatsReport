@@ -330,6 +330,14 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		this.pathRecord = recordStatsObject.get(FIELD_PATHRECORD)					.getAsString();
 		this.code 		= recordStatsObject.get(RecordField.code.toString())		.getAsString();
 		this.granularity= recordStatsObject.get(RecordField.granularity.toString())	.getAsInt();
+		
+		//----------------------------
+		// Get Type
+		String typeString = recordStatsObject.get(RecordField.type.toString()).getAsString();
+		this.type = HSRRecordType.valueOf(typeString);
+		
+		//----------------------------
+		// Create Identifier
 		this.statsIdentifier = HSRRecord.createStatsIdentifier(type, test, path, name, code);
 		
 		//----------------------------
@@ -348,10 +356,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 
 		}
 		
-		//----------------------------
-		// Get Type
-		String typeString = recordStatsObject.get(RecordField.type.toString()).getAsString();
-		this.type = HSRRecordType.valueOf(typeString);
+
 
 		//----------------------------
 		// OK-NOK Values

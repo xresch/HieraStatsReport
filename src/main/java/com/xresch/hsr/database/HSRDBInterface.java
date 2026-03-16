@@ -445,11 +445,11 @@ public class HSRDBInterface {
 				// Get Start Time
 				// Cannot take oldest as start time, as it might offset deep into 
 				// the timerange that still should be kept
-				Long startTime = HSRTimeUnit.s.offset(testOldest, +1);
+				//Long startTime = HSRTimeUnit.s.offset(testOldest, +1);
 				
-				while(startTime > testOldest) {
-					startTime = HSRTimeUnit.s.offset(startTime, -granularitySec);
-				}
+				//while(startTime > testOldest) {
+					long startTime = HSRTimeUnit.s.offset(testOldest, -granularitySec);
+				//}
 				
 				//--------------------------
 				// Iterate with offsets
@@ -465,7 +465,7 @@ public class HSRDBInterface {
 					endTime = HSRTimeUnit.s.offset(endTime, granularitySec);
 					
 					
-				} while(endTime < testYoungest);
+				} while(endTime < (testYoungest + (granularitySec * 1000) ) );
 				
 				logger.info(">>> AgeOut Statistics for Test: "+testid+", Success: "+success+", Timeframe "+HSRTime.formatMillisAsTimestamp(startTime) + " to "+ HSRTime.formatMillisAsTimestamp(endTime));
 				
