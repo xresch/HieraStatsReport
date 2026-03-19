@@ -2440,13 +2440,13 @@ function drawSummaryPage(target){
 	
 
 	//----------------------------
-	// Create SLA Table
-	resultDiv.append('<h3>SLA Analysis<h3>');
-	resultDiv.append('<p>Lists all records that have an SLA rule defined.</p>');
+	// Create SLA Table OK
+	resultDiv.append('<h3>SLA Analysis - OK<h3>');
+	resultDiv.append('<p>Lists all records that have an OK value for their SLA evaluation.</p>');
 	let slaRendeDef = {
 		idfield: 'statsid',
-		data: _.filter(clonedRecord, function(o){ return o.ok_sla != null; } ),
-		visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "failrate", "Rule", "ok_sla", "status_over_time"),
+		data: _.filter(clonedRecord, function(o){ return o.ok_sla == 1; } ),
+		visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p50", "ok_p90", "failrate", "Rule", "ok_sla", "status_over_time"),
 		labels: FIELDLABELS,
 		actions: ACTION_BUTTONS,
 		customizers: Object.assign({}, CUSTOMIZERS, {
@@ -2459,17 +2459,49 @@ function drawSummaryPage(target){
 		},
 	}
 	
-	let slaTable = CFW.render.getRenderer('dataviewer').render(slaRendeDef);	
+	let slaTableOK = CFW.render.getRenderer('dataviewer').render(slaRendeDef);	
 	
-	resultDiv.append(slaTable);	
+	resultDiv.append(slaTableOK);	
+	
+	//----------------------------
+	// Create SLA Table
+	resultDiv.append('<h3>SLA Analysis - NOK<h3>');
+	resultDiv.append('<p>Lists all records that have an NOK value for their SLA evaluation.</p>');
+	let slaNokRendeDef = {
+		idfield: 'statsid',
+		data: _.filter(clonedRecord, function(o){ return o.nok_sla == 1; } ),
+		visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p50", "ok_p90", "failrate", "Rule", "ok_sla", "status_over_time"),
+		labels: FIELDLABELS,
+		actions: ACTION_BUTTONS,
+		customizers: Object.assign({}, CUSTOMIZERS, {
+			  "Rule": function(record){ return slaForRecord(record); }
+			, "status_over_time": customizerStatusBartSLA
+		}),
+		rendererSettings: {
+			dataviewer:{ storeid: "table-summary-sla", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
+			table: {filterable: false, narrow: true, stickyheader: true},
+		},
+	}
+
+	let slaTableNOK = CFW.render.getRenderer('dataviewer').render(slaNokRendeDef);	
+
+	resultDiv.append(slaTableNOK);	
 	
 	//----------------------------
 	// Create Boxplot Table
+	//======================================
+	// Find min/max of all records
+	let boxplotRecords = _.filter(clonedRecord, function(o){ return o.ok_p50 != null &&  o.ok_p50 > 0; } )
+	
+	let minMaxes = getMinsAndMax(boxplotRecords);
+	let minMin = minMaxes.min;
+	let maxMax = minMaxes.max;
+	
 	resultDiv.append('<h3>Boxplot Analysis<h3>');
 	resultDiv.append('<p>Lists all records that have not only count but statistical values.</p>');
 	let boxplotRendeDef = {
 		idfield: 'statsid',
-		data: _.filter(clonedRecord, function(o){ return o.ok_p50 != null &&  o.ok_p50 > 0; } ),
+		data: boxplotRecords,
 		visiblefields: FIELDS_BOXPLOT.concat("Range", "IQR", "Boxplot"),
 		labels: FIELDLABELS,
 		actions: ACTION_BUTTONS,
@@ -2478,7 +2510,7 @@ function drawSummaryPage(target){
 			"IQR": function(record, value){ return record_calc_IQR(record); },
 			"Boxplot": function(record, value){
 				return $('<div class="vw-25">')
-							.append( record_format_boxplot(record) );
+							.append( record_format_boxplot(record, minMin, maxMax) );
 			}
 		}),
 		rendererSettings: {
@@ -2505,7 +2537,7 @@ function drawSummaryPage(target){
 			"failure_over_time": function(record, value, rendererName, fieldname){
 					return customizerSparkchartStats(record, value, rendererName, fieldname
 													, ["failrate"]
-													, { colors: ["red"], ymin: 0, ymax: 100 }
+													, { charttype: "sparkarea", colors: ["red"], ymin: 0, ymax: 100 }
 												);
 			}
 		}),
@@ -2533,6 +2565,45 @@ function drawSummaryPage(target){
 	// Add to Target
 	target.append(resultDiv);
 	
+}
+
+/**************************************************************************************
+ * Returns the lowest minimum and highest maximum of all records.
+ * 
+ * @param data
+ * @return JsonObject with fields min and max
+ *************************************************************************************/
+function getMinsAndMax(data){
+	let minMin = null;
+	let maxMax = null;
+
+	for(i in data){
+		let current = data[i];
+		
+		// skip counts
+		if(RECORDTYPE[current.type].isCount == true){ continue; }
+		
+		// get Minimum of Minimum
+		if(current.ok_min != null){
+			if(minMin != null){
+				minMin = Math.min(current.ok_min, minMin);
+			}else{
+				minMin = current.ok_min;
+			}
+		}
+		
+		// get Maximum of Minimum
+		if(current.ok_max != null){
+			if(maxMax != null){
+				maxMax = Math.max(current.ok_max, maxMax);
+			}else{
+				maxMax = current.ok_max;
+			}
+		}
+			
+	}
+	
+	return {min: minMin, max: maxMax};
 }
 
 /**************************************************************************************
@@ -2565,34 +2636,9 @@ function drawTable(target, data, showFields, typeFilterArray){
 
 	//======================================
 	// Find min/max of all records
-	let minMin = null;
-	let maxMax = null;
-	
-	for(i in data){
-		let current = data[i];
-		
-		// skip counts
-		if(RECORDTYPE[current.type].isCount == true){ continue; }
-		
-		// get Minimum of Minimum
-		if(current.ok_min != null){
-			if(minMin != null){
-				minMin = Math.min(current.ok_min, minMin);
-			}else{
-				minMin = current.ok_min;
-			}
-		}
-		
-		// get Maximum of Minimum
-		if(current.ok_max != null){
-			if(maxMax != null){
-				maxMax = Math.max(current.ok_max, maxMax);
-			}else{
-				maxMax = current.ok_max;
-			}
-		}
-			
-	}
+	let minMaxes = getMinsAndMax(data);
+	let minMin = minMaxes.min;
+	let maxMax = minMaxes.max;
 
 	
 	//======================================
