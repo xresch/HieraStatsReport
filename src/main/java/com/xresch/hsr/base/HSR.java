@@ -741,25 +741,29 @@ public class HSR {
 	/***********************************************************************************
 	 * Add a metric to the report. Useful to report duration and other values you want
 	 * to have statistical values for like min, avg, max.
-	 * For values use the addCount()-method.
+	 * For regular count values use the addCount()-method instead.
 	 * 
-	 * A range will be appended to the name. This is useful
-	 * for measuring the impact of response times during load testing. For Example, you
-	 * could extract the number of total records from a table (rangeValue) and measure
-	 * the duration by the amount of data.
+	 * A range will be appended to the name. This is useful for measuring the impact of 
+	 * response times during load testing. For Example, you could extract the number of 
+	 * total records from a table (rangeValue) and measure the duration by the amount 
+	 * of data.
+	 * For a rangeValue of 0(~="no data") a separate range "0000" is reported, to make
+	 * a distinction between counts that have items vs. the ones who don't.
+	 * 
 	 * The ranges this method creates are exponential. Each new range adds the size
 	 * of the previous one. For example, if you define an initialRange of 50, the ranges 
 	 * would look like this:
 	 *   <ul>
-	 *   	<li>0000-0050</li>
+	 *   	<li>0000</li>
+	 *   	<li>0001-0050</li>
 	 *   	<li>0051-0100</li>
 	 *   	<li>0101-0200</li>
 	 *   	<li>0201-0400</li>
 	 *   	<li>and so on ...</li>
 	 *   <ul>  
 	 * 
-	 * The zeros are added so that alphabetical sorting will not mess up the order, at 
-	 * least up to a range of 9999.
+	 * The padding with zeros is added so that alphabetical sorting will not mess up the order, at 
+	 * least up to a range of 9999. 
 	 * This method can only deal with positive values.
 	 * 
 	 * @param name the name of the record
@@ -770,10 +774,18 @@ public class HSR {
 	public static HSRRecord addMetricRanged(String name, BigDecimal value, int rangeValue, int initialRange){	
 		
 		//------------------------------
+		// Report zero separately.
+		if(rangeValue == 0) {
+			return addItem(HSRRecordType.Metric, name + " 0000" )
+					.value(value)
+					;
+		}
+		
+		//------------------------------
 		// Calculate Range
 		rangeValue = java.lang.Math.abs(rangeValue);
 		
-		int rangeStart = 0;
+		int rangeStart = 1;
 		int rangeEnd = java.lang.Math.abs(initialRange);
 		while( rangeValue > rangeEnd) {
 			rangeStart = rangeEnd + 1;

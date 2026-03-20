@@ -390,7 +390,8 @@ The metric will have a range attached, that gives the statistics for that range:
 ```
 |Name                           |Count      |Min    |Avg |Max  |P90 |Fails[%]|
 |-------------------------------|-----------|-------|----|-----|----|--------|
-|070.4 TableLoadTime 0000-0050  |484        |0      |188 |8343 |1948|0       |
+|070.4 TableLoadTime 0000       |193        |0      |17  |245  |171 |0       |
+|070.4 TableLoadTime 0001-0050  |484        |4      |188 |8343 |1948|0       |
 |070.4 TableLoadTime 0051-0100  |89         |14     |1615|6643 |4800|0       |
 |070.4 TableLoadTime 0101-0200  |131        |18     |1834|9800 |6426|0       |
 |070.4 TableLoadTime 0201-0400  |329        |14     |1787|9970 |6538|0       |
