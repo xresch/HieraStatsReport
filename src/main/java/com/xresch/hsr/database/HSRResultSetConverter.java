@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.xresch.hsr.utils.HSRJson;
+import com.xresch.hsr.base.HSR;
 
 /**************************************************************************************************************
  * 
@@ -403,7 +403,7 @@ public class HSRResultSetConverter {
 					
 					String value = result.getString(i);
 					csv.append("\"")
-					   .append(HSRJson.escapeString(value))
+					   .append(HSR.JSON.escapeString(value))
 					   .append("\"")
 					   .append(delimiter);
 				}
@@ -512,15 +512,15 @@ public class HSRResultSetConverter {
 						String name = metadata.getColumnLabel(i);
 						
 						if(name.toUpperCase().startsWith("JSON")) {
-							JsonElement asElement = HSRJson.stringToJsonElement(resultSet.getString(i));
+							JsonElement asElement = HSR.JSON.stringToJsonElement(resultSet.getString(i));
 							record.add(name, asElement);
 						}else {
 							
 							Object value = resultSet.getObject(i);
-							if(value instanceof Clob) {				HSRJson.addObject(record, name, resultSet.getString(i)); }
-							else if(value instanceof JdbcArray) {	HSRJson.addObject(record, name, ((JdbcArray)value).getArray()); } 
+							if(value instanceof Clob) {				HSR.JSON.addObject(record, name, resultSet.getString(i)); }
+							else if(value instanceof JdbcArray) {	HSR.JSON.addObject(record, name, ((JdbcArray)value).getArray()); } 
 							else {									
-								HSRJson.addObject(record, name, value);
+								HSR.JSON.addObject(record, name, value);
 							}
 						}
 					}

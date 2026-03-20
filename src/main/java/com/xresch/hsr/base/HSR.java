@@ -6,21 +6,21 @@ import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
+import com.xresch.hsr.stats.HSRExpression.Operator;
 import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
 import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 import com.xresch.hsr.stats.HSRSLA;
 import com.xresch.hsr.stats.HSRStatsEngine;
-import com.xresch.hsr.stats.HSRExpression.Operator;
-import com.xresch.hsr.utils.HSRCSV;
-import com.xresch.hsr.utils.HSRFiles;
-import com.xresch.hsr.utils.HSRJson;
 import com.xresch.hsr.utils.HSRLog;
-import com.xresch.hsr.utils.HSRMath;
-import com.xresch.hsr.utils.HSRRandom;
-import com.xresch.hsr.utils.HSRText;
-import com.xresch.hsr.utils.HSRTime;
+import com.xresch.xrutils.utils.XRCSV;
+import com.xresch.xrutils.utils.XRFiles;
+import com.xresch.xrutils.utils.XRJson;
+import com.xresch.xrutils.utils.XRMath;
+import com.xresch.xrutils.utils.XRRandom;
+import com.xresch.xrutils.utils.XRText;
+import com.xresch.xrutils.utils.XRTime;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -60,13 +60,13 @@ public class HSR {
 	/***********************************************************************************
 	 * Utility References
 	 ***********************************************************************************/
-	public static class CSV extends HSRCSV {}
-	public static class Files extends HSRFiles {}
-	public static class JSON extends HSRJson {}
-	public static class Math extends HSRMath {}
-	public static class Random extends HSRRandom {}
-	public static class Text extends HSRText {}
-	public static class Time extends HSRTime {}
+	public static class CSV extends XRCSV {}
+	public static class Files extends XRFiles {}
+	public static class JSON extends XRJson {}
+	public static class Math extends XRMath {}
+	public static class Random extends XRRandom {}
+	public static class Text extends XRText {}
+	public static class Time extends XRTime {}
 	
 	/***********************************************************************************
 	 * 

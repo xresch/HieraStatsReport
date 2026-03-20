@@ -51,6 +51,13 @@
 	<!-- ================= DEPENDENCIES ================== -->
 	<dependencies>
 	
+			<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+		<dependency>
+		    <groupId>com.xresch</groupId>
+		    <artifactId>xrutils</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
+		
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 		<dependency>
 		    <groupId>commons-io</groupId>

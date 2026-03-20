@@ -13,9 +13,8 @@ import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
-import com.xresch.hsr.utils.HSRFiles;
-import com.xresch.hsr.utils.HSRTime;
-import com.xresch.hsr.utils.HSRTime.HSRTimeUnit;
+import com.xresch.xrutils.utils.XRTime;
+import com.xresch.xrutils.utils.XRTime.XRTimeUnit;
 
 /**************************************************************************************************************
  * 
@@ -42,7 +41,7 @@ public class HSRDBInterface {
 	private String sqlAggregateStats;
 	
 	public static final String PACKAGE_RESOURCES = "com.xresch.hsr.database.resources";
-	static { HSRFiles.addAllowedPackage(PACKAGE_RESOURCES); }
+	static { HSR.Files.addAllowedPackage(PACKAGE_RESOURCES); }
 	
 
 	//private static final String PROCEDURE_AGGREGATE_PERC = "AGGREGATE_PERC";
@@ -387,7 +386,7 @@ public class HSRDBInterface {
 		
 		//----------------------------
 		// Iterate all granularities
-		for(int granularitySec : HSRTime.AGE_OUT_GRANULARITIES) {
+		for(int granularitySec : XRTime.AGE_OUT_GRANULARITIES) {
 			
 			//--------------------------
 			// Get Age Out Time
@@ -403,8 +402,8 @@ public class HSRDBInterface {
 			}
 			
 			logger.info("DB: Age Out statistics with granularity smaller than: "+granularitySec+" seconds");
-			logger.info(">>> Age Out earliest time: "+HSRTime.formatMillisAsTimestamp(oldest));
-			logger.info(">>> Age Out latest time: "+HSRTime.formatMillisAsTimestamp(youngest));
+			logger.info(">>> Age Out earliest time: "+XRTime.formatMillisAsTimestamp(oldest));
+			logger.info(">>> Age Out latest time: "+XRTime.formatMillisAsTimestamp(youngest));
 
 
 			//--------------------------
@@ -445,15 +444,15 @@ public class HSRDBInterface {
 				// Get Start Time
 				// Cannot take oldest as start time, as it might offset deep into 
 				// the timerange that still should be kept
-				//Long startTime = HSRTimeUnit.s.offset(testOldest, +1);
+				//Long startTime = XRTimeUnit.s.offset(testOldest, +1);
 				
 				//while(startTime > testOldest) {
-					long startTime = HSRTimeUnit.s.offset(testOldest, -granularitySec);
+					long startTime = XRTimeUnit.s.offset(testOldest, -granularitySec);
 				//}
 				
 				//--------------------------
 				// Iterate with offsets
-				Long endTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
+				Long endTime =  XRTimeUnit.s.offset(startTime, granularitySec);
 				
 				
 				boolean success = true;
@@ -461,13 +460,13 @@ public class HSRDBInterface {
 				do {
 	
 					success &= aggregateStatistics(startTime, endTime, testid, granularitySec);
-					startTime =  HSRTimeUnit.s.offset(startTime, granularitySec);
-					endTime = HSRTimeUnit.s.offset(endTime, granularitySec);
+					startTime =  XRTimeUnit.s.offset(startTime, granularitySec);
+					endTime = XRTimeUnit.s.offset(endTime, granularitySec);
 					
 					
 				} while(endTime < (testYoungest + (granularitySec * 1000) ) );
 				
-				logger.info(">>> AgeOut Statistics for Test: "+testid+", Success: "+success+", Timeframe "+HSRTime.formatMillisAsTimestamp(startTime) + " to "+ HSRTime.formatMillisAsTimestamp(endTime));
+				logger.info(">>> AgeOut Statistics for Test: "+testid+", Success: "+success+", Timeframe "+XRTime.formatMillisAsTimestamp(startTime) + " to "+ XRTime.formatMillisAsTimestamp(endTime));
 				
 			}
 		}
@@ -486,12 +485,12 @@ public class HSRDBInterface {
 		
 		long ageOutOffset;
 		
-		if		(granularitySeconds <= HSRTime.SECONDS_OF_1MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep1MinFor().get(ChronoUnit.SECONDS) ); }
-		else if	(granularitySeconds <= HSRTime.SECONDS_OF_5MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep5MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= HSRTime.SECONDS_OF_10MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep10MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= HSRTime.SECONDS_OF_15MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep15MinFor().get(ChronoUnit.SECONDS)); }
-		else if (granularitySeconds <= HSRTime.SECONDS_OF_60MIN) 	{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
-		else  															{ ageOutOffset = HSRTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
+		if		(granularitySeconds <= XRTime.SECONDS_OF_1MIN) 	{ ageOutOffset = XRTimeUnit.s.offset(null, -1 * (int)config.keep1MinFor().get(ChronoUnit.SECONDS) ); }
+		else if	(granularitySeconds <= XRTime.SECONDS_OF_5MIN) 	{ ageOutOffset = XRTimeUnit.s.offset(null, -1 * (int)config.keep5MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= XRTime.SECONDS_OF_10MIN) 	{ ageOutOffset = XRTimeUnit.s.offset(null, -1 * (int)config.keep10MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= XRTime.SECONDS_OF_15MIN) 	{ ageOutOffset = XRTimeUnit.s.offset(null, -1 * (int)config.keep15MinFor().get(ChronoUnit.SECONDS)); }
+		else if (granularitySeconds <= XRTime.SECONDS_OF_60MIN) 	{ ageOutOffset = XRTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
+		else  															{ ageOutOffset = XRTimeUnit.s.offset(null, -1 * (int)config.keep60MinFor().get(ChronoUnit.SECONDS)); }
 
 		return ageOutOffset;
 	}

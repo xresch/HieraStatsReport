@@ -13,7 +13,6 @@ import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
-import com.xresch.hsr.utils.HSRFiles;
 
 /**************************************************************************************************************
  * This record holds one record of statistical data aggregated from HSRRecord.
@@ -634,7 +633,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 ***********************************************************************/
 	public static String createSQL_AggregateStats(String tablenameStats, String tablenameTempAggregation) {
 
-		String sqlAggregateTempStats =  HSRFiles.readPackageResource(HSRDBInterface.PACKAGE_RESOURCES, "sql_createTempAggregatedStatistics.sql");
+		String sqlAggregateTempStats =  HSR.Files.readPackageResource(HSRDBInterface.PACKAGE_RESOURCES, "sql_createTempAggregatedStatistics.sql");
 		
 		String fieldsNoTimeGranularity = fieldNamesJoined
 			.replaceAll("\"time\",", "")
