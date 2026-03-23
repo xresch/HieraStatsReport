@@ -524,6 +524,15 @@ HSR.increaseUsers(1);
 HSR.decreaseUsers(1);
 ```
 
+# Reporting Custom Status Code
+To report a custom status code(e.g HTTP Status Code, Failure code etc...) use one of the HSR.end() methods.
+Calling something like `HSR.end().code()` will not work as `.code()` should never be called after `.end()` has ben executed.
+
+```java
+HSR.end(true, "SUCCESS");
+HSR.end(HSRRecordStatus.Failed, "FAIL");
+```
+
 # Example: JUnit with Playwright
 HSR registers a JUnit Listener and can be used together with JUnit Tests.
 Following example runs a playwright test with JUnit, measuring times with HSR. 
@@ -636,14 +645,14 @@ public static void measureHTTPCall(CloseableHttpClient httpClient, HttpUriReques
 			
 		//--------------------------
 		// End Measurement	
-		record = HSR.end(success).code(""+response.getStatus()); 
+		record = HSR.end(success), ""+response.getStatus()); 
 
 	} catch (Throwable e) {
 		
 		HSR.addErrorMessage("Exception during HTTP request: "+e.getMessage(), e);
 		
 		if(record != null){
-			record = HSR.end(false).code(""+response.getStatus());
+			record = HSR.end(false), ""+response.getStatus());
 		}
 		
 	}
