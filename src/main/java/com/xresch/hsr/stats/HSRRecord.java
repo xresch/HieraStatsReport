@@ -334,6 +334,9 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
+	 * <b>IMPORTANT:</b> Do not call this method after end() has been
+	 * called! It will not reflect in the aggregated statistics.<br>
+	 * 
 	 * Sets the name of the test.
 	 ******************************************************************/
 	public HSRRecord test(String test) {
@@ -352,6 +355,8 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
+	 * <b>IMPORTANT:</b> Do not call this method after end() has been
+	 * called! It will not reflect in the aggregated statistics.<br>
 	 * 
 	 ******************************************************************/
 	public HSRRecord usecase(String usecase) {
@@ -370,6 +375,8 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
+	 * <b>IMPORTANT:</b> Do not call this method after end() has been
+	 * called! It will not reflect in the aggregated statistics.<br>
 	 * 
 	 ******************************************************************/
 	public HSRRecord name(String name) {
@@ -482,7 +489,15 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
+	 * <b>IMPORTANT:</b> Do not call this method after end() has been
+	 * called! It will not reflect in the aggregated statistics.<br>
+	 * 
+	 * You can use one of the HSR.end() methods to set a custom code. <br>
+	 *
 	 * Set a custom code for this record, e.g. a HTTP response code.
+	 * 
+	 * @param code the custom code
+	 * 
 	 ******************************************************************/
 	public HSRRecord code(String code) {
 		
@@ -523,7 +538,10 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
-	 * Overrides the pathlist of this record
+	 * <b>IMPORTANT:</b> Do not call this method after end() has been
+	 * called! It will not reflect in the aggregated statistics.<br>
+	 * 
+	 * Overrides the pathlist of this record.
 	 ******************************************************************/
 	public HSRRecord pathlist(List<String> pathlist) {
 		
@@ -550,6 +568,8 @@ public class HSRRecord {
 	}
 
 	/******************************************************************
+	 * <b>IMPORTANT:</b> Do not call this method after end() has been
+	 * called! It will not reflect in the aggregated statistics.<br>
 	 * 
 	 ******************************************************************/
 	public HSRRecord type(HSRRecordType type) {
