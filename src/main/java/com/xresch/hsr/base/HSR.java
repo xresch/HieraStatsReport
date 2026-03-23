@@ -497,27 +497,24 @@ public class HSR {
 	 ***********************************************************************************/
 	public static HSRRecord end(boolean status){
 		
+		return end(HSRRecordStatus.Success, null);
+
+	}
+	/***********************************************************************************
+	 * Ends the record and returns it to be able to retrieve details.
+	 * @param status true if successful, false if failed.
+	 * @param code the custom code, e.g. HTTP code.
+	 ***********************************************************************************/
+	public static HSRRecord end(boolean status, String code){
+		
 		if(status) {
-			return end(HSRRecordStatus.Success, null);
+			return end(HSRRecordStatus.Success, code);
 		}else {
-			return end(HSRRecordStatus.Failed, null);
+			return end(HSRRecordStatus.Failed, code);
 		}
 		
 	}
 	
-	/***********************************************************************************
-	 * Ends the record and returns it to be able to retrieve details.
-	 * @param status true if successful, false if failed.
-	 ***********************************************************************************/
-	public static HSRRecord endBoolean(boolean status){
-		
-		if(status) {
-			return end(HSRRecordStatus.Success, null);
-		}else {
-			return end(HSRRecordStatus.Failed, null);
-		}
-		
-	}
 	
 	/***********************************************************************************
 	 * Ends the record and returns it to be able to retrieve details.
