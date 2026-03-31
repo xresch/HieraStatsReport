@@ -734,6 +734,93 @@ public class HSR {
 					;
 	}
 
+	/***********************************************************************************
+	 * Add a ranged metric to the report and takes over the SLA from the provided Record. 
+	 * Useful to report duration and other values you want to have statistical values 
+	 * for like min, avg, max.
+	 * For regular count values use the addCount()-method instead.
+	 * 
+	 * A range will be appended to the name. This is useful for measuring the impact of 
+	 * response times during load testing. For Example, you could extract the number of 
+	 * total records from a table (rangeValue) and measure the duration by the amount 
+	 * of data.
+	 * For a rangeValue of 0(~="no data") a separate range "0000" is reported, to make
+	 * a distinction between counts that have items vs. the ones who don't.
+	 * 
+	 * The ranges this method creates are exponential. Each new range adds the size
+	 * of the previous one. For example, if you define an initialRange of 50, the ranges 
+	 * would look like this:
+	 *   <ul>
+	 *   	<li>0000</li>
+	 *   	<li>0001-0050</li>
+	 *   	<li>0051-0100</li>
+	 *   	<li>0101-0200</li>
+	 *   	<li>0201-0400</li>
+	 *   	<li>and so on ...</li>
+	 *   <ul>  
+	 * 
+	 * The padding with zeros is added so that alphabetical sorting will not mess up the order, at 
+	 * least up to a range of 9999. 
+	 * This method can only deal with positive values.
+	 * 
+	 * @param record the record to add a range for, the record.value() will be used. if you use a
+	 * record that is started and ended, make sure to call .end()-first. 
+	 * @param rangeSuffix the name of the range that is appended to the record name
+	 * @param rangeValue a count that defines in which range 
+	 * @param initialRange the size of the initial range
+	 ***********************************************************************************/
+	public static HSRRecord addMetricRangedWithSLA(HSRRecord record, String rangeSuffix, int rangeValue, int initialRange){	
+		
+		if(record == null) { return new HSRRecord(HSRRecordType.Exception, "Prevent Nullpointer"); }
+		
+		synchronized (HSRStatsEngine.SYNC_RECORD_MODIFICATION) {
+			HSRRecord ranged = addMetricRanged(record.name() + rangeSuffix, record.value(), rangeValue, initialRange);
+			ranged.sla(record.sla());
+			return ranged;
+		}
+		
+	}
+	/***********************************************************************************
+	 * Add a metric to the report. Useful to report duration and other values you want
+	 * to have statistical values for like min, avg, max.
+	 * For regular count values use the addCount()-method instead.
+	 * 
+	 * A range will be appended to the name. This is useful for measuring the impact of 
+	 * response times during load testing. For Example, you could extract the number of 
+	 * total records from a table (rangeValue) and measure the duration by the amount 
+	 * of data.
+	 * For a rangeValue of 0(~="no data") a separate range "0000" is reported, to make
+	 * a distinction between counts that have items vs. the ones who don't.
+	 * 
+	 * The ranges this method creates are exponential. Each new range adds the size
+	 * of the previous one. For example, if you define an initialRange of 50, the ranges 
+	 * would look like this:
+	 *   <ul>
+	 *   	<li>0000</li>
+	 *   	<li>0001-0050</li>
+	 *   	<li>0051-0100</li>
+	 *   	<li>0101-0200</li>
+	 *   	<li>0201-0400</li>
+	 *   	<li>and so on ...</li>
+	 *   <ul>  
+	 * 
+	 * The padding with zeros is added so that alphabetical sorting will not mess up the order, at 
+	 * least up to a range of 9999. 
+	 * This method can only deal with positive values.
+	 * 
+	 * @param record the record to add a range for, the record.value() will be used. if you use a
+	 * record that is started and ended, make sure to call .end()-first. 
+	 * @param rangeSuffix the name of the range that is appended to the record name
+	 * @param rangeValue a count that defines in which range 
+	 * @param initialRange the size of the initial range
+	 ***********************************************************************************/
+	public static HSRRecord addMetricRanged(HSRRecord record, String rangeSuffix, int rangeValue, int initialRange){	
+		
+		if(record == null) { return new HSRRecord(HSRRecordType.Exception, "Prevent Nullpointer"); }
+		
+		return addMetricRanged(record.name() + rangeSuffix, record.value(), rangeValue, initialRange);
+	}
+		
 	
 	/***********************************************************************************
 	 * Add a metric to the report. Useful to report duration and other values you want
@@ -763,7 +850,7 @@ public class HSR {
 	 * least up to a range of 9999. 
 	 * This method can only deal with positive values.
 	 * 
-	 * @param name the name of the record
+	 * @param name the name of the ranged record
 	 * @param value the value you want to report
 	 * @param rangeValue a count that defines in which range 
 	 * @param initialRange the size of the initial range

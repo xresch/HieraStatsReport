@@ -385,6 +385,19 @@ int duration = multiplier * HSR.Random.integer(10, 1000);
 HSR.addMetricRanged("070.4 TableLoadTime", new BigDecimal(duration), count, 50);					
 ```
 
+You can also create a ranged metric for a record that has been ended. This will also allow you to take over the records SLA definition.
+
+```java
+//-------------------------------
+// Ranged Metric For Record
+HSRRecord record = HSR.end();
+int count = <yourCount>;
+
+HSR.addMetricRanged(record, " - #Count", count, 5);
+// or with SLA
+HSR.addMetricRangedWithSLA(record, " - #Count", count, 5);		
+```
+
 The metric will have a range attached, that gives the statistics for that range:
 
 ```

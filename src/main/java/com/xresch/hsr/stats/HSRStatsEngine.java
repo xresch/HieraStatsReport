@@ -50,6 +50,9 @@ public class HSRStatsEngine {
 	private static final Logger logger = LoggerFactory.getLogger(HSRStatsEngine.class);
 	
 	private static final Object SYNC_LOCK_STOP = new Object();
+	
+	// Used to sync record modification that is done after a record is added to the engine
+	public static final Object SYNC_RECORD_MODIFICATION = new Object();
 
 	private static HSRStatsEngineHooks hooks = new HSRStatsEngineHooks();
 	
@@ -649,10 +652,16 @@ public class HSRStatsEngine {
 		ArrayList<HSRRecordStats> statsRecordList = new ArrayList<>();
 		
 		TreeMap<String, ArrayList<HSRRecord> > groupedRecordsCurrent;
-		synchronized (groupedRecordsInterval) {
-			groupedRecordsCurrent = groupedRecordsInterval;
-			groupedRecordsInterval = new TreeMap<>();
+		
+		synchronized (SYNC_RECORD_MODIFICATION) {  
+			synchronized (groupedRecordsInterval) {
+				groupedRecordsCurrent = groupedRecordsInterval;
+				groupedRecordsInterval = new TreeMap<>();
+			}
 		}
+		
+			
+		
 		
 		//----------------------------------------
 		// Iterate Groups
