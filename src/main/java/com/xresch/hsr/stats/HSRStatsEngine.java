@@ -121,7 +121,6 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static void start(int reportInterval) {
 		
-
 		//--------------------------------------
 		// Reset
 		isStopped = false;
@@ -140,7 +139,7 @@ public class HSRStatsEngine {
 		//--------------------------------------
 		// Only Start once
 		if(schedulerStatsEngine == null) {
-			
+			logger.info("Starting the Statistics Engine");
 			startThreadStatsEngine(reportInterval);
 			startThreadSystemUsage();
 			registerShutdownHook();
@@ -1137,6 +1136,7 @@ public class HSRStatsEngine {
 //			latch.await();
 //		} catch (InterruptedException e) {
 //			logger.error("Waiting for coutndown interrupted.", e);
+//			Thread.currentThread().interrupt(); // restore interrupt flag		
 //		}
 
 	}
