@@ -377,6 +377,20 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
+	 * Sets the level of the logback root logger. If the level 
+	 * represented by the string is unknown or null, INFO will be used.
+	 * 
+	 * @param levelString case is ignored, one of: 'INFO', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE', 'ALL', 'OFF'
+	 ******************************************************************/
+	public static void setLogLevelRoot(String levelString) {
+		
+		setLogLevelRoot(
+				Level.toLevel(levelString, Level.INFO)
+			);
+		
+	}
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * Sets the level of the logback root logger.
 	 ******************************************************************/
 	public static void setLogLevelRoot(Level level) {
