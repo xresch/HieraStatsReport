@@ -496,8 +496,7 @@ public class HSR {
 	 * @param status true if successful, false if failed.
 	 ***********************************************************************************/
 	public static HSRRecord end(boolean status){
-		
-		return end(HSRRecordStatus.Success, null);
+		return end(status, null);
 
 	}
 	/***********************************************************************************
