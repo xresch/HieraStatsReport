@@ -158,10 +158,15 @@ public class HSRDBInterface {
 	 * 
 	 ****************************************************************************/
 	private void alterTables() {
-//		//----------------------------
-//		// Add P25 Column
-//		String addOkP25Column = "ALTER TABLE "+tablenameStats+" ADD IF NOT EXISTS ok_p25 DECIMAL(32,3);";
-//		db.preparedExecute(addOkP25Column);
+		//----------------------------
+		// Add CPH Column
+		String addOkCPHColumn = "ALTER TABLE %s ADD IF NOT EXISTS ok_cph DECIMAL(32,3);";
+		db.preparedExecute(addOkCPHColumn.formatted(tablenameStats));
+		db.preparedExecute(addOkCPHColumn.formatted(tablenameStatsSummary));
+		
+		String addNokCPHColumn = "ALTER TABLE %s ADD IF NOT EXISTS nok_cph DECIMAL(32,3);";
+		db.preparedExecute(addNokCPHColumn.formatted(tablenameStats));
+		db.preparedExecute(addNokCPHColumn.formatted(tablenameStatsSummary));
 //		
 //		//----------------------------
 //		// Add endTime to testsettings

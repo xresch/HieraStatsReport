@@ -102,6 +102,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 				        WHEN type IN ('System', 'User', 'Gauge') THEN AVG({type}_count)
 				        ELSE SUM({type}_count)
 				    END )""")
+		, cph(true, "AVG(\"{type}_cph\")") // cph = count per hour
 		, min(true, "MIN(\"{type}_min\")")
 		, avg(true, "AVG(\"{type}_avg\")")
 		, max(true, "MAX(\"{type}_max\")")

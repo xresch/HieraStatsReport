@@ -659,12 +659,12 @@ public class HSRStatsEngine {
 			}
 		}
 		
-			
-		
-		
 		//----------------------------------------
 		// Iterate Groups
 		long timeMillis = System.currentTimeMillis(); // make sure every record has the exact time, needed for proper stacked charts
+		int granularity = HSRConfig.getInterval();
+		BigDecimal perHourMultiplier = new BigDecimal(3600f / granularity);
+		
 		StringBuilder rawLog = new StringBuilder();
 		
 		for(Entry<String, ArrayList<HSRRecord>> entry : groupedRecordsCurrent.entrySet()) {
@@ -754,10 +754,12 @@ public class HSRStatsEngine {
 						statsRecord.setValue(HSRRecordState.ok, HSRMetric.count, ok_sum);
 					} else { 
 						statsRecord.setValue(HSRRecordState.ok, HSRMetric.count, ok_avg);
+						statsRecord.setValue(HSRRecordState.ok, HSRMetric.cph,	ok_avg.multiply(perHourMultiplier));
 					}
 					
 				}else {
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.count,		ok_count);
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.cph,	ok_count.multiply(perHourMultiplier));
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.min,  		ok_values.get(0));
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.avg, 		ok_avg);
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.max, 		ok_values.get( ok_values.size()-1 ));
@@ -785,9 +787,11 @@ public class HSRStatsEngine {
 						statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, nok_sum);
 					} else { 
 						statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, nok_avg);
+						statsRecord.setValue(HSRRecordState.nok, HSRMetric.cph,	  nok_count.multiply(perHourMultiplier));
 					}
 				}else {
 					statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, 	nok_count);
+					statsRecord.setValue(HSRRecordState.nok, HSRMetric.cph,		nok_count.multiply(perHourMultiplier));
 					statsRecord.setValue(HSRRecordState.nok, HSRMetric.min,  	nok_values.get(0));
 					statsRecord.setValue(HSRRecordState.nok, HSRMetric.avg, 		nok_avg);
 					statsRecord.setValue(HSRRecordState.nok, HSRMetric.max, 		nok_values.get( nok_values.size()-1 ));
@@ -991,6 +995,7 @@ public class HSRStatsEngine {
 															else if( type == HSRRecordType.User && doSumUsers ) { value = HSR.Math.bigSum(metricValues, 0, true); }
 															else				   								{ value = HSR.Math.bigAvg(metricValues, 0, true); }
 														}
+										case cph	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
 										case max	->		value = HSR.Math.bigMax(metricValues);				
 										case min	->		value = HSR.Math.bigMin(metricValues);				
 										case p25	->		value = HSR.Math.bigPercentile(25, metricValues);	
