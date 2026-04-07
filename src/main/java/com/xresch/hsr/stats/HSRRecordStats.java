@@ -435,7 +435,9 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		
 		// If the type is a Count, do not add any other metrics except count
 		if(this.type().isCount() 
-		&& metric != HSRMetric.count) {
+		&& metric != HSRMetric.count
+		&& metric != HSRMetric.cph 
+		){
 			return;
 		}
 		

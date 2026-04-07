@@ -752,15 +752,15 @@ public class HSRStatsEngine {
 					
 					if( ! firstRecord.type().isGauge() ) { 
 						statsRecord.setValue(HSRRecordState.ok, HSRMetric.count, ok_sum);
+						statsRecord.setValue(HSRRecordState.ok, HSRMetric.cph,	ok_sum.multiply(perHourMultiplier));
 					} else { 
 						statsRecord.setValue(HSRRecordState.ok, HSRMetric.count, ok_avg);
-						statsRecord.setValue(HSRRecordState.ok, HSRMetric.cph,	ok_avg.multiply(perHourMultiplier));
 					}
 					
 				}else {
-					statsRecord.setValue(HSRRecordState.ok, HSRMetric.count,		ok_count);
-					statsRecord.setValue(HSRRecordState.ok, HSRMetric.cph,	ok_count.multiply(perHourMultiplier));
-					statsRecord.setValue(HSRRecordState.ok, HSRMetric.min,  		ok_values.get(0));
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.count,	ok_count);
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.cph,		ok_count.multiply(perHourMultiplier));
+					statsRecord.setValue(HSRRecordState.ok, HSRMetric.min,  	ok_values.get(0));
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.avg, 		ok_avg);
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.max, 		ok_values.get( ok_values.size()-1 ));
 					statsRecord.setValue(HSRRecordState.ok, HSRMetric.stdev, 	bigStdev(ok_values, ok_avg, false));
@@ -785,9 +785,9 @@ public class HSRStatsEngine {
 				if(firstRecord.type().isCount()) {
 					if( ! firstRecord.type().isGauge() ) { 
 						statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, nok_sum);
+						statsRecord.setValue(HSRRecordState.nok, HSRMetric.cph,	  nok_sum.multiply(perHourMultiplier));
 					} else { 
 						statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, nok_avg);
-						statsRecord.setValue(HSRRecordState.nok, HSRMetric.cph,	  nok_count.multiply(perHourMultiplier));
 					}
 				}else {
 					statsRecord.setValue(HSRRecordState.nok, HSRMetric.count, 	nok_count);

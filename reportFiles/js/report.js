@@ -250,6 +250,12 @@ const FIELDS_STATUS = [
 	"none",
 ];
 
+const FIELDS_THROUGHPUT = [
+	, "ok_cps"
+	, "ok_cpm"
+	, "ok_cph"
+];
+
 const FIELDLABELS = {
 	  "time": "Time"
 	, "type": "Type"
@@ -260,6 +266,7 @@ const FIELDLABELS = {
 	, "code": "Code"
 	, "granularity": "Granularity"
 	, "ok_count": "Count"
+	, "ok_cph" : "Count/h"
 	, "ok_min": "Min"
 	, "ok_avg": "Avg"
 	, "ok_max": "Max"
@@ -272,6 +279,7 @@ const FIELDLABELS = {
 	, "ok_p99": "P99"
 	, "ok_sla": "SLA"
 	, "nok_count": "Count(nok)"
+	, "nok_cph" : "Count(nok)/h"
 	, "nok_min": "Min(nok)"
 	, "nok_avg": "Avg(nok)"
 	, "nok_max": "Max(nok)"
@@ -293,7 +301,8 @@ const FIELDLABELS = {
 	// calculated and added in javascript 
 	, "Range": "Range"
 	, "IQR": "IQR"
-	, "total_count": "Count(total)"
+	, "ok_cps" : "Count/s"
+	, "ok_cpm" : "Count/m"
 }
 
 const CUSTOMIZERS = {
@@ -305,6 +314,7 @@ const CUSTOMIZERS = {
 	, 'name': customizerTextValues
 	
 	, "ok_count": customizerStatsNumber
+	, "ok_cph": customizerStatsNumber
 	, "ok_min": customizerStatsNumber
 	, "ok_avg": customizerStatsNumber
 	, "ok_max": customizerStatsNumber
@@ -318,6 +328,7 @@ const CUSTOMIZERS = {
 	, "ok_sla": customizerSLA
 	
 	, "nok_count": customizerStatsNumber
+	, "nok_cph": customizerStatsNumber
 	, "nok_min": customizerStatsNumber
 	, "nok_avg": customizerStatsNumber
 	, "nok_max": customizerStatsNumber
@@ -341,6 +352,12 @@ const CUSTOMIZERS = {
 	, "Range": CFW.customizer.number
 	, "IQR": CFW.customizer.number
 	, "total_count": CFW.customizer.number
+	, "ok_cps" : function customizerStatsNumberStatuses(record, value, rendererName, fieldname){
+		return CFW.customizer.number(record, (record["ok_cph"]/3600).toFixed(1) );
+	}
+	, "ok_cpm" : function customizerStatsNumberStatuses(record, value, rendererName, fieldname){
+		return CFW.customizer.number(record, (record["ok_cph"]/60).toFixed(1) );
+	}
 
 };
 
@@ -864,7 +881,7 @@ function initialize(){
 	// }
 	
 	//------------------------------------------
-	// Create CFW Style data
+	// Create All Data
 	RECORDS_ALL = [];
 	for(let i in DATA){
 		RECORDS_ALL = RECORDS_ALL.concat(DATA[i].records);
@@ -883,6 +900,7 @@ function initialize(){
 		let arraysOK = record.series.ok;
 		let arraysNOK = record.series.nok;
 		
+		//--------------------------------------------------------
 		// clone everything except series
 		// do this here to not clone series every time
 		let clone = _.cloneDeep(record);
@@ -2114,7 +2132,24 @@ function showRecordDetails(statsid){
 	resultDiv.append('<h3>Failure Rate [%]<h3>');
 	resultDiv.append(chartFailrate);
 	
-
+	//--------------------------
+	// Chart: Throughput
+	let chartThroughput = $('<div class="row">');
+	drawChartByFields(
+		  chartThroughput
+		, datapoints
+		, []
+		, ["ok_cph","nok_cph"]
+		, { 
+			  charttype: 'bar' 
+			, height: "30vh"
+			, stacked: true
+			, colors: ["dodgerblue", "red"]
+		}
+	);;
+	
+	resultDiv.append('<h3>Throughput [count/hour]<h3>');
+	resultDiv.append(chartThroughput);
 	//--------------------------
 	// Chart Min / Avg / Max
 	if(!isCount){
@@ -2454,7 +2489,7 @@ function drawSummaryPage(target){
 			, "status_over_time": customizerStatusBartSLA
 		}),
 		rendererSettings: {
-			dataviewer:{ storeid: "table-summary-sla", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
+			dataviewer:{ storeid: "table-summary-sla-ok", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
 			table: {filterable: false, narrow: true, stickyheader: true},
 		},
 	}
@@ -2464,7 +2499,7 @@ function drawSummaryPage(target){
 	resultDiv.append(slaTableOK);	
 	
 	//----------------------------
-	// Create SLA Table
+	// Create SLA Table NOK
 	resultDiv.append('<h3>SLA Analysis - NOK<h3>');
 	resultDiv.append('<p>Lists all records that have an NOK value for their SLA evaluation.</p>');
 	let slaNokRendeDef = {
@@ -2478,7 +2513,7 @@ function drawSummaryPage(target){
 			, "status_over_time": customizerStatusBartSLA
 		}),
 		rendererSettings: {
-			dataviewer:{ storeid: "table-summary-sla", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
+			dataviewer:{ storeid: "table-summary-sla-nok", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
 			table: {filterable: false, narrow: true, stickyheader: true},
 		},
 	}
@@ -2487,9 +2522,10 @@ function drawSummaryPage(target){
 
 	resultDiv.append(slaTableNOK);	
 	
-	//----------------------------
-	// Create Boxplot Table
 	//======================================
+	// Create Boxplot Table
+	
+	//----------------------------
 	// Find min/max of all records
 	let boxplotRecords = _.filter(clonedRecord, function(o){ return o.ok_p50 != null &&  o.ok_p50 > 0; } )
 	
@@ -2550,7 +2586,29 @@ function drawSummaryPage(target){
 	let failrateTable = CFW.render.getRenderer('dataviewer').render(failrateRendeDef);	
 	
 	resultDiv.append(failrateTable);
-		
+	
+
+	//----------------------------
+	// Create Throughput Table
+	resultDiv.append('<h3>Throughput Analysis<h3>');
+	resultDiv.append('<p>Lists all records that have an Count/h value greater than 0.</p>');
+	
+	let throughputRendeDef = {
+		idfield: 'statsid',
+		data: _.filter(clonedRecord, function(o){ return o.ok_cph > 0 || o.nok_cph > 0; } ),
+		visiblefields: FIELDS_BASE_COUNTS.concat(FIELDS_THROUGHPUT, "ok_avg", "ok_p50", "ok_p90", "failrate", "ok_sla"),
+		labels: FIELDLABELS,
+		actions: ACTION_BUTTONS,
+		customizers: CUSTOMIZERS,
+		rendererSettings: {
+			dataviewer:{ storeid: "table-summary-throughput", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
+			table: {filterable: false, narrow: true, stickyheader: true},
+		},
+	}
+
+	let throughputTable = CFW.render.getRenderer('dataviewer').render(throughputRendeDef);	
+
+	resultDiv.append(throughputTable);		
 	//----------------------------
 	// Create Statistics Table
 	resultDiv.append('<h3>Statistics<h3>');
@@ -2858,7 +2916,20 @@ function drawTable(target, data, showFields, typeFilterArray){
 								},
 							}
 						},
-						
+						{	
+							label: 'Analysis: Throughput',
+							name: 'table',
+							renderdef: {
+								merge: false,
+								visiblefields: FIELDS_BASE_COUNTS.concat(FIELDS_THROUGHPUT, "ok_avg", "ok_p50", "ok_p90", "failrate", "ok_sla"), //, "Counts"),
+								customizers: Object.assign({}, CUSTOMIZERS, {
+									"Counts": customizerSparkchartCount
+								}),
+								rendererSettings: {
+									table: {filterable: false, narrow: true, stickyheader: true},
+								},
+							}
+						},
 						
 						
 						
