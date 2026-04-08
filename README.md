@@ -1,9 +1,8 @@
 # HieraStatsReport
 HieraStatsReport ("Hierachical Statistics Report") is a small tool that was created to report test results for load tests as HTML, CSV, JSON, into Databases and other targets with the option to be extended for custom reporting.
 
-
 # Notes on Usage
-- **Summary Report:** Is generated based on all previous aggregated datapoints. For Example:
+* **Summary Report:** Is generated based on all previous aggregated datapoints. For Example:
 	- Average in the summary is the average of all previous averages.
 	- 90th percentile in the summary is the 90th-perc of all previous 90-percs.
 	
@@ -40,7 +39,7 @@ HSRConfig.enable();
 ```
 
 
-#Logging
+# Logging
 
 ### Log Levels
 The HSR framework is using Logback for logging. It provides methods to set log levels for packages in code.
@@ -101,6 +100,103 @@ HSRConfig.statsDiskUsage(false);
 HSRConfig.statsDiskIO();
 HSRConfig.statsNetworkIO();
 ```
+
+# Reported Data
+
+### State OK and NOT OK
+Every time a value is reported it has one of the following two states:
+
+* **OK:**  The value is considered OK to be included in the statistic.
+* **NOK:**  The value is considered NOT OK to be included in the statistic.
+This distinction is made to get proper measurements of duration values, excluding skipped, failed or aborted transactions.
+
+### Status
+Every time a value is reported it has one of the following statuses. A status defines by default the state of the value.
+
+| Status | Description | State |
+|--------|-------------|-------|
+| **SUCCESS:** | (Default) The status of the value is successful. | OK |
+| **FAILED:** | The status of the value is failed. | NOK, as things have not been executed as expected |
+| **SKIPPED:** | The status of the value is skipped. | NOK, as what should have been measured is skipped |
+| **ABORTED:** | The status of the value is aborted. | NOK, as what should have been measured has been stopped somewhere in between |
+| **NONE:** | If the status was set to NONE . | OK, as we consider it successful |
+
+
+### Types
+Every metric has one of the following types. These types are defined while reporting values for metrics. Every type can contain every other type when building a hierarchy. Commonly, the types that contain other elements are Group, Step and Wait.
+
+| Type | Description |
+|------|------------|
+| **Group:** | The type Group is used to wrap and include measurements of any other type. |
+| **Step:** | The type Step is used to measure the time of a step in the test. A step can contain any other type. |
+| **Wait:** | The type Wait is used to measure a waiting time during your the test. |
+| **Assert:** | The type Assert is used to report results of assertions. The results are in the fields "Count" and "Count(nok)". |
+| **Exception:** | The type Exception is used to report an exception. The "name" of the metric will contain the exception message and an a truncated stack trace. |
+| **Metric:** | The type Metric is used to report custom metrics that should calculate statistical values(min, avg, max ...). Typically used for duration and not for counts. |
+| **Count:** | The type Count is used to report count values. Count values are always aggregated as a sum. |
+| **Gauge:** | The type Gauge is used to report gauge values. Gauge values are always aggregated as an average. |
+| **User:** | The type User is used to report the number started, active and stopped users during a test. This type is used and created internally by the testing framwork. |
+| **MessageInfo:** | The type MessageInfo is used to report custom info messages. The message will be put in the "name" field. Often nested into groups and steps. |
+| **MessageWarn:** | The type MessageWarn is used to report custom warning messages. The message will be put in the "name" field. Often nested into groups and steps. |
+| **MessageError:** | The type MessageError is used to report custom error messages without exception stack traces. The message will be put in the "name" field. Often nested into groups and steps. |
+| **Unknown:** | The type Unknown is applied when there is an unexpected type. You should actually never encounter this one. |
+
+
+### Fields and Metrics
+Following are the fields and metrics that can be reported:
+
+| Field | Description |
+|------|------------|
+| **Time:** | The time of the metric. |
+| **Type:** | The type of the record. |
+| **Test:** | The name of the test that was executed. |
+| **Usecase:** | The name of the usecase in the test. |
+| **Path:** | The path of the metric, basically the hierarchy from left to right. |
+| **Name:** | The name of the metric or record. |
+| **Code:** | The custom status code. |
+| **Granularity:** | The time interval in seconds the measurements have been aggregated on and reported with. |
+| **Count:** | Either contains the metric's number of values, an actual count(Type: Count), or the value of a gauge(Type: Gauge). |
+| **CPH:** | The Count Per Hour, calculated as `Count * (3600 / Granularity)`. |
+| **Min:** | The minimum of the metric's values that are considered OK to be included in the statistics. |
+| **Avg:** | The average of the metric's values that are considered OK to be included in the statistics. |
+| **Max:** | The maximum of the metric's values that are considered OK to be included in the statistics. |
+| **Stdev:** | The standard deviation of the metric's values that are considered OK to be included in the statistics. |
+| **P25:** | The 25th percentile of the metric's values that are considered OK to be included in the statistics. |
+| **P50:** | The 50th percentile of the metric's values that are considered OK to be included in the statistics. |
+| **P75:** | The 75th percentile of the metric's values that are considered OK to be included in the statistics. |
+| **P90:** | The 90th percentile of the metric's values that are considered OK to be included in the statistics. |
+| **P95:** | The 95th percentile of the metric's values that are considered OK to be included in the statistics. |
+| **P99:** | The 99th percentile of the metric's values that are considered OK to be included in the statistics. |
+| **SLA:** | Contains the values for the evaluation of Service Level Agreements(SLA). Either 1 for true if the SLA was met, or 0 for false if the SLA was not met. Will be shown on the UI as OK and Not OK. |
+| **Count(nok):** | The metric's number of NOT OK values. |
+| **CPH(nok):** | The Count Per Hour for NOT OK values, calculated as `Count(nok) * (3600 / Granularity)`. |
+| **Min(nok):** | The minimum of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **Avg(nok):** | The average of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **Max(nok):** | The maximum of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **Stdev(nok):** | The standard deviation of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **P25(nok):** | The 25th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **P50(nok):** | The 50th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **P75(nok):** | The 75th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **P90(nok):** | The 90th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **P95(nok):** | The 95th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **P99(nok):** | The 99th percentile of the metric's values that are considered NOT OK and are excluded from the statistics. |
+| **SLA(nok):** | Contains the values for the evaluation of Service Level Agreements(SLA). Either 1 for true if the SLA was NOT met, or 0 for false if the SLA was met. Will be shown on the UI as OK and Not OK. |
+| **Success:** | The number of values for the metric that were reported with the status SUCCESS. |
+| **Failed:** | The number of values for the metric that were reported with the status FAILED. |
+| **Skipped:** | The number of values for the metric that were reported with the status SKIPPED. |
+| **Aborted:** | The number of values for the metric that were reported with the status ABORTED. |
+| **None:** | The number of values for the metric that were reported with the status NONE. |
+| **Failure Rate:** | Percentage of failure, calculated as `(failed * 100) / (ok_count + nok_count)` |
+
+
+Following are additionally calculated in the HTML report(and maybe in other locations too):
+
+| Field | Description |
+|------|------------|
+| **Range:** | The range of the values, equals to maximum - minimum. |
+| **IQR:** | The Inter Quartile Range(IQR) of the values, equals to P75 - P25. |
+| **Count/m:** | Count per Minute, calculated as `(CPH / 60)` |
+| **Count/s:** | Count per Second, calculated as `(CPH / 3600)` |
 
 # Reporters
 Reporters are the way of getting data to where you want it to be.
