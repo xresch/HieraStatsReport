@@ -89,6 +89,7 @@ const RECORDSTATE =  [
 //================================================
 const RECORDMETRIC =  {
 	"count": 		{ isOkNok: true }
+	, "cph": 		{ isOkNok: true }
 	, "min": 		{ isOkNok: true }
 	, "avg": 		{ isOkNok: true }
 	, "max": 		{ isOkNok: true }
@@ -169,13 +170,14 @@ const FIELDS_BASE_COUNT = FIELDS_PROPERTIES.concat([
 
 const FIELDS_BASE_COUNTS = FIELDS_BASE_COUNT.concat([
 	"nok_count",
+	"ok_cph"
 
 ]);
 const FIELDS_BASE_STATS = FIELDS_BASE_COUNTS.concat([
 	"ok_min",
 	"ok_avg",
 	"ok_max",
-	"ok_stdev",
+	//"ok_stdev",
 	//"ok_p25",
 	"ok_p50",
 	//"ok_p75",
@@ -190,6 +192,7 @@ const FIELDS_RECORD_DETAILS = [
 	"code",
 	"ok_count",
 	"nok_count",
+	"ok_cph",
 	"ok_min",
 	"ok_avg",
 	"ok_max",
@@ -251,9 +254,9 @@ const FIELDS_STATUS = [
 ];
 
 const FIELDS_THROUGHPUT = [
+	// "ok_cph" // already in COUNTS
+	  "ok_cpm"
 	, "ok_cps"
-	, "ok_cpm"
-	, "ok_cph"
 ];
 
 const FIELDLABELS = {
@@ -301,6 +304,7 @@ const FIELDLABELS = {
 	// calculated and added in javascript 
 	, "Range": "Range"
 	, "IQR": "IQR"
+	, "total_count": "Count[sum]"
 	, "ok_cps" : "Count/s"
 	, "ok_cpm" : "Count/m"
 }
@@ -684,6 +688,7 @@ function customizerSparkchartStats(record, value, rendererName, fieldname, metri
 		stacked: false,
 		padding: '2px',
 		height: '100px',
+		width: '15vw'
 	};
 	
 	let finalSettings = Object.assign({}, defaultSettings, chartSettings);
@@ -714,7 +719,7 @@ function customizerSparkchartStats(record, value, rendererName, fieldname, metri
 	let renderer = CFW.render.getRenderer('chart');
 	
 	let renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
-	let wrapper = $("<div class='vw-15'>");	
+	let wrapper = $('<div class="vw-15" style="max-width: '+finalSettings.width+'">');	
 	wrapper.append(renderedChart);
 	
 	return wrapper;
@@ -1495,9 +1500,9 @@ function drawChartsUsers(target, chartOptions, userFilter){
 	let defaultChartOptions = { 
 			    multichart: true 
 			  , multichartcolumns: 3
-			  , charttype: "line"
+			  , charttype: "area"
 			  , height: '30vh'
-			  , stacked: false
+			  , stacked: true
 		}
 	
 	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
@@ -2251,7 +2256,7 @@ function showRecordDetails(statsid){
 function defaultSortOptions(){
 	return addFieldSortOptions(
 				  {"Path, Name": [[ "name", "path"], ["asc","asc"] ]}
-				, FIELDS_BASE_STATS.concat(FIELDS_STATUS)
+				, FIELDS_RECORD_DETAILS.concat(FIELDS_STATUS)
 			);
 }
 /**************************************************************************************
@@ -2300,6 +2305,16 @@ function drawSummaryPage(target){
 	//--------------------------
 	// Result 
 	let resultDiv = $('<div class="container minvw-90">');
+	
+	resultDiv.append(`<div id="summary-nav">
+			<a class="btn btn-sm btn-primary" href="#sla-ok">SLA OK</a> 
+			<a class="btn btn-sm btn-primary" href="#sla-nok">SLA NOK</a>
+			<a class="btn btn-sm btn-primary" href="#boxplot">Boxplot</a>
+			<a class="btn btn-sm btn-primary" href="#failurerate">Failure Rate</a>
+			<a class="btn btn-sm btn-primary" href="#throughput">Throughput</a>
+			<a class="btn btn-sm btn-primary" href="#statistics">Statistics</a>
+		</div>
+		`)
 	resultDiv.append('<h2>Report Summary<h>');
 
 	//==================================================================
@@ -2476,7 +2491,7 @@ function drawSummaryPage(target){
 
 	//----------------------------
 	// Create SLA Table OK
-	resultDiv.append('<h3>SLA Analysis - OK<h3>');
+	resultDiv.append('<a name="sla-ok"><h3>SLA Analysis - OK<h3></a>');
 	resultDiv.append('<p>Lists all records that have an OK value for their SLA evaluation.</p>');
 	let slaRendeDef = {
 		idfield: 'statsid',
@@ -2500,8 +2515,8 @@ function drawSummaryPage(target){
 	
 	//----------------------------
 	// Create SLA Table NOK
-	resultDiv.append('<h3>SLA Analysis - NOK<h3>');
-	resultDiv.append('<p>Lists all records that have an NOK value for their SLA evaluation.</p>');
+	resultDiv.append('<a name="sla-nok"><h3>SLA Analysis - NOK<h3></a>');
+	resultDiv.append('<p>Lists all records that have a NOK value for their SLA evaluation.</p>');
 	let slaNokRendeDef = {
 		idfield: 'statsid',
 		data: _.filter(clonedRecord, function(o){ return o.nok_sla == 1; } ),
@@ -2533,7 +2548,7 @@ function drawSummaryPage(target){
 	let minMin = minMaxes.min;
 	let maxMax = minMaxes.max;
 	
-	resultDiv.append('<h3>Boxplot Analysis<h3>');
+	resultDiv.append('<a name="boxplot"><h3>Boxplot Analysis<h3></a>');
 	resultDiv.append('<p>Lists all records that have not only count but statistical values.</p>');
 	let boxplotRendeDef = {
 		idfield: 'statsid',
@@ -2561,7 +2576,7 @@ function drawSummaryPage(target){
 	
 	//----------------------------
 	// Create Failure Rate Table
-	resultDiv.append('<h3>Failure Rate Analysis<h3>');
+	resultDiv.append('<a name="failurerate"><h3>Failure Rate Analysis<h3></a>');
 	resultDiv.append('<p>Lists all records that have a failure rate greater than 0%.</p>');
 	let failrateRendeDef = {
 		idfield: 'statsid',
@@ -2573,12 +2588,12 @@ function drawSummaryPage(target){
 			"failure_over_time": function(record, value, rendererName, fieldname){
 					return customizerSparkchartStats(record, value, rendererName, fieldname
 													, ["failrate"]
-													, { charttype: "sparkarea", colors: ["red"], ymin: 0, ymax: 100 }
+													, { charttype: "sparkarea", colors: ["red"], ymin: 0, ymax: 100 , width: "150px", height: "50px" }
 												);
 			}
 		}),
 		rendererSettings: {
-			dataviewer:{ storeid: "table-summary-failure", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
+			dataviewer:{ storeid: "table-summary-failure", download: true, print: true, sortable: true, sortoptions: defaultSortOptions(), defaultsize: 10 },
 			table: {filterable: false, narrow: true, stickyheader: true},
 		},
 	}
@@ -2590,28 +2605,43 @@ function drawSummaryPage(target){
 
 	//----------------------------
 	// Create Throughput Table
-	resultDiv.append('<h3>Throughput Analysis<h3>');
+	resultDiv.append('<a name="throughput"><h3>Throughput Analysis<h3></a>');
 	resultDiv.append('<p>Lists all records that have an Count/h value greater than 0.</p>');
 	
 	let throughputRendeDef = {
 		idfield: 'statsid',
-		data: _.filter(clonedRecord, function(o){ return o.ok_cph > 0 || o.nok_cph > 0; } ),
-		visiblefields: FIELDS_BASE_COUNTS.concat(FIELDS_THROUGHPUT, "ok_avg", "ok_p50", "ok_p90", "failrate", "ok_sla"),
+		data: _.filter(clonedRecord, function(o){ 
+							return (o.ok_cph > 0 || o.nok_cph > 0)
+								&& o.type != 'Exception'
+								&& o.type != 'Assert'
+								&& o.type != 'Wait'
+								&& ! o.type.startsWith('Message')
+							; 
+						}),
+		visiblefields: FIELDS_BASE_COUNTS.concat(FIELDS_THROUGHPUT, "Chart", "ok_avg", "ok_p50", "ok_p90", "failrate", "ok_sla"),
 		labels: FIELDLABELS,
 		actions: ACTION_BUTTONS,
-		customizers: CUSTOMIZERS,
+		customizers: Object.assign({}, CUSTOMIZERS, {
+			"Chart": function(record, value, rendererName, fieldname){
+					return customizerSparkchartStats(record, value, rendererName, fieldname
+													, ["ok_cph", "nok_cph"]
+													, { charttype: "sparkline", colors: ["dodgerblue", "red"], width: "100px", height: "50px"}
+												);
+			}
+		}),
 		rendererSettings: {
-			dataviewer:{ storeid: "table-summary-throughput", download: true, print: true, sortable: true, sortoptions: defaultSortOptions() },
+			dataviewer:{ storeid: "table-summary-throughput", download: true, print: true, sortable: true, sortoptions: defaultSortOptions(), defaultsize: 10  },
 			table: {filterable: false, narrow: true, stickyheader: true},
 		},
 	}
 
 	let throughputTable = CFW.render.getRenderer('dataviewer').render(throughputRendeDef);	
 
-	resultDiv.append(throughputTable);		
+	resultDiv.append(throughputTable);	
+	
 	//----------------------------
 	// Create Statistics Table
-	resultDiv.append('<h3>Statistics<h3>');
+	resultDiv.append('<a name="statistics"><h3>Statistics<h3></a>');
 	resultDiv.append('<p>Lists all the records except of type System.</p>');
 	drawTable(resultDiv
 			, _.filter(clonedRecord, function(r){ return r.type != 'System'; } )
@@ -2921,9 +2951,14 @@ function drawTable(target, data, showFields, typeFilterArray){
 							name: 'table',
 							renderdef: {
 								merge: false,
-								visiblefields: FIELDS_BASE_COUNTS.concat(FIELDS_THROUGHPUT, "ok_avg", "ok_p50", "ok_p90", "failrate", "ok_sla"), //, "Counts"),
+								visiblefields: FIELDS_BASE_COUNTS.concat(FIELDS_THROUGHPUT, "Chart", "ok_avg", "ok_p50", "ok_p90", "failrate", "ok_sla"),
 								customizers: Object.assign({}, CUSTOMIZERS, {
-									"Counts": customizerSparkchartCount
+									"Chart": function(record, value, rendererName, fieldname){
+											return customizerSparkchartStats(record, value, rendererName, fieldname
+																			, ["ok_cph", "nok_cph"]
+																			, { charttype: "sparkline", colors: ["dodgerblue", "red"], width: "100px", height: "50px"  }
+																		);
+									}
 								}),
 								rendererSettings: {
 									table: {filterable: false, narrow: true, stickyheader: true},
@@ -3084,11 +3119,14 @@ function draw(options){
 			case "tableExceptions": 	target.append('<h2>Table: Exceptions</h2>');
 										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;	
 										
-			case "tableUsers": 	target.append('<h2>Table: Users</h2>');
+			case "tableUsers": 			target.append('<h2>Table: Users</h2>');
 										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["User"]); break;
 										
-			case "tableSystem": 	target.append('<h2>Table: System</h2>');
+			case "tableSystem": 		target.append('<h2>Table: System</h2>');
 										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["System"]); break;
+										
+			case "tableWait": 			target.append('<h2>Table: Wait</h2>');
+										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Wait"]); break;
 										
 			case "csv": 				drawCSV(); break;
 			case "json": 				drawJSON(); break;
