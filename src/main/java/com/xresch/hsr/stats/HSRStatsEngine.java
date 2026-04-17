@@ -334,7 +334,7 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * 
+	 * Adds a record to the statistics engine
 	 ***************************************************************************/
 	public static void addRecord(HSRRecord record) {
 
@@ -363,8 +363,7 @@ public class HSRStatsEngine {
 
 		customRecordStats.add(stats);
 
-	}
-	
+	}	
 	
 	/***************************************************************************
 	 * Creates user records and adds them to the list of records.

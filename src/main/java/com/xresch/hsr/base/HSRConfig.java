@@ -95,6 +95,15 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	    }
 	};
 	
+	//------------------------------------------
+	// Static Block
+	static {
+		//-----------------------------
+		// Set Default Log Interceptor
+		setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN) );
+		
+	}
+	
 	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
@@ -148,13 +157,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 			
 			isEnabled = true;
 			isTerminated = false;
-			
-			//----------------------------
-			// Add Default Log Interceptor
-			if(!isLogInterceptorSet) {
-				setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN) );
-			}
-			
+						
 			//----------------------------
 			// Add Default Properties
 			HSRConfig.addProperty("[HSR] reportingInterval", reportingIntervalSec + " sec");
