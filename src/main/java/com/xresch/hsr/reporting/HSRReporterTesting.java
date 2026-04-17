@@ -35,6 +35,8 @@ public class HSRReporterTesting implements HSRReporter {
 	// needed as data is sent to reporters asynchronously
 	private boolean reportReceived = false;
 	
+	private final Object SYNCLOCK_AGGREGATE = new Object();
+	
 	/*********************************************************************
 	 * 
 	 *********************************************************************/
@@ -127,14 +129,16 @@ public class HSRReporterTesting implements HSRReporter {
 	 *********************************************************************/
 	public HSRReporterTesting aggregate() {
 		
-		reportReceived = false;
-		HSRStatsEngine.aggregateAndReport();
-		
-		while( ! reportReceived) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				Thread.interrupted();
+		synchronized(SYNCLOCK_AGGREGATE) {
+			reportReceived = false;
+			HSRStatsEngine.aggregateAndReport();
+			
+			while( ! reportReceived) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					Thread.interrupted();
+				}
 			}
 		}
 		
@@ -156,19 +160,41 @@ public class HSRReporterTesting implements HSRReporter {
 		return this;
 		
 	}
+	
 	/*********************************************************************
 	 * Returns true if there is a record with the given name.
 	 * 
 	 *********************************************************************/
 	public boolean hasRecordNameEquals(String name) {
 		
-		for(HSRRecordStats stats : allReportedRecords) {
-			if(stats.name().equals(name)) {
-				return true;
+		synchronized(SYNCLOCK_AGGREGATE) {
+			for(HSRRecordStats stats : allReportedRecords) {
+				if(stats.name().equals(name)) {
+					return true;
+				}
 			}
 		}
 		
 		return false;
+		
+	}
+	
+	/*********************************************************************
+	 * Returns the given Record by name.
+	 * 
+	 * @return HSRRecordStats record, null if not found
+	 *********************************************************************/
+	public HSRRecordStats getRecordByName(String name) {
+		
+		synchronized(SYNCLOCK_AGGREGATE) {
+			for(HSRRecordStats stats : allReportedRecords) {
+				if(stats.name().equals(name)) {
+					return stats;
+				}
+			}
+		}
+		
+		return null;
 		
 	}
 
