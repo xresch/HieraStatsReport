@@ -255,6 +255,17 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * 
+	 * @return metric name of the active item, null if there is no active item.
+	 ***********************************************************************************/
+	public static String currentMetricName() {
+		if(getActiveItem() != null) {
+			return getActiveItem().name();
+		}
+		return null;
+	}
+	
+	/***********************************************************************************
 	 * Set the name of the test.
 	 ***********************************************************************************/
 	public static void setTest(String test){
