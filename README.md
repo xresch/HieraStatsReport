@@ -433,6 +433,17 @@ boolean isSuccess = ( "expected".equals("actual") );
 HSR.addAssert("MyAssertMessage", isSuccess);
 ```
 
+### Count
+Counts are for reporting values that represent an overall count.
+Counts will be summed up in aggregation.
+
+```java
+//-------------------------------
+// Count
+// will be summed up in aggregation 
+HSR.addCount("070.2 Count: TiramisusEaten", HSR.Random.bigDecimal(0, 100));
+```
+
 ### Gauge
 Gauges are for reporting values that indicate a specific state in time.
 Gauges will be averaged when aggregated.
@@ -444,17 +455,6 @@ Gauges will be averaged when aggregated.
 HSR.addGauge("070.1 Gauge: SessionCount", HSR.Random.bigDecimal(80, 250));
 ```
 
-### Count
-Counts are for reporting values that represent an overall count.
-Gauges will be summed up in aggregation.
-
-```java
-//-------------------------------
-// Count
-// will be summed up in aggregation 
-HSR.addCount("070.2 Count: TiramisusEaten", HSR.Random.bigDecimal(0, 100));
-HSR.addInfoMessage(HSR.Random.from("Valeria", "Roberta", "Ariella") + " has eaten the Tiramisu!");
-```
 
 ### Metric
 Metrics are used to report values that will also have statistical values like min, avg, max etc.
