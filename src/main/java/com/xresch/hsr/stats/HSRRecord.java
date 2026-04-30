@@ -126,8 +126,7 @@ public class HSRRecord {
 	 * Creates a new record, take values from parent.
 	 * 
 	 * @param type the type of the record
-	 * @param parent the parent of this item
-	 * @param name the name of this record (e.g. Step name)
+	 * @param recordName the name of this record (e.g. Step name)
 	 *******************************************************************/
 	public HSRRecord(
 			  HSRRecordType type
@@ -148,8 +147,8 @@ public class HSRRecord {
 	 * Creates a new record, take values from parent.
 	 * 
 	 * @param type the type of the record
-	 * @param parent the parent of this item
-	 * @param name the name of this record (e.g. Step name)
+	 * @param recordName the name of this record (e.g. Step name)
+	 * @param sla the SLA for this record
 	 *******************************************************************/
 	public HSRRecord(
 			  HSRRecordType type
@@ -167,7 +166,7 @@ public class HSRRecord {
 	 * 
 	 * @param type the type of the record
 	 * @param parent the parent of this item
-	 * @param name the name of this record (e.g. Step name)
+	 * @param recordName the name of this record (e.g. Step name)
 	 *******************************************************************/
 	public HSRRecord(
 			  HSRRecordType type
@@ -192,7 +191,7 @@ public class HSRRecord {
 	 * 
 	 * @param type the type of the record
 	 * @param parent the parent of this item
-	 * @param name the name of this record (e.g. Step name)
+	 * @param recordName the name of this record (e.g. Step name)
 	 * @param value the value of this record
 	 *******************************************************************/
 	public HSRRecord(
@@ -220,7 +219,7 @@ public class HSRRecord {
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param usecase the name of the usecase (Use Case etc...)
 	 * @param pathlist the pathlist that is defining the hierarchy
-	 * @param name the name of this record (e.g. Step name)
+	 * @param recordName the name of this record (e.g. Step name)
 	 * @param value the value of this record
 	 *******************************************************************/
 	public HSRRecord(
@@ -253,11 +252,11 @@ public class HSRRecord {
 	 * @param test the name of the test (E.g. Test Suite, Test Set etc...)
 	 * @param usecase the name of the usecase (Use Case etc...)
 	 * @param pathlist the pathlist that are defining the hierarchy
-	 * @param name the name of this record (e.g. Step name)
+	 * @param recordName the name of this record (e.g. Step name)
 	 * @param startTimeNanos the start time retrieved with System.nanoTime()
 	 * @param endTimeNanos the end time retrieved with System.nanoTime()
 	 * @param status the status of this record
-	 * @param code custom code of this record
+	 * @param responseCode custom code of this record
 	 * @param message custom message of this record
 	 * @param value the value of this record
 	 *******************************************************************/
@@ -416,7 +415,7 @@ public class HSRRecord {
 	 * Adds a correction to this value. Multiple calls to this method
 	 * will cause all corrections to be summed together.
 	 * 
-	 * @param currection the corrective value that should be added to 
+	 * @param correction the corrective value that should be added to 
 	 * the value, either positive or negative
 	 ******************************************************************/
 	public HSRRecord correction(long correction) {
@@ -427,7 +426,7 @@ public class HSRRecord {
 	 * Adds a correction to this value. Multiple calls to this method
 	 * will cause all corrections to be summed together.
 	 * 
-	 * @param currection the corrective value that should be added to 
+	 * @param correction the corrective value that should be added to 
 	 * the value, either positive or negative
 	 ******************************************************************/
 	public HSRRecord correction(int correction) {
@@ -438,7 +437,7 @@ public class HSRRecord {
 	 * Adds a correction to this value. Multiple calls to this method
 	 * will cause all corrections to be summed together. 
 	 * 
-	 * @param currection the corrective value that should be added to 
+	 * @param correction the corrective value that should be added to 
 	 * the value, either positive or negative
 	 ******************************************************************/
 	public HSRRecord correction(BigDecimal correction) {

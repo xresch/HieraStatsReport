@@ -76,7 +76,7 @@ public class HSRHooks {
 	 * HSR.start*()-method.
 	 * 
 	 * @param type
-	 * @param name
+	 * @param startedItem
 	 *****************************************************************************************/
 	public void afterStart(HSRRecordType type, HSRRecord startedItem) {
 		
@@ -87,7 +87,7 @@ public class HSRHooks {
 	 * HSR.end()-method.
 	 * 
 	 * @param type
-	 * @param name
+	 * @param endedItem
 	 *****************************************************************************************/
 	public void beforeEnd(HSRRecordStatus type, HSRRecord endedItem) {
 		
@@ -98,7 +98,7 @@ public class HSRHooks {
 	 * HSR.end()-method.
 	 * 
 	 * @param type
-	 * @param name
+	 * @param endedItem
 	 *****************************************************************************************/
 	public void afterEnd(HSRRecordStatus type, HSRRecord endedItem) {
 		

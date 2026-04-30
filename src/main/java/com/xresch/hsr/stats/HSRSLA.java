@@ -103,9 +103,14 @@ public class HSRSLA {
 		return this;
 	}
 	/******************************************************************************
-	 * Evaluates the SLA
-	 * @param stats
-	 * @return
+	 * Combines this SLA with an and-operation to another SLA.
+	 * 
+	 * @param metric the metric to check
+	 * @param operator the operation to use for the check
+	 * @param value the value to check against
+	 * 
+	 * @return the new SLA combining the existing one with the one defined with
+	 * this method.
 	 ******************************************************************************/
 	public HSRSLA and(HSRMetric metric, Operator operator, int value) {
 		 HSRSLA other = new HSRSLA(metric, operator, value);
@@ -113,9 +118,14 @@ public class HSRSLA {
 	}
 	
 	/******************************************************************************
-	 * Evaluates the SLA
-	 * @param stats
-	 * @return
+	 * Combines this SLA with an or-operation to another SLA.
+	 * 
+	 * @param metric the metric to check
+	 * @param operator the operation to use for the check
+	 * @param value the value to check against
+	 * 
+	 * @return the new SLA combining the existing one with the one defined with
+	 * this method.
 	 ******************************************************************************/
 	public HSRSLA or(HSRMetric metric, Operator operator, int value) {
 		 HSRSLA other = new HSRSLA(metric, operator, value);
@@ -125,7 +135,7 @@ public class HSRSLA {
 	/******************************************************************************
 	 * Evaluates the SLA against the given Value
 	 * @param checkThis value to check if it fullfills the SLA
-	 * @return
+	 * @return boolean
 	 ******************************************************************************/
 	public boolean evaluate(HSRRecordStats checkThis) {
 		
@@ -207,10 +217,10 @@ public class HSRSLA {
 	 * Parses a SLA Rule string into an instance of a Rule. 
 	 * Example Strings:
 	 * <ul>
-	 * 		<li>( ok_p90 <= 100 )</li>
-	 * 		<li>( ok_p90 <= 100 ) AND ( ok_avg <= 50 )</li>
-	 * 		<li>( ok_avg <= 50 ) OR ( ok_p90 <= 100 )</li>
-	 * 		<li>( ok_failrate < 10 )</li>
+	 * 		<li>( ok_p90 &lt;= 100 )</li>
+	 * 		<li>( ok_p90 &lt;= 100 ) AND ( ok_avg &lt;= 50 )</li>
+	 * 		<li>( ok_avg &lt;= 50 ) OR ( ok_p90 &lt;= 100 )</li>
+	 * 		<li>( ok_failrate &lt; 10 )</li>
 	 * </ul>
 	 * 
 	 * @param rule string 

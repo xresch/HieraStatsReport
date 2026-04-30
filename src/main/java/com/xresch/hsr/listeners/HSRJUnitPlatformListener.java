@@ -29,7 +29,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 	 * Called when the execution of the {@link TestPlan} has started,
 	 * <em>before</em> any test has been executed.
 	 *
-	 * @param testPlan describes the tree of tests about to be executed
+	 * @param testplan describes the tree of tests about to be executed
 	 */
 	public void testPlanExecutionStarted(TestPlan testplan) {
 		currentTestplan = testplan;
@@ -40,7 +40,7 @@ public class HSRJUnitPlatformListener implements TestExecutionListener {
 	 * Called when the execution of the {@link TestPlan} has finished,
 	 * <em>after</em> all tests have been executed.
 	 *
-	 * @param testPlan describes the tree of tests that have been executed
+	 * @param testplan describes the tree of tests that have been executed
 	 */
 	public void testPlanExecutionFinished(TestPlan testplan) {
 		

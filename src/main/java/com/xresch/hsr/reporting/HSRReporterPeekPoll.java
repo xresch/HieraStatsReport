@@ -29,9 +29,6 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	
 	/****************************************************************************
 	 * 
-	 * @param filepath the path of the file to write the data to.
-	 * @param makeArray set to true to make the file content a JSON Array.
-	 *					If false, writes a JSON Object string per line.
 	 ****************************************************************************/
 	public HSRReporterPeekPoll() {
 

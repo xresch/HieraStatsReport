@@ -42,7 +42,7 @@ public class HSRAgeOutConfig {
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
-	 * @param how long the Granularity should be kept for.
+	 * @param duration how long the Granularity should be kept for.
 	 *************************************************************/
 	public HSRAgeOutConfig keep1MinFor(Duration duration) {
 		keep1MinFor = duration;
@@ -54,7 +54,7 @@ public class HSRAgeOutConfig {
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
-	 * @param how long the Granularity should be kept for
+	 * @param duration how long the Granularity should be kept for
 	 *************************************************************/
 	public HSRAgeOutConfig keep5MinFor(Duration duration) {
 		keep5MinFor = duration;
@@ -66,7 +66,7 @@ public class HSRAgeOutConfig {
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
-	 * @param how long the Granularity should be kept for
+	 * @param duration how long the Granularity should be kept for
 	 *************************************************************/
 	public HSRAgeOutConfig keep10MinFor(Duration duration) {
 		keep10MinFor = duration;
@@ -78,7 +78,7 @@ public class HSRAgeOutConfig {
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
-	 * @param how long the Granularity should be kept for
+	 * @param duration how long the Granularity should be kept for
 	 *************************************************************/
 	public HSRAgeOutConfig keep15MinFor(Duration duration) {
 		keep15MinFor = duration;
@@ -90,7 +90,7 @@ public class HSRAgeOutConfig {
 	 * name should be kept. All granularities lower than that
 	 * granularity will be kept too.
 	 * 
-	 * @param how long the Granularity should be kept for
+	 * @param duration how long the Granularity should be kept for
 	 *************************************************************/
 	public HSRAgeOutConfig keep60MinFor(Duration duration) {
 		keep60MinFor = duration;

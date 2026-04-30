@@ -322,8 +322,12 @@ public class HSR {
 	/***********************************************************************************
 	 * Starts a new step, sets it as the active item and returns it to be able to set 
 	 * further details.
+	 * 
 	 * @param name the name for the record, should be unique in your test.
-	 * @param sla the sla rule that should be evaluated for this record.
+	 * @param metric 
+	 * @param operator 
+	 * @param value 
+	 * 
 	 * @return the created record 
 	 ***********************************************************************************/
 	public static HSRRecord start(String name, HSRMetric metric, Operator operator, int value){
@@ -333,8 +337,10 @@ public class HSR {
 	/***********************************************************************************
 	 * Starts a new step, sets it as the active item and returns it to be able to set 
 	 * further details.
+	 * 
 	 * @param name the name for the record, should be unique in your test.
 	 * @param sla the sla rule that should be evaluated for this record.
+	 * 
 	 * @return the created record 
 	 ***********************************************************************************/
 	public static HSRRecord start(String name, HSRSLA sla){
@@ -346,7 +352,9 @@ public class HSR {
 	/***********************************************************************************
 	 * Starts a new wait, sets it as the active item and returns it to be able to set 
 	 * further details.
+	 * 
 	 * @param name the name for the record, should be unique in your test.
+	 * 
 	 * @return the created record 
 	 ***********************************************************************************/
 	public static HSRRecord startWait(String name){
@@ -356,8 +364,10 @@ public class HSR {
 	/***********************************************************************************
 	 * Starts a new wait, sets it as the active group and returns it to be able to set 
 	 * further details.
+	 * 
 	 * @param name the name for the record, should be unique in your test.
 	 * @param sla the sla rule that should be evaluated for this record.
+	 * 
 	 * @return the created record 
 	 ***********************************************************************************/
 	public static HSRRecord startWait(String name, HSRSLA sla){
@@ -371,7 +381,6 @@ public class HSR {
 	 * 
 	 * @param minMillis minimum time to pause
 	 * @param maxMillis maximum time to pause
-	 * @return nothing
 	 ***********************************************************************************/
 	public static void pause(String name, long minMillis, long maxMillis){
 		pause(name, HSR.Random.longInRange(minMillis, maxMillis));
@@ -382,8 +391,8 @@ public class HSR {
 	 * The time spent in this pause will be removed from parent items.
 	 * Adds a metric to the HSR report of type "Wait".
 	 * 
+	 * @param name for the created record of time Wait
 	 * @param millis time to pause
-	 * @return nothing
 	 ***********************************************************************************/
 	public static void pause(String name, long millis){
 		
@@ -414,7 +423,6 @@ public class HSR {
 	 * 
 	 * @param minMillis minimum time to pause
 	 * @param maxMillis maximum time to pause
-	 * @return nothing
 	 ***********************************************************************************/
 	public static void pause(long minMillis, long maxMillis){
 		pause(HSR.Random.longInRange(minMillis, maxMillis));
@@ -425,7 +433,6 @@ public class HSR {
 	 * The time spent in this pause will be removed from parent items.
 	 * 
 	 * @param millis time to pause
-	 * @return nothing
 	 ***********************************************************************************/
 	public static void pause(long millis){
 		
@@ -452,8 +459,6 @@ public class HSR {
 	 * have been slept.
 	 * 
 	 * @param millis time to pause
-	 * @return nothing
-	 * 
 	 ***********************************************************************************/
 	private static long measuredSleep(long millis) throws InterruptedException {
 	    

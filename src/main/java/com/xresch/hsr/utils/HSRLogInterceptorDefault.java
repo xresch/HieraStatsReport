@@ -42,9 +42,8 @@ public class HSRLogInterceptorDefault extends TurboFilter {
 	}
 	
 	/***************************************************************************
-	 * Constructor
-	 * 
-	 * @param minLevel the minimum level that should be added to the HSR report
+	 * Check if the minimum level for logging is reached, if true, add the 
+	 * log message to the HSR report.
 	 ***************************************************************************/
     @Override
     public FilterReply decide(Marker marker,
@@ -74,7 +73,7 @@ public class HSRLogInterceptorDefault extends TurboFilter {
     }
     
 	/***************************************************************************
-	 * 
+	 * Format the message.
 	 ***************************************************************************/
     private String formatMessage(String format, Object[] params, Throwable t) {
         if (format == null) return null;

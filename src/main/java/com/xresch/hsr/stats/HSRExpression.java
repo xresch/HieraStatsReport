@@ -211,9 +211,13 @@ public class HSRExpression {
 
 	
 	/******************************************************************************
-	 * Creates a new Expression
-	 * @param stats
-	 * @return
+	 * Creates a new Expression.
+	 * 
+	 * @param left
+	 * @param operator
+	 * @param right
+	 * 
+	 * @return the created BooleanExpression
 	 ******************************************************************************/
 	public static <T extends Comparable<T>> Expression of(
 												      Expressionable<T> left
@@ -224,9 +228,13 @@ public class HSRExpression {
 	}
 	
 	/******************************************************************************
-	 * Creates a new Expression
-	 * @param stats
-	 * @return
+	 * Creates a new Expression.
+	 * 
+	 * @param left
+	 * @param operator
+	 * @param right
+	 * 
+	 * @return the created BooleanExpression
 	 ******************************************************************************/
 	public static <T extends Comparable<T>> Expression of(
 			Expressionable<T> left
@@ -237,9 +245,13 @@ public class HSRExpression {
 	}
 	
 	/******************************************************************************
-	 * Creates a new Expression
-	 * @param stats
-	 * @return
+	 * Creates a new Expression.
+	 * 
+	 * @param left
+	 * @param operator
+	 * @param right
+	 * 
+	 * @return the created BooleanExpression
 	 ******************************************************************************/
 	public static <T extends Comparable<T>> Expression of(
 												      T left
@@ -250,9 +262,13 @@ public class HSRExpression {
 	}
 	
 	/******************************************************************************
-	 * Creates a new Expression
-	 * @param stats
-	 * @return
+	 * Creates a new Expression.
+	 * 
+	 * @param left
+	 * @param operator
+	 * @param right
+	 * 
+	 * @return the created BooleanExpression
 	 ******************************************************************************/
 	public static <T extends Comparable<T>> Expression of(
 												      T left

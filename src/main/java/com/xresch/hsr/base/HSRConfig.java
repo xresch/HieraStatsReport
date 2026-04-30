@@ -144,12 +144,9 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
-	 * 
 	 * Starts HSR and the reporting engine.
-	 * 
-	 * @param reportingInterval number of seconds for the reporting
-	 * used to aggregate statistics and reporting them to the various
-	 * reporters.
+	 * Enables the collection of metrics based on the configured 
+	 * report interval.
 	 * 
 	 ******************************************************************/
 	public static void enable() {
@@ -533,10 +530,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * 
-	 * Sets the age out config.
-	 * Only takes effect if AgeOut has been enabled.
-	 * 
-	 * @param config
+	 * Returns the age out config.
 	 * 
 	 * @return the AgeOutConfig 
 	 ******************************************************************/

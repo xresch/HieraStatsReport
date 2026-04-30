@@ -68,12 +68,10 @@ public class HSRReportUtils {
 
 
 	/********************************************************************************************
-	 * Extract zipfile to outdir with complete directory structure
+	 * Extract zipfile to toDir with complete directory structure
 	 * 
-	 * @param zipfile
-	 *            Input .zip file
-	 * @param outdir
-	 *            Output directory
+	 * @param zipFileUri Input .zip file
+	 * @param toDir the output directory
 	 ********************************************************************************************/
 	public static void extractZipFile(URI zipFileUri, String toDir) {
 		
@@ -107,12 +105,10 @@ public class HSRReportUtils {
 	/********************************************************************************************
 	 * Extract zipfile to outdir with complete directory structure
 	 * 
-	 * @param zipfile
-	 *            Input .zip file
-	 * @param outdir
-	 *            Output directory
+	 * @param zipInputStream input stream for the .zip file
+	 * @param targetDir the output directory
 	 ********************************************************************************************/
-	public static void extractZipFile(ZipInputStream zin, String targetDir) {
+	public static void extractZipFile(ZipInputStream zipInputStream, String targetDir) {
 		try {
 						
 			File outdir = new File(targetDir);
@@ -122,7 +118,7 @@ public class HSRReportUtils {
 			
 			ZipEntry entry = null;
 			
-			while ((entry = zin.getNextEntry()) != null) {
+			while ((entry = zipInputStream.getNextEntry()) != null) {
 
 				String filePath = entry.getName();
 				
@@ -134,7 +130,7 @@ public class HSRReportUtils {
 				//Create directories 
 				new File(targetDir+"/"+filePath).getParentFile().mkdirs();
 
-				extractFile(zin, outdir, filePath);
+				extractFile(zipInputStream, outdir, filePath);
 			}
 			
 		} catch (IOException e) {
@@ -142,7 +138,7 @@ public class HSRReportUtils {
 			e.printStackTrace();
 		}finally{
 			try {
-				zin.close();
+				zipInputStream.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
