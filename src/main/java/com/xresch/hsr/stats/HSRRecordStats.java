@@ -36,8 +36,10 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	private String pathRecord;
 	private String code = "";
 	private int granularity;
-	private String statsIdentifier;
 	private HashMap<String, BigDecimal> values = new HashMap<>();
+	
+	private String statsIdentifier;
+	private String sortIdentifier;
 
 	
 	private HSRSLA sla = null;
@@ -307,7 +309,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
       "name": "040_SLA_P90_AND_AVG-NOK-AVG",
       "code": "",
       "granularity": 15,
-      "sla": "( ok_p90 \u003C= 100 ) AND ( ok_avg \u003C= 50 )",
+      "sla": "( ok_p90 &lt;= 100 ) AND ( ok_avg &lt;= 50 )",
       "ok_count": 3,
       "ok_min": 50,	"ok_avg": 50,	"ok_max": 50,	"ok_stdev": 0,	"ok_p25": 50,	"ok_p50": 50,	"ok_p75": 50,	"ok_p90": 50,	"ok_p95": 50,	"ok_p99": 50,	"ok_sla": 1,
       "nok_count": null,	"nok_min": null,	"nok_avg": null,	"nok_max": null,	"nok_stdev": null,	"nok_p25": null,	"nok_p50": null,	"nok_p75": null,	"nok_p90": null,	"nok_p95": null,	"nok_p99": null,	"nok_sla": 0,
@@ -316,7 +318,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
     },
 	 * </code></pre>
 	 * 
-	 * @param stats another instance to clone
+	 * @param recordStatsObject another instance to clone
 	 ***********************************************************************/
 	public HSRRecordStats(JsonObject recordStatsObject){	
 		//-----------------------------------
@@ -629,8 +631,8 @@ SELECT
 FROM gatlytronx_stats
 WHERE 
 	"time" >= ? 
-AND "time" < ? 
-AND "granularity" < ?
+AND "time" &lt; ? 
+AND "granularity" &lt; ?
 GROUP BY "type","test","usecase","path","metric","code","granularity"
 	 * </code></pre>
 	 ***********************************************************************/
@@ -836,11 +838,34 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 		return statsIdentifier;
 	}
 	
+	/******************************************************************
+	 * Returns the string used for sorting the statistics.
+	 * 
+	 ******************************************************************/
+	public String sortIdentifier(){
+		
+		if(sortIdentifier == null) {
+			sortIdentifier = 
+						  ( (type().equals(HSRRecordType.System)) ? "AAAAA" : "" )	 // put system metrics first
+						+ ( (type().equals(HSRRecordType.User)) ? "BBBBB" : "" )	   // put user metrics second
+						+ test
+						+ usecase
+						// + path // do not add path, sorting will get to complicated ...
+						+ name 
+						// + code // do not add code, as it will create strange orders with ranged metrics
+						;
+		}
+		
+		return sortIdentifier;
+	}
+	
 	
 	/***********************************************************************
+	 * Returns the selected value.
 	 * 
-	 * @param name of a value, e.g. "nok_count" or "ok_max"
-	 * @return the value for the given name
+	 * @param state of the value to retrieve, ignored if the metric is 
+	 * not an OK/NOK metric.
+	 * @return metric the metric to retrieve
 	 ***********************************************************************/
 	public BigDecimal getValue(HSRRecordState state, HSRMetric metric) {
 		if(metric.isOkNok) {

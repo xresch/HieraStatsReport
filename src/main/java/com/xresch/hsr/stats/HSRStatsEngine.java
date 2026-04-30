@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -842,7 +843,14 @@ public class HSRStatsEngine {
 		
 		//-------------------------------
 		// Sort
-		statsRecordList.sort(null);
+		statsRecordList.sort(new Comparator<HSRRecordStats>() {
+
+			@Override
+			public int compare(HSRRecordStats o1, HSRRecordStats o2) {
+				
+				return HSR.Text.compareStringsAlphanum(o1.sortIdentifier(), o2.sortIdentifier());
+			}
+		});
 		
 		//-------------------------------
 		// Report Stats
