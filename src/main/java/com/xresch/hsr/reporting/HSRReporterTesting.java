@@ -133,7 +133,7 @@ public class HSRReporterTesting implements HSRReporter {
 			reportReceived = false;
 			HSRStatsEngine.aggregateAndReport();
 			
-			while( ! reportReceived) {
+			while( ! reportReceived ) {
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException e) {
