@@ -502,7 +502,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	}
 	
 	/***********************************************************************
-	 * 
+	 * Returns this record as a JSON Object String 
 	 ***********************************************************************/
 	public String toJsonString() {
 		return this.toJson().toString();
@@ -510,7 +510,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	
 	
 	/***********************************************************************
-	 * 
+	 * Returns this record as a JSON Object
 	 ***********************************************************************/
 	public JsonObject toJson() {
 		
