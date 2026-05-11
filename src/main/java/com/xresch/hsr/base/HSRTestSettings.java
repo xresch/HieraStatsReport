@@ -44,7 +44,8 @@ public class HSRTestSettings {
 
 	
 	/***************************************************************************
-	 *
+	 * Constructor
+	 * 
 	 ***************************************************************************/
 	public HSRTestSettings(String usecase, JsonObject settings) {
 		this.usecase = usecase;
@@ -52,7 +53,8 @@ public class HSRTestSettings {
 	}
 	
 	/***********************************************************************
-	 * Returns a SQL template for creating the database table.
+	 * Returns a SQL template for creating the database table that stores
+	 * the test settings.
 	 ***********************************************************************/
 	public static String createSQL_CreateTableTestSettings(String tableName, String parentTablename) {
 		return sqlCreateTableTemplate
@@ -62,7 +64,7 @@ public class HSRTestSettings {
 	}
 	
 	/***********************************************************************
-	 * Insert into database.
+	 * Insert this test settings into the given database.
 	 ***********************************************************************/
 	public boolean insertIntoDatabase(DBInterface db, int testid, String tableName) {
 		

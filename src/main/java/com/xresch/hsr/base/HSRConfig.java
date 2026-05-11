@@ -547,8 +547,10 @@ public class HSRConfig {
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * 
-	 * Sets the age out config.
-	 * Only takes effect if AgeOut has been enabled.
+	 * Sets the age out config. Only takes effect if AgeOut has been enabled.
+	 * This must be called before constructors of DB Reporters are called
+	 * to have an effect, as the age out will be triggered in the
+	 * constructor.
 	 * 
 	 * @param config 
 	 ******************************************************************/
@@ -589,7 +591,9 @@ public class HSRConfig {
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * 
-	 * Disables the collection of system usage statistics.
+	 * Disables the collection of all the system usage statistics.
+	 * You can re-enable specific ones using the stats*()-methods.
+	 * 
 	 ******************************************************************/
 	public static void disableSystemStats() {
 		toggleSystemStats(false);
@@ -599,6 +603,7 @@ public class HSRConfig {
 	 * <b>Scope:</b> Global <br>
 	 * 
 	 * Toggle if system usage statistics should be collected.
+	 * You can adjust specific ones using the stats*()-methods.
 	 ******************************************************************/
 	public static void toggleSystemStats(boolean isEnabled) {
 		statsCPU(isEnabled);
@@ -721,7 +726,7 @@ public class HSRConfig {
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * 
-	 * Terminates HieraStatsReport.
+	 * Terminates HieraStatsReport and resets it.
 	 * 
 	 ******************************************************************/
 	public static void terminate() {

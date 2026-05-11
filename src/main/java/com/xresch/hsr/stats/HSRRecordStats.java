@@ -15,7 +15,8 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
 
 /**************************************************************************************************************
- * This record holds one record of statistical data aggregated from HSRRecord.
+ * This record holds aggregated statistical data from HSRRecord instances.
+ * Grouping of the aggregation is based on HSRRecord.getStatsIdentifier().
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
  * @license EPL-License
@@ -358,8 +359,6 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 
 		}
 		
-
-
 		//----------------------------
 		// OK-NOK Values
 		for(HSRRecordState state : HSRRecordState.values()) {

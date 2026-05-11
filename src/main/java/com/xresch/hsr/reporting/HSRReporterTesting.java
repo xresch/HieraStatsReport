@@ -10,8 +10,10 @@ import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.stats.HSRStatsEngine;
 
 /**************************************************************************************************************
- *  This reporter is useful for writing unit tests the check things are working as expected.
+ *  This reporter is useful for writing unit tests, then check things are working as expected.
  *  It exposes a variety of public fields that contain the records that have been reported by the stats engine.
+ *  Further it provides methods to trigger the aggregation of the statistics, clear collected data, print it 
+ *  as a table to sysout and check if a record exists by name and retrieve it.
  *  
  * @author Reto Scheiwiller, (c) Copyright 2026
  * @license EPL-License

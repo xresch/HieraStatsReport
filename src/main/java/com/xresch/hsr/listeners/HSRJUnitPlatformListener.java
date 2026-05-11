@@ -13,7 +13,7 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 
 /***************************************************************************
  * Hooks into JUnit to do some awesomeness.
- * Causes HSR to be used for JUnit Tests
+ * Causes HSR to be used for JUnit Tests.
  * 
  * License: EPL License
  * 

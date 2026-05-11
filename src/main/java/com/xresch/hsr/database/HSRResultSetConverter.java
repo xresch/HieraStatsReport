@@ -18,9 +18,10 @@ import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 
 /**************************************************************************************************************
+ * Utility class used to convert a result set.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRResultSetConverter {
 	

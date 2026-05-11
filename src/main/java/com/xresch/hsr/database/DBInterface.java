@@ -24,9 +24,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 /**************************************************************************************************************
+ * Database inteface class.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2019 
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class DBInterface {
 
@@ -80,9 +81,7 @@ public class DBInterface {
 	
 	
 	/********************************************************************************************
-	 * Add a connection that was openend to the list of open connections.
-	 * When connections remain after the Servlet returns, they will be closed 
-	 * by the RequestHandler using hardCloseRemainingConnections().
+	 * Close any connections that may still be open.
 	 * 
 	 * @throws SQLException 
 	 ********************************************************************************************/
@@ -152,7 +151,7 @@ public class DBInterface {
 	/********************************************************************************************
 	 * Removes a connection that was openend from the list of open connections.
 	 * When connections remain after the Servlet returns, they will be closed 
-	 * by the RequestHandler using hardCloseRemainingConnections().
+	 * by the RequestHandler using forceCloseRemainingConnections().
 	 * 
 	 * @throws SQLException 
 	 ********************************************************************************************/
@@ -174,7 +173,7 @@ public class DBInterface {
 	}
 	
 	/********************************************************************************************
-	 * Starts a new transaction.
+	 * Starts a new transaction in the current thread.
 	 * 
 	 * @throws SQLException 
 	 ********************************************************************************************/
@@ -201,8 +200,9 @@ public class DBInterface {
 	}
 	
 	/********************************************************************************************
-	 * Commits a new transaction.
+	 * Ends the current transaction, commits on success and rollback on fail.
 	 * 
+	 * @param isSuccess
 	 * @throws SQLException 
 	 ********************************************************************************************/
 	public void transactionEnd(boolean isSuccess) {
@@ -295,6 +295,7 @@ public class DBInterface {
 	
 	
 	/********************************************************************************************
+	 * Executes a statement with PreparedStatement.execute().
 	 * 
 	 * @param sql string with placeholders
 	 * @param values the values to be placed in the prepared statement
@@ -348,6 +349,7 @@ public class DBInterface {
 	}
 	
 	/********************************************************************************************
+	 * Executes a statement with PreparedStatement.executeBatch().
 	 * 
 	 * @param sql string with placeholders
 	 * @param values the values to be placed in the prepared statement
@@ -457,7 +459,7 @@ public class DBInterface {
 		return generatedID;
 	}
 	/********************************************************************************************
-	 * Returns the result or null if there was any issue.
+	 * Returns the result, or null if there was any issue.
 	 * 
 	 * @param sql string with placeholders
 	 * @param values the values to be placed in the prepared statement
@@ -470,6 +472,7 @@ public class DBInterface {
 	/********************************************************************************************
 	 * Returns the result or null if there was any issue.
 	 * Errors will be written to log but not be propagated to client.
+	 * 
 	 * @param sql string with placeholders
 	 * @param values the values to be placed in the prepared statement
 	 * @throws SQLException 
@@ -525,6 +528,7 @@ public class DBInterface {
 	}
 
 	/********************************************************************************************
+	 * Adds the values to the prepared statement.
 	 * 
 	 * @param prepared the prepared statement with placeholders
 	 * @param values the values to be placed in the prepared statement. Supports String, Integer,

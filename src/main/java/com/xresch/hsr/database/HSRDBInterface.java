@@ -19,7 +19,7 @@ import com.xresch.xrutils.utils.XRTimeUnit;
 /**************************************************************************************************************
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
- * @license MIT-License
+ * @license EPL-License
  **************************************************************************************************************/
 public class HSRDBInterface {
 	
@@ -100,7 +100,7 @@ public class HSRDBInterface {
 	}
 	
 	/****************************************************************************
-	 * Create the Gatlytron tables in the database
+	 * Create the HSR tables in the database
 	 ****************************************************************************/
 	public void initializeDB() {
 		
@@ -155,7 +155,8 @@ public class HSRDBInterface {
 	}
 
 	/****************************************************************************
-	 * 
+	 * Method will be called after database tables have been created.
+	 * Used for migration, adding new columns etc...
 	 ****************************************************************************/
 	private void alterTables() {
 		//----------------------------
@@ -175,7 +176,7 @@ public class HSRDBInterface {
 	}
 	
 	/****************************************************************************
-	 * 
+	 * Insert the given records into the database table "{tableprefix}_stats".
 	 ****************************************************************************/
 	public void reportRecords(int testID, ArrayList<HSRRecordStats> records) {
 		
@@ -186,7 +187,7 @@ public class HSRDBInterface {
 	}
 	
 	/****************************************************************************
-	 * 
+	 * Insert the given records into the database table "{tableprefix}_stats_summary".
 	 ****************************************************************************/
 	public void reportRecordsSummary(int testID, ArrayList<HSRRecordStats> records) {
 		
@@ -197,7 +198,7 @@ public class HSRDBInterface {
 	}
 	
 	/****************************************************************************
-	 * 
+	 * Insert the given records into the database table "{tableprefix}_testsettings".
 	 ****************************************************************************/
 	public void reportTestSettings(int testid, ArrayList<HSRTestSettings> testsettings) {
 		
@@ -209,6 +210,8 @@ public class HSRDBInterface {
 	}
 	
 	/****************************************************************************
+	 * Updates the end time in the database tables "{tableprefix}_tests" 
+	 * and "{tableprefix}_testsettings".
 	 * 
 	 ****************************************************************************/
 	public void reportEndTime(int testid) {
@@ -216,7 +219,7 @@ public class HSRDBInterface {
 		long endTime = System.currentTimeMillis();
 		
 		//----------------------
-		// Test Settings
+		// Table Test Settings
 		String sqlUpdateTestsettings = "UPDATE "+tablenameTestsettings
 				+ " SET endtime = "+endTime
 				+ " WHERE testid = '"+testid+"'";
@@ -224,7 +227,7 @@ public class HSRDBInterface {
 		db.preparedExecute(sqlUpdateTestsettings);
 		
 		//----------------------
-		// Test Settings
+		// Table Tests
 		String sqlUpdateTests = "UPDATE "+tablenameTests
 				+ " SET endtime = "+endTime
 				+ " WHERE id = '"+testid+"'";
@@ -234,7 +237,7 @@ public class HSRDBInterface {
 	}
 	
 	/****************************************************************************
-	 * 
+	 * Updates the SLA in the database table "{tableprefix}_tests".
 	 ****************************************************************************/
 	public void reportSLA(int testid, JsonObject sla) {
 		

@@ -41,7 +41,7 @@ public class HSRRecord {
 	
 	
 	private BigDecimal value = null;
-	private BigDecimal correction = BigDecimal.ZERO; // corrections for the value like pauses etc...
+	private BigDecimal totalCorrection = BigDecimal.ZERO; // corrections for the value like pauses etc...
 	
 	private String logString = null;
 	
@@ -50,7 +50,7 @@ public class HSRRecord {
 
 		
 	/******************************************************************
-	 * 
+	 * The type of the record.
 	 ******************************************************************/
 	
 	// !#!#!#!#!#!#!# IMPORTANT !#!#!#!#!#!#!#
@@ -95,14 +95,14 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * 
+	 * Enumeration of the the record states.
 	 ******************************************************************/
 	public enum HSRRecordState { 
 		ok, nok
 	}
 	
 	/******************************************************************
-	 * 
+	 * Enumeration of the the record statuses.
 	 ******************************************************************/
 	public enum HSRRecordStatus { 
 			  Success(HSRRecordState.ok)
@@ -122,6 +122,7 @@ public class HSRRecord {
 				return state;
 			}
 		}
+	
 	/********************************************************************
 	 * Creates a new record, take values from parent.
 	 * 
@@ -293,8 +294,9 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * This will also take over other values from the parent and override
-	 * them, including: test, usecase, name pathlist
+	 * Set this records parent.This will also take over other values 
+	 * from the parent and override them, including: 
+	 * test, usecase, pathlist
 	 ******************************************************************/
 	public HSRRecord parent(HSRRecord parent) {
 		this.parent = parent;
@@ -387,14 +389,15 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * Returns the name of the record-
+	 * Returns the name of the record.
 	 ******************************************************************/
 	public String name() {
 		return name;
 	}
 
 	/******************************************************************
-	 * 
+	 * Set the value of this record. If you use start()- and end()-method,
+	 * the value will be set to the measured time in milliseconds.
 	 ******************************************************************/
 	public HSRRecord value(BigDecimal value) {
 		if(value != null) {	
@@ -408,7 +411,7 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public BigDecimal value() {
-		return value.add(correction);
+		return value.add(totalCorrection);
 	}
 	
 	/******************************************************************
@@ -443,7 +446,7 @@ public class HSRRecord {
 	public HSRRecord correction(BigDecimal correction) {
 
 		if(correction != null) {	
-			this.correction = this.correction.add(correction);
+			this.totalCorrection = this.totalCorrection.add(correction);
 		}
 		return this;
 	}
@@ -452,11 +455,11 @@ public class HSRRecord {
 	 * 
 	 ******************************************************************/
 	public BigDecimal correction() {
-		return correction;
+		return totalCorrection;
 	}
 
 	/******************************************************************
-	 * 
+	 * Sets the start time of this record in nano seconds.
 	 ******************************************************************/
 	public HSRRecord startTimeNanos(long startTimeNanos) {
 		this.startTimeNanos = startTimeNanos;
@@ -465,14 +468,14 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * 
+	 * Returns the start time of this record in nano seconds.
 	 ******************************************************************/
 	public long startTimeNanos() {
 		return startTimeNanos;
 	}
 
 	/******************************************************************
-	 * 
+	 * Sets the end time of this record in nano seconds.
 	 ******************************************************************/
 	public HSRRecord endTimeNanos(long endTimeNanos) {
 		this.endTimeNanos = endTimeNanos;
@@ -481,7 +484,7 @@ public class HSRRecord {
 	
 	
 	/******************************************************************
-	 * 
+	 * Returns the end time of this record in nano seconds.
 	 ******************************************************************/
 	public long endTimeNanos() {
 		return endTimeNanos;
@@ -510,7 +513,7 @@ public class HSRRecord {
 	
 	
 	/******************************************************************
-	 * 
+	 * Returns the custom code of this record.
 	 ******************************************************************/
 	public String code() {
 		return code;
@@ -530,7 +533,7 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * 
+	 * Return the status of this record.
 	 ******************************************************************/
 	public HSRRecordStatus status() {
 		return status;
@@ -617,7 +620,6 @@ public class HSRRecord {
 		
 	}
 	
-	
 	/******************************************************************
 	 * Returns the string used for grouping the statistics.
 	 * 
@@ -632,7 +634,7 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * Returns the string used for grouping the statistics.
+	 * Creates the string used for grouping the statistics.
 	 * 
 	 ******************************************************************/
 	public static String createStatsIdentifier(
@@ -686,7 +688,7 @@ public class HSRRecord {
 	}
 	
 	/******************************************************************
-	 * 
+	 * Returns a string for logging as a raw log.
 	 ******************************************************************/
 	public String toLogString() {
 		
@@ -762,6 +764,7 @@ public class HSRRecord {
 	}
 	
 	/***********************************************************************************
+	 * Returns the nesting level of this record based on its parents.
 	 * 
 	 ***********************************************************************************/
 	public int getLevel() {

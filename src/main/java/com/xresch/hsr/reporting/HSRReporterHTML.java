@@ -21,8 +21,7 @@ import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.utils.HSRReportUtils;
 
 /**************************************************************************************************************
- * This reporter writes report data to a CSV file.
- * You might choose the separator for your CSV data so that you can properly delimit your data.
+ * This reporter writes report data to a HTML Report.
  * 
  * @author Reto Scheiwiller, (c) Copyright 2025
  * @license EPL-License

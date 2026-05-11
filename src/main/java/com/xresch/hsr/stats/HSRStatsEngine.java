@@ -148,7 +148,7 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * Starts the reporting of the statistics.
+	 * Starts the aggregation and reporting thread of the engine.
 	 *  
 	 ***************************************************************************/
 	private static void startThreadStatsEngine(int reportInterval) {
@@ -285,6 +285,7 @@ public class HSRStatsEngine {
 	
 	/***************************************************************************
 	 * Shutdown hook for graceful stops.
+	 * Will not work in some IDE's, for example Eclipse.
 	 *  
 	 ***************************************************************************/
 	private static void registerShutdownHook() {
@@ -307,7 +308,8 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * Stops the stats engine
+	 * Stops the stats engine.
+	 * 
 	 ***************************************************************************/
 	public static void stop() {
 		
@@ -335,7 +337,7 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * Adds a record to the statistics engine
+	 * Adds a record to the statistics engine.
 	 ***************************************************************************/
 	public static void addRecord(HSRRecord record) {
 
@@ -367,7 +369,7 @@ public class HSRStatsEngine {
 	}	
 	
 	/***************************************************************************
-	 * Creates user records and adds them to the list of records.
+	 * Creates the system usage records and adds them to the list of records.
 	 ***************************************************************************/
 	private static void createSystemUsageRecords() {
 		
@@ -909,7 +911,9 @@ public class HSRStatsEngine {
 
 
 	/***************************************************************************
-	 * Aggregates the grouped statistics and makes one final report
+	 * Aggregates the grouped statistics and creates a summarized report.
+	 * Either used to aggregated stats collected from agents(doSummUsers=true), 
+	 * or for the final summary report(doSummUsers=false).
 	 * 
 	 * @param groupedStats that should be summarized
 	 * @param doSumUsers true if users should be summed, false will calculate average
@@ -1087,7 +1091,7 @@ public class HSRStatsEngine {
 				return new SummarizedStats(finalRecords, finalRecordsJson);
 	}
 	/***************************************************************************
-	 * Aggregates the grouped statistics and makes one final report
+	 * Aggregates the collected and grouped statistics and makes one final report.
 	 * 
 	 ***************************************************************************/
 	public static void generateSummaryReport() {
@@ -1110,10 +1114,10 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * Send the records to the Reporters, resets the existingRecords.
+	 * Send the aggregated records to the Reporters.
 	 * 
 	 ***************************************************************************/
-	private static void sendRecordsToReporter( ArrayList<HSRRecordStats> finalRecords){
+	private static void sendRecordsToReporter( ArrayList<HSRRecordStats> aggregatedRecords){
 		
 		//-------------------------
 		// Send Clone of list to each Reporter
@@ -1121,7 +1125,7 @@ public class HSRStatsEngine {
 		
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			ArrayList<HSRRecordStats> clone = new ArrayList<>();
-			clone.addAll(finalRecords);
+			clone.addAll(aggregatedRecords);
 
 			// wrap with try catch to not stop reporting to all reporters
 			try {
@@ -1154,7 +1158,7 @@ public class HSRStatsEngine {
 	}
 	
 	/***************************************************************************
-	 * Send the records to the Reporters, resets the existingRecords.
+	 * Send the summary records to the Reporters.
 	 * 
 	 ***************************************************************************/
 	private static void sendSummaryReportToReporter(
@@ -1285,6 +1289,7 @@ public class HSRStatsEngine {
 	}
 	
 	/***********************************************************************************************
+	 * Calculate the standard deviation for a list of BigDecimal values.
 	 * 
 	 ***********************************************************************************************/
 	public static BigDecimal bigStdev(List<BigDecimal> values, BigDecimal average, boolean usePopulation) {

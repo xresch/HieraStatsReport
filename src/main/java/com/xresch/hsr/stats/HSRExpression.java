@@ -1,17 +1,17 @@
 package com.xresch.hsr.stats;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**************************************************************************************************************
- * Class to define SLAs that will be evaluated on aggregation of statistics.
- * Results will be stored in the columns ok_sla and nok_sla.
+ * Class to define the Expressions used in SLA evaluation.
+ * 
  * <ul>
  * 		<li><b>OK:&nbsp;</b>If the sla is ok >> ok_sla = 1 </li>
  * 		<li><b>NOK:&nbsp;</b>If the sla is not ok >> nok_sla = 1 </li>
  * 		<li><b>Not Evaluated:&nbsp;</b>If the sla is not evaluated both ok_sla/nok_sla = null or zero (depending on the reporter) </li>
  * </ul>
  * @author Reto Scheiwiller, (c) Copyright 2025
+ * 
  * @license EPL-License
  **************************************************************************************************************/
 public class HSRExpression {
