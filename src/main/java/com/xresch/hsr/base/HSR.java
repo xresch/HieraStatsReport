@@ -34,9 +34,7 @@ import ch.qos.logback.classic.Logger;
  **************************************************************************************/
 
 public class HSR {	
-	
-	private static int testNumber = 1;
-	
+		
 	private static String testname = "";
 	
 	// For each type until test level one thread local to make it working in multi-threaded mode
@@ -69,8 +67,7 @@ public class HSR {
 	public static class Time extends XRTime {}
 	
 	/***********************************************************************************
-	 * 
-	 * Initialize the Report and clean up the report directory.
+	 * Do the initialization. Currently this method only calls initializeThreadLocals().
 	 ***********************************************************************************/
 	public static void initialize(){
 		initializeThreadLocals();    	    	
@@ -92,9 +89,9 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Increases the user count by the defined amount for the usecase of the current 
+	 * Decreases the user count by the defined amount for the usecase of the current 
 	 * thread.
-	 * @param amount the amount to increase by
+	 * @param amount the amount to decrease by
 	 ***********************************************************************************/
 	public static void decreaseUsers(int amount) {
 		String usecase = currentUsecase.get();
@@ -114,7 +111,9 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * Returns the amount of users that have been started during the entire reporting period.
 	 * 
+	 * @return user count
 	 ***********************************************************************************/
 	private static int getUsersStarted() {
 		
@@ -131,7 +130,9 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * Returns the amount of users that are currently active.
 	 * 
+	 * @return user count
 	 ***********************************************************************************/
 	private static int getUsersActive() {
 
@@ -148,7 +149,9 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * Returns the amount of users that have been stopped during the entire reporting period.
 	 * 
+	 * @return user count
 	 ***********************************************************************************/
 	private static int getUsersStopped() {
 		
@@ -190,7 +193,7 @@ public class HSR {
 	
 	
 	/***********************************************************************************
-	 * 
+	 * Resets the reporting.
 	 ***********************************************************************************/
 	public static void reset(){
 		areThreadLocalsInitialized.set(null);
@@ -208,6 +211,7 @@ public class HSR {
 		initializeThreadLocals();
 	}
 	/***********************************************************************************
+	 * Initializes the thread locals.
 	 * 
 	 ***********************************************************************************/
 	private static void initializeThreadLocals(){
@@ -239,7 +243,9 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * Returns the items that have been started but not yet ended.
 	 * 
+	 * @return stack of open items
 	 ***********************************************************************************/
 	protected static Stack<HSRRecord> openItems(){
 		initializeThreadLocals();
@@ -247,7 +253,10 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * Returns the currently active item, what is the last item that has been started 
+	 * but not yet ended.
 	 * 
+	 * @return active item
 	 ***********************************************************************************/
 	public static HSRRecord getActiveItem(){
 		initializeThreadLocals();
@@ -266,6 +275,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * <b>Scope:</b> Global<br>
 	 * Set the name of the test.
 	 ***********************************************************************************/
 	public static void setTest(String test){
@@ -274,6 +284,7 @@ public class HSR {
 	
 	
 	/***********************************************************************************
+	 * <b>Scope:</b> Global<br>
 	 * Returns the name of the test.
 	 ***********************************************************************************/
 	public static String getTest(){
@@ -281,6 +292,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
+	 * <b>Scope:</b> Propagated (Inheritable Thread Local)<br>
 	 * Set the name of the usecase
 	 ***********************************************************************************/
 	public static void setUsecase(String usecase){
@@ -375,10 +387,11 @@ public class HSR {
 	}	
 	
 	/***********************************************************************************
-	 * Pauses the current thread to wait for the specified amount of time.
+	 * Pauses the current thread to wait for a random time.
 	 * The time spent in this pause will be removed from parent items.
 	 * Adds a metric to the HSR report of type "Wait".
 	 * 
+	 * @param name for the created record of type "Wait"
 	 * @param minMillis minimum time to pause
 	 * @param maxMillis maximum time to pause
 	 ***********************************************************************************/
@@ -391,7 +404,7 @@ public class HSR {
 	 * The time spent in this pause will be removed from parent items.
 	 * Adds a metric to the HSR report of type "Wait".
 	 * 
-	 * @param name for the created record of time Wait
+	 * @param name for the created record of type "Wait"
 	 * @param millis time to pause
 	 ***********************************************************************************/
 	public static void pause(String name, long millis){
@@ -636,7 +649,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Add a warning essage to the report.
+	 * Add a warning message to the report.
 	 ***********************************************************************************/
 	public static HSRRecord addWarnMessage(String message){
 				
@@ -679,7 +692,13 @@ public class HSR {
 		switch(level.levelInt) {
 		
 			case Level.ERROR_INT: return addErrorMessage(message);
+			
 			case Level.WARN_INT: return addWarnMessage(message);
+			
+			case Level.DEBUG_INT:
+			case Level.TRACE_INT:
+			case Level.INFO_INT: return addInfoMessage(message);
+			
 			default: return addWarnMessage(message);
 		
 		}
@@ -694,7 +713,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
+	 * 
 	 ***********************************************************************************/
 	public static HSRRecord addException(Throwable e, String customMessage){	
 		if(e == null) { return null; }
@@ -704,7 +723,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Add a item to the report without the need of starting and ending it.
+	 * Adds an exception to the report.
 	 ***********************************************************************************/
 	public static HSRRecord addException(Throwable e){	
 		if(e == null) { return null; }
@@ -928,7 +947,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Adds a new assertion with the specified 
+	 * Adds a new assertion with the specified title and result.
 	 * @param title name for the assert
 	 * @param result true if success, false if failed
 	 ***********************************************************************************/
@@ -1030,7 +1049,7 @@ public class HSR {
 	}
 	
 	/***********************************************************************************
-	 * Return the current active step.
+	 * Set the status on the the open items
 	 ***********************************************************************************/
 //	protected static void setStatusOnCurrentTree(HSRRecordStatus status){
 //			
@@ -1047,12 +1066,6 @@ public class HSR {
 //		}
 //	}
 	
-	/***********************************************************************************
-	 * Log Indendation for the active item
-	 ***********************************************************************************/
-	private static String getLogIndendation(){
-		return getLogIndendation(getActiveItem());
-	}
 	
 	/***********************************************************************************
 	 * Log Indendation

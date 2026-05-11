@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import com.xresch.hsr.database.HSRAgeOutConfig;
 import com.xresch.hsr.reporting.HSRReporter;
-import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRStatsEngine;
 import com.xresch.hsr.utils.HSRLogInterceptorDefault;
 
@@ -23,6 +22,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.turbo.TurboFilter;
+import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import ch.qos.logback.core.util.FileSize;
@@ -37,8 +37,10 @@ import ch.qos.logback.core.util.FileSize;
  ***************************************************************************/
 public class HSRConfig {
 	
-private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
+	private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
+	private static String logPattern = "%d{HH:mm:ss.SSS} [%thread] %-5level %class{36}.%method:%line - %msg%n";
+
 	//----------------------
 	// Data Structures
 	private static ArrayList<HSRReporter> reporterList = new ArrayList<>();
@@ -49,7 +51,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	//----------------------
 	// Hooks & Interceptors
 	protected static HSRHooks hooks = new HSRHooks();
-	private static boolean isLogInterceptorSet = false;
 	
 	//----------------------
 	// System Stats
@@ -201,12 +202,15 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	public static boolean disablePauses() {
 		return HSRConfig.disablePauses.get();
 	}
+	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * 
 	 * Sets if summaries should be reported or not.
 	 * This will stop the StatsEngine from collecting the aggregated metrics
 	 * until the engine is stopped, therefore reducing memory usage.
+	 * Makes it possible to start the engine and report metrics
+	 * endlessly.
 	 * 
 	 ******************************************************************/
 	public static void disableSummaryReports(boolean disableSummaryReports) {
@@ -254,7 +258,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
-	 * Add reporters to the list.
+	 * Remove reporters to the list.
 	 ******************************************************************/
 	public static void removeReporter(HSRReporter reporter) {
 		logger.info("Removing Reporter: " + reporter.getClass().getSimpleName());
@@ -263,7 +267,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
-	 * Add reporters to the list.
+	 * Empty the list of  reporters.
 	 ******************************************************************/
 	public static void clearReporters() {
 		logger.info("Removing all Reporters");
@@ -283,7 +287,7 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * For internal use only.
-	 * Adds Test settings to the 
+	 * Adds test settings to the existing list of test settings.
 	 ******************************************************************/
 	public static void addTestSettings(HSRTestSettings settings) {
 		testsettingsList.add(settings);
@@ -422,7 +426,6 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	 ******************************************************************/
     public static void setLogInterceptor(TurboFilter filter) {
     	
-    	isLogInterceptorSet = true;
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         context.resetTurboFilterList(); // optional: rebuilds internal structures
         context.addTurboFilter(filter);
@@ -446,34 +449,44 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
         
 
         synchronized (LOCK) {
-            if (root.getAppender(APPENDER_NAME) != null) return;
+            
+            // =========================================================
+            // Check is already defined
+        	if (root.getAppender(APPENDER_NAME) != null) return;
 
-            LoggerContext ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        	// =========================================================
+            // Create Context and Create Directores
+        	LoggerContext ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-            // ensure directory exists
             try {
                 Files.createDirectories(Paths.get(logFilePath).getParent());
             } catch (Exception ignored) {}
 
+            // =========================================================
+            // ENCODER
             PatternLayoutEncoder encoder = new PatternLayoutEncoder();
             encoder.setContext(ctx);
-            encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n");
+            encoder.setPattern(logPattern);
             encoder.start();
 
-            RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
-            appender.setContext(ctx);
-            appender.setName(APPENDER_NAME);
+            // =========================================================
+            // FILE APPENDER
+            RollingFileAppender<ILoggingEvent> fileAppender = new RollingFileAppender<>();
+            fileAppender.setContext(ctx);
+            fileAppender.setName(APPENDER_NAME);
             //appender.setFile(logFilePath); // do not call this, leave it to rolling file policy
-            appender.setEncoder(encoder);
-            appender.setAppend(true); // ← ensure writing
+            fileAppender.setEncoder(encoder);
+            fileAppender.setAppend(true); // ← ensure writing
 
             // remove ".log" for rotating pattern
             String base = logFilePath.endsWith(".log") ?
                     logFilePath.substring(0, logFilePath.length() - 4) : logFilePath;
 
+            // =========================================================
+            // File Policy
             SizeAndTimeBasedRollingPolicy<ILoggingEvent> policy = new SizeAndTimeBasedRollingPolicy<>();
             policy.setContext(ctx);
-            policy.setParent(appender); // must be before start
+            policy.setParent(fileAppender); // must be before start
             policy.setFileNamePattern(base + "_%d{yyyy-MM-dd}_%i.log");
             policy.setMaxFileSize(FileSize.valueOf("50MB"));
             policy.setMaxHistory(10);
@@ -481,11 +494,28 @@ private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
             policy.setCleanHistoryOnStart(true);
 
             // **Correct order**
-            appender.setRollingPolicy(policy);
+            fileAppender.setRollingPolicy(policy);
             policy.start();        // policy must start before appender
-            appender.start();      // appender starts last
+            fileAppender.start();      // appender starts last
+            
+            // =========================================================
+            // CONSOLE APPENDER
+            ConsoleAppender<ILoggingEvent> consoleAppender =
+                    new ConsoleAppender<>();
 
-            root.addAppender(appender);
+            consoleAppender.setContext(ctx);
+            consoleAppender.setName("CONSOLE");
+            consoleAppender.setEncoder(encoder);
+            consoleAppender.start();
+
+            // avoid duplicates if default console already exists
+            root.detachAppender("console");
+            root.detachAppender("CONSOLE");
+            
+            //=========================================================
+            // Add Appenders
+            root.addAppender(fileAppender);
+            root.addAppender(consoleAppender);
             root.setAdditive(true); // keep console + file together (optional)
         }
     }
