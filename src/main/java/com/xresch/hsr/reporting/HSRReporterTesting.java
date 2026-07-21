@@ -182,14 +182,73 @@ public class HSRReporterTesting implements HSRReporter {
 	}
 	
 	/*********************************************************************
-	 * Returns the given Record by name.
+	 * Returns all the records with the given name.
+	 * 
+	 *********************************************************************/
+	public ArrayList<HSRRecordStats> getRecordsByName(String name) {
+		
+		ArrayList<HSRRecordStats> statsList = new ArrayList<>();
+		
+		synchronized(SYNCLOCK_AGGREGATE) {
+
+			for(HSRRecordStats stats : allReportedRecords) {
+				if(stats.name().equals(name)) {
+					statsList.add(stats);
+					
+				}
+			}
+		}
+		
+		return statsList;
+		
+	}
+	
+	/*********************************************************************
+	 * Returns the first found record by name.
 	 * 
 	 * @return HSRRecordStats record, null if not found
 	 *********************************************************************/
-	public HSRRecordStats getRecordByName(String name) {
+	public HSRRecordStats getRecordByNameFirst(String name) {
 		
 		synchronized(SYNCLOCK_AGGREGATE) {
 			for(HSRRecordStats stats : allReportedRecords) {
+				if(stats.name().equals(name)) {
+					return stats;
+				}
+			}
+		}
+		
+		return null;
+		
+	}
+	
+	/*********************************************************************
+	 * Returns true if there is a record with the given name.
+	 * 
+	 *********************************************************************/
+	public boolean hasSummaryRecordNameEquals(String name) {
+		
+		synchronized(SYNCLOCK_AGGREGATE) {
+			for(HSRRecordStats stats : summaryRecords) {
+				if(stats.name().equals(name)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+		
+	}
+	
+	/*********************************************************************
+	 * Returns the first found summary record by name.
+	 * 
+	 * @return HSRRecordStats record, null if not found
+	 *********************************************************************/
+	public HSRRecordStats getSummaryRecordByName(String name) {
+		
+		synchronized(SYNCLOCK_AGGREGATE) {
+			for(HSRRecordStats stats : summaryRecords) {
 				if(stats.name().equals(name)) {
 					return stats;
 				}
