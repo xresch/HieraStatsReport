@@ -275,6 +275,7 @@ public class HSRStatsEngine {
 				
 				}catch(InterruptedException e) {
 					logger.info("SysInfoCollector thread has been stopped.");
+					Thread.currentThread().interrupt(); // restore interrupt flag
 				}
 			}
 		});

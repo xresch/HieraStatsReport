@@ -138,8 +138,8 @@ public class HSRReporterTesting implements HSRReporter {
 			while( ! reportReceived ) {
 				try {
 					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					Thread.interrupted();
+				} catch(InterruptedException e) {
+					Thread.currentThread().interrupt(); // restore interrupt flag
 				}
 			}
 		}
