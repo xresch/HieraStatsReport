@@ -223,6 +223,29 @@ public class HSRReporterTesting implements HSRReporter {
 	}
 	
 	/*********************************************************************
+	 * Returns the last found record by name.
+	 * 
+	 * @return HSRRecordStats record, null if not found
+	 *********************************************************************/
+	public HSRRecordStats getRecordByNameLast(String name) {
+		
+		synchronized(SYNCLOCK_AGGREGATE) {
+			int total = allReportedRecords.size();
+			for(int i = total-1; i >= 0 ; i-- ) {
+				
+				HSRRecordStats stats = allReportedRecords.get(i);
+				
+				if(stats.name().equals(name)) {
+					return stats;
+				}
+			}
+		}
+		
+		return null;
+		
+	}
+	
+	/*********************************************************************
 	 * Returns true if there is a record with the given name.
 	 * 
 	 *********************************************************************/
