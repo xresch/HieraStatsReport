@@ -134,9 +134,7 @@ public class HSRRecord {
 			, String recordName
 			){
 		
-		long now = System.nanoTime();
-		startTimeNanos(now); 
-		endTimeNanos(now);  // setting end = start, for items that do not measure time
+		start();
 		
 		type(type);
 		name(recordName);
@@ -175,9 +173,7 @@ public class HSRRecord {
 			, String recordName
 			){
 		
-		long now = System.nanoTime();
-		startTimeNanos(now); 
-		endTimeNanos(now);  // setting end = start, for items that do not measure time
+		start();
 		
 		parent(parent);
 		
@@ -202,9 +198,7 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		long now = System.nanoTime();
-		startTimeNanos(now); 
-		endTimeNanos(now);  // setting end = start, for items that do not measure time
+		start();
 		
 		parent(parent);
 		name(recordName);
@@ -232,9 +226,7 @@ public class HSRRecord {
 			, BigDecimal value
 			){
 		
-		long now = System.nanoTime();
-		startTimeNanos(now); 
-		endTimeNanos(now);  // setting end = start, for items that do not measure time
+		start();
 		
 		type(type);
 		
@@ -456,6 +448,17 @@ public class HSRRecord {
 	 ******************************************************************/
 	public BigDecimal correction() {
 		return totalCorrection;
+	}
+	
+	/********************************************************************
+	 * Starts this record, settings the start and end time to "now".
+	 * This method can be used to reset the start and end time.
+	 * 
+	 *******************************************************************/
+	public void start() {
+		long now = System.nanoTime();
+		startTimeNanos(now); 
+		endTimeNanos(now);  // setting end = start, for items that do not measure time
 	}
 
 	/******************************************************************
