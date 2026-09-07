@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.turbo.TurboFilter;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
@@ -40,7 +42,8 @@ public class HSRConfig {
 	private static final Logger logger = LoggerFactory.getLogger(HSRConfig.class);
 	
 	private static String logPattern = "%d{HH:mm:ss.SSS} [%thread] %-5level %class{36}.%method:%line - %msg%n";
-
+	private static boolean disableConsoleLogging = false;
+	
 	//----------------------
 	// Data Structures
 	private static ArrayList<HSRReporter> reporterList = new ArrayList<>();
@@ -380,6 +383,36 @@ public class HSRConfig {
 	
 
 	/******************************************************************
+	 * Disables the console login entirely, what enables you to make clean
+	 * outputs on the command line. Useful to print data like JSON.
+	 * 
+	 ******************************************************************/
+	public static void disableConsoleLogging() {
+
+		disableConsoleLogging = true;
+		
+	    LoggerContext context =
+	            (LoggerContext) LoggerFactory.getILoggerFactory();
+
+	    for (ch.qos.logback.classic.Logger logger : context.getLoggerList()) {
+	        logger.setLevel(ch.qos.logback.classic.Level.OFF);
+	        
+	        Iterator<Appender<ILoggingEvent>> iter = logger.iteratorForAppenders();
+	        while(iter.hasNext() ) {
+	        	Appender<ILoggingEvent> appender = iter.next();
+	        	
+	        	if(appender instanceof ConsoleAppender) {
+	        		logger.detachAppender(appender);
+	        	}
+	        	
+	        	logger.detachAppender("console");
+	        	logger.detachAppender("CONSOLE");
+
+	        }
+	    }
+	}
+
+	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * Sets the level of the logback root logger. If the level 
 	 * represented by the string is unknown or null, INFO will be used.
@@ -393,6 +426,8 @@ public class HSRConfig {
 			);
 		
 	}
+	
+	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * Sets the level of the logback root logger.
@@ -400,9 +435,8 @@ public class HSRConfig {
 	public static void setLogLevelRoot(Level level) {
 
 		String loggerName = ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME;
-		
 		setLogLevel(level, loggerName);
-		
+
 	}
 	
 	/******************************************************************
@@ -447,7 +481,6 @@ public class HSRConfig {
     			(ch.qos.logback.classic.Logger) 
     				LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         
-
         synchronized (LOCK) {
             
             // =========================================================
@@ -500,22 +533,26 @@ public class HSRConfig {
             
             // =========================================================
             // CONSOLE APPENDER
-            ConsoleAppender<ILoggingEvent> consoleAppender =
-                    new ConsoleAppender<>();
-
-            consoleAppender.setContext(ctx);
-            consoleAppender.setName("CONSOLE");
-            consoleAppender.setEncoder(encoder);
-            consoleAppender.start();
-
-            // avoid duplicates if default console already exists
-            root.detachAppender("console");
-            root.detachAppender("CONSOLE");
+            if( ! disableConsoleLogging ) {
+	            ConsoleAppender<ILoggingEvent> consoleAppender =
+	                    new ConsoleAppender<>();
+	
+	            consoleAppender.setContext(ctx);
+	            consoleAppender.setName("CONSOLE");
+	            consoleAppender.setEncoder(encoder);
+	            consoleAppender.start();
+	
+	            // avoid duplicates if default console already exists
+	            root.detachAppender("console");
+	            root.detachAppender("CONSOLE");
+	            
+	            root.addAppender(consoleAppender);
+            }
             
             //=========================================================
             // Add Appenders
             root.addAppender(fileAppender);
-            root.addAppender(consoleAppender);
+            
             root.setAdditive(true); // keep console + file together (optional)
         }
     }
