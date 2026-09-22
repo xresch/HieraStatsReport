@@ -144,7 +144,7 @@ public class HSRDBInterface {
 		ArrayList<Object> valueList = new ArrayList<>();
 		
 		//(execid, time, endtime, name, properties)
-		valueList.add(HSRConfig.EXECUTION_ID);
+		valueList.add(HSRConfig.executionID);
 		valueList.add(HSRConfig.STARTTIME_MILLIS);
 		valueList.add(null); //report nothing for endtime
 		valueList.add(HSR.getTest());

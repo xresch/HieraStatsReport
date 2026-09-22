@@ -78,7 +78,7 @@ public class HSRConfig {
 	
 	//----------------------
 	// Report Properties
-	public static final String EXECUTION_ID = UUID.randomUUID().toString();
+	public static String executionID = null;
 	public static final long STARTTIME_MILLIS = System.currentTimeMillis();
 	
 	private static boolean debug = false;
@@ -146,6 +146,33 @@ public class HSRConfig {
 		hooks = new HSRHooks();
 	}
 	
+	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * Sets the execution id of the test execution. This method has to 
+	 * be called preferably before enable() is called, but surely before
+	 * the first reportInterval() is reached.
+	 * 
+	 * @param execID for example UUID.randomUUID().toString()
+	 * 
+	 ******************************************************************/
+	public static void setExecID(String execID) {
+		executionID = execID;
+	}
+	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
+	 * Sets the execution id of the test execution. This method has to 
+	 * be called preferably before enable() is called, but surely before
+	 * the first reportInterval() is reached.
+	 * 
+	 * @return execution ID, null if no execution was started or after termination
+	 * 
+	 ******************************************************************/
+	public static String getExecID() {
+		return executionID;
+	}
+		
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
 	 * Starts HSR and the reporting engine.
@@ -154,7 +181,14 @@ public class HSRConfig {
 	 * 
 	 ******************************************************************/
 	public static void enable() {
+		
 		if(!isEnabled) {
+			
+			//----------------------------
+			// Add Default Properties
+			if(executionID == null) {
+				executionID = UUID.randomUUID().toString();
+			}
 			
 			isEnabled = true;
 			isTerminated = false;
@@ -172,7 +206,7 @@ public class HSRConfig {
 			HSRConfig.addProperty("[HSR] databaseAgeOut", "" + databaseAgeOut);
 			HSRConfig.addProperty("[HSR] rawDataToSysout", "" + rawDataToSysout);
 			HSRConfig.addProperty("[HSR] rawdataLogPath", "" + rawdataLogPath);
-			HSRConfig.addProperty("[HSR] executionID", "" + EXECUTION_ID);
+			HSRConfig.addProperty("[HSR] executionID", "" + executionID);
 			HSRConfig.addProperty("[HSR] debug", "" + debug);
 			
 			//----------------------------
@@ -806,6 +840,7 @@ public class HSRConfig {
 			
 			isEnabled = false;
 			isTerminated = true;
+			executionID = null;
 		}
 		
 	}	
