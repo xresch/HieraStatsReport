@@ -78,7 +78,7 @@ public class HSRConfig {
 	
 	//----------------------
 	// Report Properties
-	public static String executionID = null;
+	private static String executionID = null;
 	public static final long STARTTIME_MILLIS = System.currentTimeMillis();
 	
 	private static boolean debug = false;
@@ -88,7 +88,7 @@ public class HSRConfig {
 	private static int reportingIntervalSec = 15; 
 	
 	private static Object SYNC_LOCK_TERMINATION = new Object(); 
-	private static boolean isTerminated = false; 
+	private static boolean isTerminated = true; 
 	
 	//----------------------
 	// Thread Local Settings
