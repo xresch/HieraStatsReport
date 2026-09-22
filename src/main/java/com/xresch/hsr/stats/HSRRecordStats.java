@@ -1,8 +1,13 @@
 package com.xresch.hsr.stats;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -23,7 +28,7 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
  **************************************************************************************************************/
 public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	
-	//private static final Logger logger = LoggerFactory.getLogger(GatlytronRecordStats.class);
+	private static final Logger logger = LoggerFactory.getLogger(HSRRecordStats.class);
 	
 	private long time;
 	private HSRRecordType type;
@@ -411,6 +416,57 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	}
 	
 	/***********************************************************************
+	 * Converts the current row of the result set to a HSRRecord Statistic.
+	 * 
+	 * @param record a record to copy data from
+	 * @throws SQLException 
+	 ***********************************************************************/
+	public HSRRecordStats(ResultSet result) throws SQLException{	
+		
+		//-----------------------------------
+		// Parse Message
+		// Intern Strings to reduce memory overhead
+		this.time = result.getLong(RecordField.time.toString());
+		
+		String typeString = result.getString(RecordField.type.toString());
+		if(typeString != null) {
+			this.type = HSRRecordType.valueOf(typeString);
+		}
+
+		
+		this.test = result.getString(RecordField.test.toString());
+		this.usecase = result.getString(RecordField.usecase.toString());
+		this.name = result.getString(RecordField.name.toString());
+		this.path = result.getString(RecordField.path.toString());
+		this.pathRecord = result.getString(FIELD_PATHRECORD);
+		this.code = result.getString(RecordField.code.toString());
+		this.granularity = result.getInt(RecordField.granularity.toString());
+		this.statsIdentifier = HSRRecord.createStatsIdentifier(type, test, path, name, code);
+
+		
+		//------------------------------------
+		// OK NOK Metrics
+		for(HSRRecordState state : HSRRecordState.values()) {
+			for(HSRMetric metric : HSRMetric.values()) {
+				if(metric.isOkNok()) {
+					BigDecimal value = result.getBigDecimal(state + "_" + metric);
+					this.setValue(state,metric, value);
+				}
+			}
+		}
+		//------------------------------------
+		// NOT okNok Metrics
+		for(HSRMetric metric : HSRMetric.values()) {
+			if(!metric.isOkNok()) {
+				BigDecimal value = result.getBigDecimal(metric.toString());
+				this.setValue(null,metric, value);
+			}
+		}
+
+	}
+	
+	
+	/***********************************************************************
 	 * Clears all number values while keeping other details.
 	 * 
 	 ***********************************************************************/
@@ -708,6 +764,42 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 				
 		return db.preparedExecute(insertSQL, valueList.toArray());
 		
+
+	}
+	
+	/***********************************************************************
+	 * Creates a basics stats instance with the data of the record.
+	 * 
+	 * @param record a record to copy data from
+	 ***********************************************************************/
+	public static ArrayList<HSRRecordStats> convertResultSetToRecords(ResultSet result){	
+		
+		ArrayList<HSRRecordStats> array = new ArrayList<>();
+
+		//-----------------------------
+		// Check Conditions
+		if(result == null) { return array; }
+		
+		try {
+			
+			if(result.isBeforeFirst()) {
+				result.beforeFirst();
+			}
+			
+			while(result.next()) {
+				try {
+					array.add(new HSRRecordStats(result));
+				} catch (SQLException e) {
+					logger.error("Error while converting database records to stats object: "+e.getMessage(), e);
+				}
+			}
+			
+		} catch (SQLException e) {
+			logger.error("Error while converting list of database records to statistics: "+e.getMessage(), e);
+		}
+		
+
+		return array;
 
 	}
 	
