@@ -13,6 +13,7 @@ import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
+import com.xresch.xrutils.data.XRRecord;
 import com.xresch.xrutils.database.XRDBInterface;
 import com.xresch.xrutils.database.XRResultSetConverter;
 import com.xresch.xrutils.utils.XRTime;
@@ -25,6 +26,11 @@ import com.xresch.xrutils.utils.XRTimeUnit;
  **************************************************************************************************************/
 public class HSRDBInterface {
 	
+	public static final String TABLE_SUFFIX_TESTSETTINGS = "_testsettings";
+	public static final String TABLE_SUFFIX_STATS_SUMMARY = "_stats_summary";
+	public static final String TABLE_SUFFIX_STATS = "_stats";
+	public static final String TABLE_SUFFIX_TESTS = "_tests";
+
 	private static final Logger logger = LoggerFactory.getLogger(HSRDBInterface.class);
 	
 	private XRDBInterface db;
@@ -47,6 +53,9 @@ public class HSRDBInterface {
 	
 
 	//private static final String PROCEDURE_AGGREGATE_PERC = "AGGREGATE_PERC";
+	public enum TestColumns {
+		id, execid, time, endtime, name, properties, sla
+	}
 	
 	private static final String sqlCreateTableTemplate = """
 			CREATE TABLE IF NOT EXISTS {tablename} (
@@ -67,12 +76,13 @@ public class HSRDBInterface {
 			;
 	
 	public record Test(
-			String execid
+			  int id
+			, String execid
 			, long starttime
 			, long endtime
 			, String name
 			, JsonObject properties
-			, JsonObject SLA
+			, JsonObject sla
 		) {};
 	
 	/************************************************************************
@@ -86,10 +96,10 @@ public class HSRDBInterface {
 		// Set table names
 		this.db = db;
 		this.tablenamePrefix = tablenamePrefix;
-		this.tablenameTests = tablenamePrefix+"_tests";
-		this.tablenameStats = tablenamePrefix+"_stats";
-		this.tablenameStatsSummary = tablenamePrefix+"_stats_summary";
-		this.tablenameTestsettings = tablenamePrefix+"_testsettings";
+		this.tablenameTests = tablenamePrefix + TABLE_SUFFIX_TESTS;
+		this.tablenameStats = tablenamePrefix + TABLE_SUFFIX_STATS;
+		this.tablenameStatsSummary = tablenamePrefix + TABLE_SUFFIX_STATS_SUMMARY;
+		this.tablenameTestsettings = tablenamePrefix + TABLE_SUFFIX_TESTSETTINGS;
 		this.tablenameTempAggregation = tablenamePrefix+"_temp_aggregation";
 		
 		//-----------------------------------
@@ -262,14 +272,58 @@ public class HSRDBInterface {
 		
 	}
 	
+	/***************************************************************
+	 * Returns the test for the execution id.
+	 * @return Test or null if not found
+	 ****************************************************************/
+	public static Test selectTestForExecID(XRDBInterface dbInterface, String tableNamePrefix, String execID  ) {
 
+		String sql = 
+				  " SELECT * FROM " + tableNamePrefix + TABLE_SUFFIX_TESTS
+				+ " WHERE execid = ?";
+		
+		ResultSet result = dbInterface.preparedExecuteQuery(sql, execID);
+		
+		XRRecord record = new XRResultSetConverter(dbInterface, result).getFirstAsXRRecord();
+		
+		if(record == null) { return null; }
+		
+		return  new Test(
+				 	  record.getInt(TestColumns.id)
+					, record.getString(TestColumns.execid)
+					, record.getLong(TestColumns.time)
+					, record.getLong(TestColumns.endtime)
+					, record.getString(TestColumns.name)
+					, record.getJsonObject(TestColumns.properties)
+					, record.getJsonObject(TestColumns.sla)
+				);
+
+	}
+	
+	/***************************************************************
+	 * Returns the test for the execution id.
+	 * @return Test or null if not found
+	 ****************************************************************/
+	public static ArrayList<HSRRecordStats> selectStatsForTest(XRDBInterface dbInterface, String tableNamePrefix, int testID  ) {
+
+		String sql = 
+				  " SELECT * FROM " + tableNamePrefix + TABLE_SUFFIX_STATS
+				+ " WHERE testid = ?";
+		
+		ResultSet result = dbInterface.preparedExecuteQuery(sql, testID);
+		
+		return HSRRecordStats.convertResultSetToRecords(result);
+
+	}
+	
+	
 	/***************************************************************
 	 * Get the timestamp of the oldest record that has a ganularity lower
 	 * than the one specified by the parameter.
 	 * @param granularity
 	 * @return timestamp
 	 ****************************************************************/
-	private Long getOldestAgedRecord(int granularity, long ageOutTime  ) {
+	private Long selectOldestAgedRecord(int granularity, long ageOutTime  ) {
 
 		String sql = 
 				  " SELECT time FROM " + tablenameStats
@@ -290,7 +344,7 @@ public class HSRDBInterface {
 	 * @param granularity
 	 * @return timestamp
 	 ****************************************************************/
-	private Long getYoungestAgedRecord(int granularity, long ageOutTime  ) {
+	private Long selectYoungestAgedRecord(int granularity, long ageOutTime  ) {
 
 		String sql = 
 				  " SELECT time FROM " + tablenameStats
@@ -414,8 +468,8 @@ public class HSRDBInterface {
 			
 			//--------------------------
 			// Get timespan 
-			Long oldest = getOldestAgedRecord(granularitySec, ageOutTime);
-			Long youngest = getYoungestAgedRecord(granularitySec, ageOutTime);
+			Long oldest = selectOldestAgedRecord(granularitySec, ageOutTime);
+			Long youngest = selectYoungestAgedRecord(granularitySec, ageOutTime);
 			if(oldest == null || youngest == null ) {
 				//nothing to aggregate for this granularity
 				continue;

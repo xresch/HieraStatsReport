@@ -438,11 +438,10 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		this.usecase = result.getString(RecordField.usecase.toString());
 		this.name = result.getString(RecordField.name.toString());
 		this.path = result.getString(RecordField.path.toString());
-		this.pathRecord = result.getString(FIELD_PATHRECORD);
+		this.pathRecord = HSRRecord.createPathRecord(path, name);
 		this.code = result.getString(RecordField.code.toString());
 		this.granularity = result.getInt(RecordField.granularity.toString());
 		this.statsIdentifier = HSRRecord.createStatsIdentifier(type, test, path, name, code);
-
 		
 		//------------------------------------
 		// OK NOK Metrics
@@ -554,6 +553,25 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 		}
 		
 		return csv;
+
+	}
+	
+	/***********************************************************************
+	 * Converts a list of HSRRecordStats to CSV.
+	 ***********************************************************************/
+	public static String toCSV(ArrayList<HSRRecordStats> statsList, String separator) {
+		
+		//---------------------------------
+		// Create CSV		
+		StringBuilder builder = new StringBuilder( HSRRecordStats.getCSVHeader(separator) );
+		
+		if(statsList != null) {
+			for(HSRRecordStats stats :  statsList) {
+				builder.append("\n").append(stats.toCSV(separator));
+			}
+		}
+		
+		return builder.toString();
 
 	}
 	
@@ -782,7 +800,8 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 		
 		try {
 			
-			if(result.isBeforeFirst()) {
+			if(result.getType() != ResultSet.TYPE_FORWARD_ONLY 
+			&& ! result.isBeforeFirst() ) {
 				result.beforeFirst();
 			}
 			

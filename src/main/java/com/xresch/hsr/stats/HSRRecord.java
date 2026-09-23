@@ -753,17 +753,23 @@ public class HSRRecord {
 	 *   {path} / {metricName}
 	 ******************************************************************/
 	public String getPathRecord() {
-		
 		if(pathRecordCached == null) {
-			
-			pathRecordCached = getPath(PATH_SEP)
-			 + PATH_SEP 
-			 + name.replace(PATH_SEP_TRIMMED, "_")
-			 ;
+			pathRecordCached = createPathRecord(getPath(PATH_SEP), name);
 		}
 		
 		return pathRecordCached;
+	}
+	/******************************************************************
+	 * Returns the metric path of the metric including pathlist:
+	 *   {path} / {metricName}
+	 ******************************************************************/
+	public static String createPathRecord(String path, String name) {
 		
+		return path
+			 + PATH_SEP 
+			 + name.replace(PATH_SEP_TRIMMED, "_")
+			 ;
+
 	}
 	
 	/***********************************************************************************
