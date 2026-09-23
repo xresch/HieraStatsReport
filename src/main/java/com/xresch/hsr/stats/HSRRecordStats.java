@@ -14,10 +14,10 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
-import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
+import com.xresch.xrutils.database.XRDBInterface;
 
 /**************************************************************************************************************
  * This record holds aggregated statistical data from HSRRecord instances.
@@ -726,7 +726,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 	/***********************************************************************
 	 * Returns an insert statement 
 	 ***********************************************************************/
-	public boolean insertIntoDatabase(DBInterface db, int testID, String tableName) {
+	public boolean insertIntoDatabase(XRDBInterface db, int testID, String tableName) {
 
 		if(db == null || tableName == null) { return false; }
 		

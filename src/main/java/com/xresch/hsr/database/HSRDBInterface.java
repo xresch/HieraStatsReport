@@ -13,6 +13,8 @@ import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.stats.HSRRecordStats;
+import com.xresch.xrutils.database.XRDBInterface;
+import com.xresch.xrutils.database.XRResultSetConverter;
 import com.xresch.xrutils.utils.XRTime;
 import com.xresch.xrutils.utils.XRTimeUnit;
 
@@ -25,7 +27,7 @@ public class HSRDBInterface {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HSRDBInterface.class);
 	
-	private DBInterface db;
+	private XRDBInterface db;
 	
 	public final String tablenamePrefix;
 	public final String tablenameTests;
@@ -64,12 +66,21 @@ public class HSRDBInterface {
 				VALUES (?,?,?,?,?)"""
 			;
 	
+	public record Test(
+			String execid
+			, long starttime
+			, long endtime
+			, String name
+			, JsonObject properties
+			, JsonObject SLA
+		) {};
+	
 	/************************************************************************
 	 * 
 	 * @param db
 	 * @param tablenamePrefix
 	 ************************************************************************/
-	public HSRDBInterface(DBInterface db, String tablenamePrefix) {
+	public HSRDBInterface(XRDBInterface db, String tablenamePrefix) {
 		
 		//-----------------------------------
 		// Set table names
@@ -251,6 +262,7 @@ public class HSRDBInterface {
 		
 	}
 	
+
 	/***************************************************************
 	 * Get the timestamp of the oldest record that has a ganularity lower
 	 * than the one specified by the parameter.
@@ -268,7 +280,7 @@ public class HSRDBInterface {
 		
 		ResultSet result = db.preparedExecuteQuery(sql, granularity, ageOutTime);
 		
-		return new HSRResultSetConverter(db, result).getFirstAsLong();
+		return new XRResultSetConverter(db, result).getFirstAsLong();
 		
 	}
 	
@@ -289,7 +301,7 @@ public class HSRDBInterface {
 		
 		ResultSet result = db.preparedExecuteQuery(sql, granularity, ageOutTime);
 		
-		return new HSRResultSetConverter(db, result).getFirstAsLong();
+		return new XRResultSetConverter(db, result).getFirstAsLong();
 		
 	}
 
@@ -317,7 +329,7 @@ public class HSRDBInterface {
 		
 		ResultSet result = db.preparedExecuteQuery(sql, testid, startTime, endTime, newGranularity);
 		
-		int count =  new HSRResultSetConverter(db, result).getFirstAsCount();
+		int count =  new XRResultSetConverter(db, result).getFirstAsCount();
 
 		if(count == 0) {
 			db.transactionRollback();
@@ -425,7 +437,7 @@ public class HSRDBInterface {
 			
 			ResultSet testIDResult = db.preparedExecuteQuery(sqlGetTestIDs, oldest, youngest, granularitySec);
 			
-			ArrayList<Integer> testIDs = new HSRResultSetConverter(db, testIDResult).toIntegerArrayList("testid");
+			ArrayList<Integer> testIDs = new XRResultSetConverter(db, testIDResult).toIntegerArrayList("testid");
 			
 			//--------------------------------------------
 			// Iterate Tests and aggregate them
@@ -443,7 +455,7 @@ public class HSRDBInterface {
 						  ;
 				
 				ResultSet timeframeResult = db.preparedExecuteQuery(sqlGetTestTimeframe, testid);
-				JsonArray timeframeArray = new HSRResultSetConverter(db, timeframeResult).toJSONArray();
+				JsonArray timeframeArray = new XRResultSetConverter(db, timeframeResult).toJSONArray();
 				JsonObject timeframeObject = timeframeArray.get(0).getAsJsonObject();
 				long testOldest = timeframeObject.get("oldest").getAsLong();
 				long testYoungest = timeframeObject.get("youngest").getAsLong();

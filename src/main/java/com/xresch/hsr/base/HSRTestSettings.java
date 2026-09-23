@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonObject;
-import com.xresch.hsr.database.DBInterface;
+import com.xresch.xrutils.database.XRDBInterface;
 
 /***************************************************************************
  * Extend this class to make your usecase a HSRUsecase.
@@ -66,7 +66,7 @@ public class HSRTestSettings {
 	/***********************************************************************
 	 * Insert this test settings into the given database.
 	 ***********************************************************************/
-	public boolean insertIntoDatabase(DBInterface db, int testid, String tableName) {
+	public boolean insertIntoDatabase(XRDBInterface db, int testid, String tableName) {
 		
 		if(db == null || tableName == null) { return false; }
 

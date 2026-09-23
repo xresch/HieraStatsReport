@@ -10,9 +10,9 @@ import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
-import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecordStats;
+import com.xresch.xrutils.database.XRDBInterface;
 
 import ch.qos.logback.classic.Logger;
 
@@ -32,7 +32,7 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	private String username;
 	private String password;
 	
-	private DBInterface db;
+	private XRDBInterface db;
 	private HSRDBInterface hsrDB;
 	private int testID = -1;
 	
@@ -69,7 +69,7 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 			String uniqueName = jdbcURL;
 			
 			try {
-				db = DBInterface.createDBInterface(uniqueName, driverName, jdbcURL, username, password);
+				db = XRDBInterface.createDBInterface(uniqueName, driverName, jdbcURL, username, password);
 				
 				hsrDB = this.getHSRDBInterface(db, tableNamePrefix);
 		
@@ -91,7 +91,7 @@ public abstract class HSRReporterDatabaseJDBC extends HSRReporterDatabase {
 	 * to make any adaptions needed for your specific database.
 	 * 
 	 ****************************************************************************/
-	public abstract HSRDBInterface getHSRDBInterface(DBInterface dbInterface, String tableName);
+	public abstract HSRDBInterface getHSRDBInterface(XRDBInterface dbInterface, String tableName);
 
 
 	/****************************************************************************

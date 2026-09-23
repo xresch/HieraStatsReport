@@ -10,9 +10,9 @@ import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
-import com.xresch.hsr.database.DBInterface;
 import com.xresch.hsr.database.HSRDBInterface;
 import com.xresch.hsr.stats.HSRRecordStats;
+import com.xresch.xrutils.database.XRDBInterface;
 
 import ch.qos.logback.classic.Logger;
 
@@ -33,7 +33,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	private String username;
 	private String password;
 	
-	private DBInterface db;         
+	private XRDBInterface db;         
 	HSRDBInterface hsrDB;           
 	
 	private int testID = -1;
@@ -75,7 +75,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 			String uniqueName = servername + port + dbName;
 			
 			try {
-				db = DBInterface.createDBInterfacePostgres(uniqueName, servername, port, dbName, username, password);
+				db = XRDBInterface.createDBInterfacePostgres(uniqueName, servername, port, dbName, username, password);
 	
 				hsrDB = new HSRDBInterface(db, tableNamePrefix);
 				hsrDB.initializeDB();
