@@ -57,6 +57,11 @@ public class HSRDBInterface {
 		id, execid, time, endtime, name, properties, sla
 	}
 	
+	//private static final String PROCEDURE_AGGREGATE_PERC = "AGGREGATE_PERC";
+	public enum TestSettingsColumns {
+		testid, execid, time, endtime, test, usecase, settings
+	}
+	
 	private static final String sqlCreateTableTemplate = """
 			CREATE TABLE IF NOT EXISTS {tablename} (
 			    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
@@ -313,6 +318,34 @@ public class HSRDBInterface {
 		ResultSet result = dbInterface.preparedExecuteQuery(sql, testID);
 		
 		return HSRRecordStats.convertResultSetToRecords(result);
+
+	}
+	
+	/***************************************************************
+	 * Returns the test for the execution id.
+	 * @return Test or null if not found
+	 ****************************************************************/
+	public static ArrayList<HSRTestSettings> selectTestSettingsForTest(XRDBInterface dbInterface, String tableNamePrefix, int testID  ) {
+
+		String sql = 
+				  " SELECT * FROM " + tableNamePrefix + TABLE_SUFFIX_TESTSETTINGS
+				+ " WHERE testid = ?";
+		
+		ResultSet result = dbInterface.preparedExecuteQuery(sql, testID);
+		
+		ArrayList<XRRecord> recordList = new XRResultSetConverter(dbInterface, result).toXRRecordList();
+		
+		ArrayList<HSRTestSettings> settingsArray = new ArrayList<>();
+		
+		for(XRRecord record : recordList) {
+			String usecase = record.getString(TestSettingsColumns.usecase);
+			JsonObject settings = record.getJsonObject(TestSettingsColumns.settings);
+			
+			HSRTestSettings testSettings = new HSRTestSettings(usecase, settings);
+			settingsArray.add(testSettings);
+		}
+		
+		return settingsArray;
 
 	}
 	

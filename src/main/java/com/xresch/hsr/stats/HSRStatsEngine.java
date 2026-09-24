@@ -10,7 +10,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -94,12 +93,17 @@ public class HSRStatsEngine {
 	private static List<OSFileStore> fileStores;
 	private static String hostname;
 	static {
-		HSRConfig.setLogLevel(Level.INFO, "com.xresch.hsr.stats");
-		logger.info("Loading Open Source Hardware Info(OSHI) ...");
-		systemInfo = new SystemInfo();
-		os = systemInfo.getOperatingSystem();
-		fileStores = os.getFileSystem().getFileStores(); // performance issues, keep this here	
-		hostname = os.getNetworkParams().getHostName();
+		
+		try {
+			HSRConfig.setLogLevel(Level.INFO, "com.xresch.hsr.stats");
+			logger.info("Loading Open Source Hardware Info(OSHI) ...");
+			systemInfo = new SystemInfo();
+			os = systemInfo.getOperatingSystem();
+			fileStores = os.getFileSystem().getFileStores(); // performance issues, keep this here	
+			hostname = os.getNetworkParams().getHostName();
+		}catch(Throwable e) {
+			logger.error("Error in static block: "+e.getMessage(), e);
+		}
 	}
 	
 	private static double lastCpuUsage = 0;
@@ -906,6 +910,31 @@ public class HSRStatsEngine {
 			statsRecord.setValue(HSRRecordState.ok, HSRMetric.sla, 0);
 			statsRecord.setValue(HSRRecordState.nok, HSRMetric.sla, 1);
 		}
+	}
+	
+	/***************************************************************************
+	 * Takes a list of HSRRecordStats and converts it into a grouped list.
+	 * This is useful if you load stats from the database and want to make
+	 * summarized statistics.
+	 * 
+	 * @return Map of grouped statistics
+	 * 
+	 ***************************************************************************/
+	public static TreeMap<String, ArrayList<HSRRecordStats>> makeGroupedStats(ArrayList<HSRRecordStats> statsList) {
+
+		TreeMap<String, ArrayList<HSRRecordStats>> result = new TreeMap<>();
+
+		for(HSRRecordStats current : statsList) {
+			String statsID = current.statsIdentifier();
+			
+			if( ! result.containsKey(statsID) ) {
+				result.put(statsID, new ArrayList<>());
+			}
+			
+			result.get(statsID).add(current);
+		}
+		
+		return result;
 	}
 	
 	

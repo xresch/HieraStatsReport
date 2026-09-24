@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,10 +103,15 @@ public class HSRConfig {
 	//------------------------------------------
 	// Static Block
 	static {
-		//-----------------------------
-		// Set Default Log Interceptor
-		setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN) );
 		
+		try {
+			//-----------------------------
+			// Set Default Log Interceptor
+
+			setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN) );
+		}catch(Throwable e) {
+			logger.error("Error in static block: "+e.getMessage(), e);
+		}
 	}
 	
 	
@@ -478,13 +484,14 @@ public class HSRConfig {
 	 * Sets the level of the logback of the selected logger.
 	 ******************************************************************/
 	public static void setLogLevel(Level level, String loggerName) {
-		ch.qos.logback.classic.Logger logger = 
-				(ch.qos.logback.classic.Logger) 
-				org.slf4j.LoggerFactory.getLogger(loggerName);
 		
-	    logger.setLevel(level);
-	    
-	    HSRConfig.addProperty("[HSR] Log Level: "+loggerName, level.toString());
+		Logger logger = org.slf4j.LoggerFactory.getLogger(loggerName);
+		
+		if(logger instanceof ch.qos.logback.classic.Logger) {
+			((ch.qos.logback.classic.Logger)logger).setLevel(level);
+		    HSRConfig.addProperty("[HSR] Log Level: "+loggerName, level.toString());
+		}
+
 	}
 	
 	/******************************************************************
@@ -494,9 +501,13 @@ public class HSRConfig {
 	 ******************************************************************/
     public static void setLogInterceptor(TurboFilter filter) {
     	
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        context.resetTurboFilterList(); // optional: rebuilds internal structures
-        context.addTurboFilter(filter);
+    	ILoggerFactory factory = LoggerFactory.getILoggerFactory();
+
+    	if(factory instanceof LoggerContext) {
+	        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+	        context.resetTurboFilterList(); // optional: rebuilds internal structures
+	        context.addTurboFilter(filter);
+    	}
 
     }
     
