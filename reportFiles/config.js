@@ -2,7 +2,21 @@
  * This file contains the configuration for the HSR HTML Repoort.
  * It can either load the data from a URL, or load it from a list of Javascript files.
  * 
- * The loaded Data has to follow the following structure:
+ * URL RESPONSE
+ * ============
+ * When loading from a URL, the response body should have the following structure:
+{
+    "success": true,
+    "messages": [
+        { "type": "INFO|SUCCESS|WARNING|ERROR", "message": "Your Message"},
+        ...
+    ],
+    "payload": the data (see below)
+}
+ * 
+ * REPORT DATA STRUCTURE
+ * =====================
+ * The loaded Data has to follow the following structure, both in the js-files or when loading from a URL:
 {
     "test": "PFRTestExample", "starttime": 1775556523499, "endtime": 1775557433720,
     "properties": {

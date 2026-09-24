@@ -10,8 +10,9 @@
  * GLOBALS
  *************************************************************************************/
 
-//declare with var and do not initialize, this will work when filelist.js creates
-//this variable or not.
+// declare with var and do not initialize, will prevent errors when config.js 
+// is not loaded or does not define the variables.
+var LOAD_DATA_URL;
 var FILELIST;
 
 //================================================
@@ -55,6 +56,8 @@ var FILELIST;
 //	]
 //}
 //================================================
+
+// use DATA = DATA.concat() to add your data JsonObjects
 var DATA = [];
 
 // list of all records of all DATA entries
@@ -733,18 +736,36 @@ loadData();
 
 function loadData(){
 	
-	//------------------------------------------
-	//if not defined set data.js as default
-	if(FILELIST == undefined){
-		FILELIST = ["./data.js"];
-	}
-	//------------------------------------------
-	//dedup the files so nothing is loaded twice
-	FILELIST = dedupArray(FILELIST);
+	if(LOAD_DATA_URL != null){
+		
+		var params = {};
+		
+		CFW.http.getJSON(LOAD_DATA_URL, params, 
+			function(data) {
+				if(data.success){
+					DATA = DATA.concat(data.payload);
+					initialize();
+				}else{
+					// do nothing
+				}
+		});
 
-	//------------------------------------------
-	// Concatenate all data into var DATA
-	loadDataScript(0);
+	} else {
+		
+		//------------------------------------------
+		//if not defined set data.js as default
+		if(FILELIST == undefined){
+			FILELIST = ["./data.js"];
+		}
+		
+		//------------------------------------------
+		//dedup the files so nothing is loaded twice
+		FILELIST = dedupArray(FILELIST);
+	
+		//------------------------------------------
+		// Concatenate all data into var DATA
+		loadDataScript(0);
+	}
 	
 	//------------------------------------------
 	// Adding full path CSS
