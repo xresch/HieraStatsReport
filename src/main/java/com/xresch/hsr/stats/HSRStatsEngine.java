@@ -1046,6 +1046,7 @@ public class HSRStatsEngine {
 										case p95	->		value = HSR.Math.bigPercentile(95, metricValues);	
 										case p99	->		value = HSR.Math.bigPercentile(99, metricValues);	
 										case stdev	->		value = HSR.Math.bigStdev(metricValues, false, 2);
+										case sla	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
 										default -> { /*do nothing */ }
 									};
 									
