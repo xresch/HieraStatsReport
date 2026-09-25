@@ -83,8 +83,8 @@ public class HSRDBInterface {
 	public record Test(
 			  int id
 			, String execid
-			, long starttime
-			, long endtime
+			, Long starttime
+			, Long endtime
 			, String name
 			, JsonObject properties
 			, JsonObject sla

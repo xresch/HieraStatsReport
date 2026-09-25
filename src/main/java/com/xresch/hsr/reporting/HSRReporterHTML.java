@@ -152,8 +152,8 @@ public class HSRReporterHTML implements HSRReporter {
 	 ****************************************************************/
 	public static JsonObject makeReportDataObject(
 							  String testName
-							, long starttime
-							, long endtime
+							, Long starttime
+							, Long endtime
 							, JsonArray summaryRecordsWithSeries
 							, JsonObject properties
 							, JsonObject slaForRecords
@@ -174,13 +174,17 @@ public class HSRReporterHTML implements HSRReporter {
 	
 	
 	/***************************************************************
-	 * Returns the test for the execution id.
-	 * @return Test or null if not found
+	 * Returns the data in the format needed for the HTML report loaded
+	 * from the datase.
+	 * @return JsonObject, empty if not found.
 	 ****************************************************************/
 	public static JsonObject selectReportDataFromDB(XRDBInterface dbInterface, String tableNamePrefix, Test test  ) {
 
 		JsonObject result = new JsonObject();
 		
+		if(test == null) {
+			return result;
+		}
 		
 		//------------------------------
 		// Fetch Stats and Make Summary
