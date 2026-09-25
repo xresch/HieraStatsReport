@@ -349,6 +349,22 @@ public class HSRDBInterface {
 
 	}
 	
+	/***************************************************************
+	 * Deletes a test
+	 * @return boolean true if successful, false otherwise
+	 ****************************************************************/
+	public static boolean deleteTest(XRDBInterface dbInterface, String tableNamePrefix, int testID  ) {
+
+		String sql = 
+				  " DELETE FROM " + tableNamePrefix + TABLE_SUFFIX_TESTS
+				+ " WHERE id = ?";
+		
+		boolean result = dbInterface.preparedExecute(sql, testID);
+		
+		return result;
+
+	}
+	
 	
 	/***************************************************************
 	 * Get the timestamp of the oldest record that has a ganularity lower
