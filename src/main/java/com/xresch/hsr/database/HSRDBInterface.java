@@ -108,11 +108,24 @@ public class HSRDBInterface {
 	//#########################################################################################
 	
 	public record LogStatement(
-					  String host
-					, Level level
+					  Long time
+					, String host
+					, String level
 					, String message
-					, Throwable throwable
-				) {};
+				) {
+				
+		public JsonObject toJson() {
+			
+			JsonObject result = new JsonObject();
+			result.addProperty("time", time() );
+			result.addProperty("host", host() );
+			result.addProperty("level", level() );
+			result.addProperty("message", message() );
+			
+			return result;
+			
+		}
+	};
 		
 	public enum LogColumns {
 		testid, time, host, level, message
@@ -253,16 +266,10 @@ public class HSRDBInterface {
 		
 		//(testid, time, host, level, message)
 		valueList.add( testid );
-		valueList.add( System.currentTimeMillis() );
-		valueList.add( log.host ); //report nothing for endtime
-		valueList.add( log.level.toString() );
-		
-		String message = log.message() 
-						+ ( (log.throwable() == null) 
-							? ""
-							: XR.Text.stacktraceToString(log.throwable() )
-						);
-		valueList.add(message);
+		valueList.add( log.time() );
+		valueList.add( log.host() ); //report nothing for endtime
+		valueList.add( log.level().toString() );
+		valueList.add( log.message() );
 	
 		return db.preparedExecute(insertSQL, valueList.toArray());
 		
@@ -295,7 +302,11 @@ public class HSRDBInterface {
 	public void reportRecords(int testID, List<HSRRecordStats> records) {
 		
 		for(HSRRecordStats record : records ) {
-			record.insertIntoDatabase(db, testID, tablenameStats);
+			try {
+				record.insertIntoDatabase(db, testID, tablenameStats);
+			}catch(Throwable t) {
+				logger.error("Error while inserting record into DB: "+t.getMessage(), t);
+			}
 		}
 
 	}
@@ -306,7 +317,12 @@ public class HSRDBInterface {
 	public void reportLogs(int testID, List<LogStatement> logs) {
 		
 		for(LogStatement log : logs ) {
-			insertLog(testID, log);
+			
+			try {
+				insertLog(testID, log);
+			}catch(Throwable t) {
+				logger.error("Error while inserting log into DB: "+t.getMessage(), t);
+			}
 		}
 
 	}

@@ -12,6 +12,7 @@ import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
+import com.xresch.xrutils.base.XR;
 
 /**************************************************************************************************************
  * This reporter stores the aggregated statistics internally and provides methods to peek and poll the list of 
@@ -28,6 +29,8 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	
 	List<HSRRecordStats> storedRecords = new ArrayList<>();
 	List<HSRRecordStats> storedSummaryRecords = new ArrayList<>();
+	
+	List<LogStatement> storedLogs = new ArrayList<>();
 	
 	/****************************************************************************
 	 * 
@@ -60,7 +63,7 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	 ****************************************************************************/
 	@Override
 	public void reportLogs(List<LogStatement> logs) {
-		// do nothing
+		storedLogs.addAll(logs);
 	}
 	
 	/****************************************************************************
@@ -81,6 +84,7 @@ public class HSRReporterPeekPoll implements HSRReporter {
 			
 	}
 	
+	
 	/****************************************************************************
 	 * Returns the stored records as a Json Array without resetting the 
 	 * list.
@@ -93,6 +97,33 @@ public class HSRReporterPeekPoll implements HSRReporter {
 			array.add(record.toJson());
 		}
 		
+		return array;
+		
+	}
+	
+	/****************************************************************************
+	 * Returns the stored logs without resetting from the list.
+	 * @return 
+	 ****************************************************************************/
+	public List<LogStatement> peekLogs() {
+
+		return storedLogs;
+			
+	}
+	
+	/****************************************************************************
+	 * Returns the stored logs as a Json Array without resetting the 
+	 * list.
+	 * @return records
+	 ****************************************************************************/
+	public JsonArray peekLogsJson() {
+
+		JsonArray array = new JsonArray();
+		
+		for(LogStatement log : storedLogs) {
+			array.add( log.toJson() );
+		}
+
 		return array;
 		
 	}
@@ -122,6 +153,8 @@ public class HSRReporterPeekPoll implements HSRReporter {
 		return array;
 		
 	}
+	
+	
 	
 	/****************************************************************************
 	 * Returns the stored records and empties the list of stored records.
@@ -173,6 +206,34 @@ public class HSRReporterPeekPoll implements HSRReporter {
 
 		JsonArray returnThis = peekSummaryRecordsJson();
 		storedSummaryRecords = new ArrayList<>();
+		
+		return returnThis;
+		
+	}
+	
+	/****************************************************************************
+	 * Returns the stored logs and empties the list of stored records.
+	 * @return records
+	 ****************************************************************************/
+	public List<LogStatement> pollLogs() {
+
+		List<LogStatement> returnThis = storedLogs;
+		storedLogs = new ArrayList<>();
+		
+		return returnThis;
+			
+	}
+	
+	/****************************************************************************
+	 * Returns the stored summary records as a Json Array and empties the list of 
+	 * stored records.
+	 * 
+	 * @return records
+	 ****************************************************************************/
+	public JsonArray pollLogsJson() {
+
+		JsonArray returnThis = peekLogsJson();
+		storedLogs = new ArrayList<>();
 		
 		return returnThis;
 		

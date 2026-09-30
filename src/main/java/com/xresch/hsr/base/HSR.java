@@ -721,7 +721,7 @@ public class HSR {
 	 * 
 	 ***********************************************************************************/
 	public static void addLogStatement(Level level, String message){
-		HSRStatsEngine.addLogStatement(level, message, null);
+		addLogStatement(level, message, null);
 	}
 	
 	/***********************************************************************************
@@ -732,7 +732,7 @@ public class HSR {
 	 * 
 	 ***********************************************************************************/
 	public static void addLogStatement(Level level, String message, Throwable t){
-		HSRStatsEngine.addLogStatement(level, message, t);
+		HSRStatsEngine.addLogStatement(System.currentTimeMillis(), level, message, t);
 	}
 	
 	/***********************************************************************************

@@ -31,6 +31,7 @@ import com.xresch.hsr.reporting.HSRReporterDatabase;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
 import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
+import com.xresch.xrutils.base.XR;
 
 import ch.qos.logback.classic.Level;
 import oshi.SystemInfo;
@@ -372,9 +373,30 @@ public class HSRStatsEngine {
 	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
 	 * 
 	 ***********************************************************************************/
-	public static void addLogStatement(Level level, String message, Throwable t){
+	public static void addLogStatement(Long time, Level level, String message, Throwable t){
 		
-		logsStatements.add(new LogStatement(hostname, level, message, t));
+		String finalLevel = (level != null) ? level.toString() : "";
+		
+		String messageWithStacktrace =  message 
+					+ ( 
+						(t == null) 
+						? ""
+						: XR.Text.stacktraceToString(t)
+					);
+
+		logsStatements.add( new LogStatement(time, hostname, finalLevel, messageWithStacktrace) );
+	}
+	
+	/***********************************************************************************
+	 * Reports a log to the log reporting which is separate from the other reporting.
+	 * Logs are automatically reported by the default HSRLogInterceptor. If you want
+	 * to change the log level of reported logs use:
+	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
+	 * 
+	 ***********************************************************************************/
+	public static void addLogStatement(LogStatement log){
+		
+		logsStatements.add(log);
 	}
 	
 	/***************************************************************************
@@ -1191,8 +1213,23 @@ public class HSRStatsEngine {
 
 						if(!isStopped) { // prevent some exceptions
 							logger.debug("Report data to: "+reporter.getClass().getName());
-							reporter.reportRecords(unmodifiableRecords);
-							reporter.reportLogs(unmodifiableLogs);
+							
+							//-----------------------------
+							// Report Records
+							try {
+								reporter.reportRecords(unmodifiableRecords);
+							}catch(Throwable t) {
+								logger.error("Error while reporting records: "+t.getMessage(), t);
+							}
+							
+							//-----------------------------
+							// Report Logs
+							try {
+								reporter.reportLogs(unmodifiableLogs);
+							}catch(Throwable t) {
+								logger.error("Error while reporting logs: "+t.getMessage(), t);
+							}
+							
 						}
 
 					}
