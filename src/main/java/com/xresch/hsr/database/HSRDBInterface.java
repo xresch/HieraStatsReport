@@ -1,6 +1,7 @@
 package com.xresch.hsr.database;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -435,6 +436,37 @@ public class HSRDBInterface {
 		return HSRRecordStats.convertResultSetToRecords(result);
 
 	}
+	
+	/***************************************************************
+	 * Returns the logs for the  for the execution id.
+	 * @param dbInterface
+	 * @param tableNamePrefix
+	 * @param testID
+	 * @param minTime minimum time in epochMillis of the logs returned, returns all if null
+	 * 
+	 * @return Test or null if not found
+	 ****************************************************************/
+	public static JsonArray selectLogsForTest(XRDBInterface dbInterface, String tableNamePrefix, int testID, Long minTime  ) {
+
+		String sql = 
+				  " SELECT * FROM " + tableNamePrefix + TABLE_SUFFIX_LOGS
+				+ " WHERE testid = ?";
+		
+		ArrayList<Object> values = new ArrayList<>();
+		values.add(testID);
+		
+		//--------------------------
+		// Add Min Time
+		if( minTime != null ) {
+			sql += " AND time >= ?";
+			values.add(minTime);
+		}
+		
+		ResultSet result = dbInterface.preparedExecuteQuery(sql, values.toArray());
+
+		return new XRResultSetConverter(dbInterface, result).toJSONArray();
+	}
+	
 	
 	/***************************************************************
 	 * Returns the test for the execution id.
