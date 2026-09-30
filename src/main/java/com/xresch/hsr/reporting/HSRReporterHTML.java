@@ -2,8 +2,7 @@ package com.xresch.hsr.reporting;
 
 import java.io.File;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.zip.ZipInputStream;
 
@@ -16,6 +15,7 @@ import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.database.HSRDBInterface;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.database.HSRDBInterface.Test;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.stats.HSRStatsEngine;
@@ -90,7 +90,7 @@ public class HSRReporterHTML implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 		/* do nothing, only write summary report */
 	}
 	
@@ -98,12 +98,20 @@ public class HSRReporterHTML implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
 	public void reportSummary(
-			  ArrayList<HSRRecordStats> summaryRecords
+			  List<HSRRecordStats> summaryRecords
 			, JsonArray summaryRecordsWithSeries
 			, TreeMap<String, String> properties
 			, JsonObject slaForRecords
-			, ArrayList<HSRTestSettings> testSettings
+			, List<HSRTestSettings> testSettings
 			){
 		
 		//-----------------------------------
@@ -157,7 +165,7 @@ public class HSRReporterHTML implements HSRReporter {
 							, JsonArray summaryRecordsWithSeries
 							, JsonObject properties
 							, JsonObject slaForRecords
-							, ArrayList<HSRTestSettings> testSettings
+							, List<HSRTestSettings> testSettings
 						){
 		JsonObject data = new JsonObject();
     	
@@ -188,15 +196,15 @@ public class HSRReporterHTML implements HSRReporter {
 		
 		//------------------------------
 		// Fetch Stats and Make Summary
-		ArrayList<HSRRecordStats> stats =  HSRDBInterface.selectStatsForTest(dbInterface, tableNamePrefix, test.id());
+		List<HSRRecordStats> stats =  HSRDBInterface.selectStatsForTest(dbInterface, tableNamePrefix, test.id());
 
-		TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = HSRStatsEngine.makeGroupedStats(stats);
+		TreeMap<String, List<HSRRecordStats>> groupedStats = HSRStatsEngine.makeGroupedStats(stats);
 		
 		SummarizedStats summarized = HSRStatsEngine.summarizeGroupedStats(groupedStats, false);
 		
 		//------------------------------
 		// select Test Settings for Test
-		ArrayList<HSRTestSettings> testSettings =  HSRDBInterface.selectTestSettingsForTest(dbInterface, tableNamePrefix, test.id());
+		List<HSRTestSettings> testSettings =  HSRDBInterface.selectTestSettingsForTest(dbInterface, tableNamePrefix, test.id());
 		
 		//------------------------------
 		// Make Data Object

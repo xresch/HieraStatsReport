@@ -5,7 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -15,6 +15,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -90,7 +91,7 @@ public class HSRReporterJson implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 
 		try {
 
@@ -113,7 +114,15 @@ public class HSRReporterJson implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportSummary(List<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, List<HSRTestSettings> testSettings) {
 		
 		//--------------------------------
 		// Summary File Path

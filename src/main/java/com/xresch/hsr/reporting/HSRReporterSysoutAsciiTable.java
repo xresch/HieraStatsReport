@@ -2,6 +2,7 @@ package com.xresch.hsr.reporting;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.math.NumberUtils;
@@ -10,6 +11,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -43,26 +45,35 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 		
 		System.out.println( generateAsciiTable(records, nameMaxLength) );
 		
 	}
+	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public static String generateAsciiTable(ArrayList<HSRRecordStats> records, int nameMaxLength) {
+	@Override
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	public static String generateAsciiTable(List<HSRRecordStats> records, int nameMaxLength) {
 
 	    // Build header columns
-	    ArrayList<String> columns = new ArrayList<>();
+	    List<String> columns = new ArrayList<>();
 	    columns.addAll(HSRRecordStats.fieldNames);   // time, type, test, ...
 	    columns.addAll(HSRRecordStats.valueNames);   // ok_count, ok_min, ...
 
 	    // Convert all records into row lists
-	    ArrayList<ArrayList<String>> rows = new ArrayList<>();
+	    List<List<String>> rows = new ArrayList<>();
 
 	    for (HSRRecordStats record : records) {
-	        ArrayList<String> row = new ArrayList<>();
+	        List<String> row = new ArrayList<>();
 
 	        row.add( HSR.Time.formatMillis(record.time(), "yyyy-MM-dd HH:mm:ss") );
 	        row.add(record.type().toString());
@@ -94,7 +105,7 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	private static String printAsciiTable(ArrayList<String> headers, ArrayList<ArrayList<String>> rows) {
+	private static String printAsciiTable(List<String> headers, List<List<String>> rows) {
 
 		StringBuilder result = new StringBuilder();
 		
@@ -108,7 +119,7 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	        widths[i] = headers.get(i).length(); // header size
 	    }
 
-	    for (ArrayList<String> row : rows) {
+	    for (List<String> row : rows) {
 	        for (int i = 0; i < columnCount; i++) {
 	            if (row.get(i) != null) {
 	                widths[i] = Math.max(widths[i], row.get(i).length());
@@ -130,7 +141,7 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	    	  .append(headerRow).append("\r\n")
 	    	  .append(horizontal.replace("+", "|")).append("\r\n");
 
-	    for (ArrayList<String> row : rows) {
+	    for (List<String> row : rows) {
 	    	result.append(buildRow(row, widths)).append("\r\n");
 	    }
 
@@ -155,7 +166,7 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	private static String buildRow(ArrayList<String> row, int[] widths) {
+	private static String buildRow(List<String> row, int[] widths) {
 	    StringBuilder sb = new StringBuilder();
 	    sb.append('|');
 	    for (int i = 0; i < widths.length; i++) {
@@ -187,7 +198,7 @@ public class HSRReporterSysoutAsciiTable implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
+	public void reportSummary(List<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, List<HSRTestSettings> testSettings) {
 		System.out.println( "============================================================");
 		System.out.println( "============ ASCII TABLE: SUMMARY STATISTICS ===============");
 		System.out.print(   "============================================================");

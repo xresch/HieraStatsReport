@@ -22,7 +22,8 @@ import ch.qos.logback.core.spi.FilterReply;
  ***************************************************************************/
 public class HSRLogInterceptorDefault extends TurboFilter {
 
-	Level minLevel = Level.WARN;
+	Level minLevelMessageReporting = Level.WARN;
+	Level minLevelLogReporting = Level.INFO;
 	
 	/***************************************************************************
 	 * Default Constructor
@@ -35,10 +36,12 @@ public class HSRLogInterceptorDefault extends TurboFilter {
 	/***************************************************************************
 	 * Constructor
 	 * 
-	 * @param minLevel the minimum level that should be added to the HSR report
+	 * @param minLevelMessageReporting the minimum level that should be added to the HSR report as Messages
+	 * @param minLevelLogReporting the minimum level that should be reported as logs
 	 ***************************************************************************/
-	public HSRLogInterceptorDefault(Level minLevel) {
-		this.minLevel = minLevel;
+	public HSRLogInterceptorDefault(Level minLevelMessageReporting, Level minLevelLogReporting) {
+		this.minLevelMessageReporting = minLevelMessageReporting;
+		this.minLevelLogReporting = minLevelLogReporting;
 	}
 	
 	/***************************************************************************
@@ -53,19 +56,20 @@ public class HSRLogInterceptorDefault extends TurboFilter {
                               Object[] params,
                               Throwable t) {
 
-        //----------------------------------
-    	// Check add to HSR
-        if (!level.isGreaterOrEqual(minLevel)) {
-            return FilterReply.NEUTRAL; // not loggable, nothing to do
+        //================================================
+    	// Check add to HSR as Message
+    	//================================================
+    	String formattedMsg = formatMessage(format, params, t);
+        if ( level.isGreaterOrEqual(minLevelMessageReporting) ) {
+            HSR.addLogMessage(level, formattedMsg, t);
         }
 
-        //----------------------------------
-    	// FormatMessage
-        String formattedMsg = formatMessage(format, params, t);
-
-        //----------------------------------
-    	// Add to HSR
-        HSR.addLogMessage(level, formattedMsg, t);
+        //================================================
+    	// Report Logs
+    	//================================================
+        if ( level.isGreaterOrEqual(minLevelLogReporting) ) {
+            HSR.addLogStatement(level, formattedMsg, t);
+        }
 
         //----------------------------------
     	// Do not block or modify log decision

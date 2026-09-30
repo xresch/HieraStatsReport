@@ -1,11 +1,12 @@
 package com.xresch.hsr.reporting;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -35,7 +36,7 @@ public class HSRReporterSysoutCSV implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 		
 		StringBuilder output = new StringBuilder();
 		output.append("\r\n" + HSRRecordStats.getCSVHeader(separator) )
@@ -48,12 +49,19 @@ public class HSRReporterSysoutCSV implements HSRReporter {
 		System.out.println(output.toString());
 	}
 	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
+	}
 	
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
+	public void reportSummary(List<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, List<HSRTestSettings> testSettings) {
 		System.out.println( "============================================================");
 		System.out.println( "=================== CSV: SUMMARY STATISTICS ================");
 		System.out.print(   "============================================================");

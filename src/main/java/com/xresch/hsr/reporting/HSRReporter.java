@@ -1,12 +1,12 @@
 package com.xresch.hsr.reporting;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 
@@ -35,7 +35,15 @@ public interface HSRReporter {
 	 * 
 	 * @param records aggregated record statistics
 	 ******************************************************************************************/
-	public void reportRecords(ArrayList<HSRRecordStats> records);
+	public void reportRecords(List<HSRRecordStats> records);
+	
+	/******************************************************************************************
+	 * This method will be called periodically based on the report interval.
+	 * If your reporter does not report logs, you can just do nothing in this method.
+	 * 
+	 * @param records log statements to report
+	 ******************************************************************************************/
+	public void reportLogs(List<LogStatement> logs);
 	
 	/******************************************************************************************
 	 * This method will be called once at the end of the test.
@@ -49,11 +57,11 @@ public interface HSRReporter {
 	 * @param testSettings TODO
 	 ******************************************************************************************/
 	public void reportSummary(
-			  ArrayList<HSRRecordStats> summaryRecords
+			  List<HSRRecordStats> summaryRecords
 			, JsonArray summaryRecordsWithSeries
 			, TreeMap<String, String> properties
 			, JsonObject slaForRecords
-			, ArrayList<HSRTestSettings> testSettings
+			, List<HSRTestSettings> testSettings
 			);
 	
 	/******************************************************************************************

@@ -1,15 +1,16 @@
 package com.xresch.hsr.reporting;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.TreeMap;
 
-import com.xresch.hsr.stats.HSRRecordStats;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
+import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -93,7 +94,7 @@ public class HSRReporterOTel implements HSRReporter {
 	 * 
 	 ****************************************************************************/
     @Override
-    public void reportRecords(ArrayList<HSRRecordStats> records) {
+    public void reportRecords(List<HSRRecordStats> records) {
         
         for (HSRRecordStats record : records) {
         	String metricName = record.name().replaceAll("[^A-Za-z0-9_./\\-]", "_");
@@ -117,7 +118,15 @@ public class HSRReporterOTel implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
+	}
+    
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportSummary(List<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, List<HSRTestSettings> testSettings) {
 		// do nothing
 		
 	}

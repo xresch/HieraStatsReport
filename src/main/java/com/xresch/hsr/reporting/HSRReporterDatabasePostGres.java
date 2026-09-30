@@ -1,6 +1,6 @@
 package com.xresch.hsr.reporting;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
@@ -11,6 +11,7 @@ import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
 import com.xresch.hsr.database.HSRDBInterface;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.xrutils.database.XRDBInterface;
 
@@ -101,7 +102,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 		if(isConnected()) {
 			hsrDB.reportRecords(testID, records);
 		}
@@ -111,7 +112,17 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void firstReport(ArrayList<HSRTestSettings> testsettings) {
+	public void reportLogs(List<LogStatement> logs) {
+		if(isConnected()) {
+			hsrDB.reportLogs(testID, logs);
+		}
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void firstReport(List<HSRTestSettings> testsettings) {
 		if(isConnected()) {
 			testID = hsrDB.insertTestGetPrimaryKey();
 			hsrDB.reportTestSettings(testID, testsettings);
@@ -122,7 +133,7 @@ public class HSRReporterDatabasePostGres extends HSRReporterDatabase {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
+	public void reportSummary(List<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, List<HSRTestSettings> testSettings) {
 		if(isConnected()) {
 			hsrDB.reportSLA(testID, slaForRecords);
 			hsrDB.reportRecordsSummary(testID, summaryRecords);

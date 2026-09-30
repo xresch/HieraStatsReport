@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -76,7 +77,7 @@ public class HSRReporterCSV implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 		reportToFile(filepath, records);
 			
 	}
@@ -85,7 +86,15 @@ public class HSRReporterCSV implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportSummary(List<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, List<HSRTestSettings> testSettings) {
 		
 		//----------------------------
 		// Make Summary File
@@ -111,7 +120,7 @@ public class HSRReporterCSV implements HSRReporter {
 	/****************************************************************************
 	 * 
 	 ****************************************************************************/
-	public void reportToFile(String filepath, ArrayList<HSRRecordStats> records) {
+	public void reportToFile(String filepath, List<HSRRecordStats> records) {
 		BufferedWriter writer = null;
 		try {
 			

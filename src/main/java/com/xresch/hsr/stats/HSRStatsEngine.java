@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -24,6 +25,7 @@ import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSR;
 import com.xresch.hsr.base.HSRConfig;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.reporting.HSRReporter;
 import com.xresch.hsr.reporting.HSRReporterDatabase;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordState;
@@ -68,12 +70,14 @@ public class HSRStatsEngine {
 	//=========================================
 	// key is based on hashCode() which is the StatsIdentifier, value are all records that are part of the group
 	// these are aggregated and purged based on the report interval
-	private static TreeMap<String, ArrayList<HSRRecord> > groupedRecordsInterval = new TreeMap<>();
+	private static TreeMap<String, List<HSRRecord> > groupedRecordsInterval = new TreeMap<>();
 	
 	// key is based on hashCode() which is the StatsIdentifier, value are all Stats that are part of the group
 	// these are used for making summary reports over the full test duration
-	private static TreeMap<String, ArrayList<HSRRecordStats>> groupedStats = new TreeMap<>();
+	private static TreeMap<String, List<HSRRecordStats>> groupedStats = new TreeMap<>();
 	
+	private static ArrayList<LogStatement> logsStatements = new ArrayList<LogStatement>();
+
 	//=========================================
 	// Thread Management
 	//=========================================
@@ -131,6 +135,8 @@ public class HSRStatsEngine {
 		isStopped = false;
 		groupedRecordsInterval = new TreeMap<>();
 		groupedStats = new TreeMap<>();
+		logsStatements = new ArrayList<LogStatement>();
+		
 		HSRSLA.cacheClear();
 		
 		//--------------------------------------
@@ -357,6 +363,18 @@ public class HSRStatsEngine {
 			groupedRecordsInterval.get(id).add(record);
 		}
 
+	}
+	
+	/***********************************************************************************
+	 * Reports a log to the log reporting which is separate from the other reporting.
+	 * Logs are automatically reported by the default HSRLogInterceptor. If you want
+	 * to change the log level of reported logs use:
+	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
+	 * 
+	 ***********************************************************************************/
+	public static void addLogStatement(Level level, String message, Throwable t){
+		
+		logsStatements.add(new LogStatement(hostname, level, message, t));
 	}
 	
 	/***************************************************************************
@@ -655,9 +673,9 @@ public class HSRStatsEngine {
 		//----------------------------------------
 		// Steal Reference to not block writing
 		// new records
-		ArrayList<HSRRecordStats> statsRecordList = new ArrayList<>();
+		List<HSRRecordStats> statsRecordList = new ArrayList<>();
 		
-		TreeMap<String, ArrayList<HSRRecord> > groupedRecordsCurrent;
+		TreeMap<String, List<HSRRecord> > groupedRecordsCurrent;
 		
 		synchronized (SYNC_RECORD_MODIFICATION) {  
 			synchronized (groupedRecordsInterval) {
@@ -674,9 +692,9 @@ public class HSRStatsEngine {
 		
 		StringBuilder rawLog = new StringBuilder();
 		
-		for(Entry<String, ArrayList<HSRRecord>> entry : groupedRecordsCurrent.entrySet()) {
+		for(Entry<String, List<HSRRecord>> entry : groupedRecordsCurrent.entrySet()) {
 			
-			ArrayList<HSRRecord> records = entry.getValue();
+			List<HSRRecord> records = entry.getValue();
 			
 			//---------------------------
 			// Make list of Sorted Values
@@ -861,7 +879,7 @@ public class HSRStatsEngine {
 		
 		//-------------------------------
 		// Report Stats
-		sendRecordsToReporter(statsRecordList);
+		sendRecordsAndLogsToReporter(statsRecordList);
 		
 		//----------------------------------
 		// Print Raw
@@ -920,9 +938,9 @@ public class HSRStatsEngine {
 	 * @return Map of grouped statistics
 	 * 
 	 ***************************************************************************/
-	public static TreeMap<String, ArrayList<HSRRecordStats>> makeGroupedStats(ArrayList<HSRRecordStats> statsList) {
+	public static TreeMap<String, List<HSRRecordStats>> makeGroupedStats(List<HSRRecordStats> statsList) {
 
-		TreeMap<String, ArrayList<HSRRecordStats>> result = new TreeMap<>();
+		TreeMap<String, List<HSRRecordStats>> result = new TreeMap<>();
 
 		for(HSRRecordStats current : statsList) {
 			String statsID = current.statsIdentifier();
@@ -948,7 +966,7 @@ public class HSRStatsEngine {
 	 * @param groupedStats that should be summarized
 	 * @param doSumUsers true if users should be summed, false will calculate average
 	 ***************************************************************************/
-	public static SummarizedStats summarizeGroupedStats(TreeMap<String, ArrayList<HSRRecordStats>> groupedStats, boolean doSumUsers) {
+	public static SummarizedStats summarizeGroupedStats(TreeMap<String, List<HSRRecordStats>> groupedStats, boolean doSumUsers) {
 		//----------------------------------------
 				// Prepare Arrays
 				ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
@@ -958,11 +976,11 @@ public class HSRStatsEngine {
 				// Iterate Grouped Stats
 				long reportTime = System.currentTimeMillis();
 				
-				for(Entry<String, ArrayList<HSRRecordStats>> entry : groupedStats.entrySet()) {
+				for(Entry<String, List<HSRRecordStats>> entry : groupedStats.entrySet()) {
 					
 					//---------------------------
 					// Make stats group
-					ArrayList<HSRRecordStats> currentGroupedStats = entry.getValue();
+					List<HSRRecordStats> currentGroupedStats = entry.getValue();
 					
 					if(currentGroupedStats.isEmpty()) { continue; }
 					//---------------------------
@@ -1148,16 +1166,22 @@ public class HSRStatsEngine {
 	 * Send the aggregated records to the Reporters.
 	 * 
 	 ***************************************************************************/
-	private static void sendRecordsToReporter( ArrayList<HSRRecordStats> aggregatedRecords){
+	private static void sendRecordsAndLogsToReporter(List<HSRRecordStats> aggregatedRecords){
 		
 		//-------------------------
-		// Send Clone of list to each Reporter
-		//CountDownLatch latch = new CountDownLatch(HSRConfig.getReporterList().size());
+		// Create Unmodifiable lists
+		List<LogStatement> unmodifiableLogs = Collections.unmodifiableList(logsStatements);
+		List<HSRRecordStats> unmodifiableRecords = Collections.unmodifiableList(aggregatedRecords);
 		
+		//-------------------------
+		// Reset Logs
+		logsStatements = new ArrayList<LogStatement>();
+		
+		//-------------------------
+		// Send unmodifiable list to each Reporter
+		//CountDownLatch latch = new CountDownLatch(HSRConfig.getReporterList().size());
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
-			ArrayList<HSRRecordStats> clone = new ArrayList<>();
-			clone.addAll(aggregatedRecords);
-
+			
 			// wrap with try catch to not stop reporting to all reporters
 			try {
 				
@@ -1167,7 +1191,8 @@ public class HSRStatsEngine {
 
 						if(!isStopped) { // prevent some exceptions
 							logger.debug("Report data to: "+reporter.getClass().getName());
-							reporter.reportRecords(clone);
+							reporter.reportRecords(unmodifiableRecords);
+							reporter.reportLogs(unmodifiableLogs);
 						}
 
 					}

@@ -1,6 +1,7 @@
 package com.xresch.hsr.reporting;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 
 /**************************************************************************************************************
@@ -24,8 +26,8 @@ public class HSRReporterPeekPoll implements HSRReporter {
 
 	private static final Logger logger = LoggerFactory.getLogger(HSRReporterPeekPoll.class);
 	
-	ArrayList<HSRRecordStats> storedRecords = new ArrayList<>();
-	ArrayList<HSRRecordStats> storedSummaryRecords = new ArrayList<>();
+	List<HSRRecordStats> storedRecords = new ArrayList<>();
+	List<HSRRecordStats> storedSummaryRecords = new ArrayList<>();
 	
 	/****************************************************************************
 	 * 
@@ -47,7 +49,7 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 
 		storedRecords.addAll(records);
 			
@@ -57,7 +59,15 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	 * 
 	 ****************************************************************************/
 	@Override
-	public void reportSummary(ArrayList<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, ArrayList<HSRTestSettings> testSettings) {	
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportSummary(List<HSRRecordStats> summaryRecords, JsonArray summaryRecordsWithSeries, TreeMap<String, String> properties, JsonObject slaForRecords, List<HSRTestSettings> testSettings) {	
 		storedSummaryRecords.addAll(summaryRecords);
 	}
 	
@@ -65,7 +75,7 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	 * Returns the stored records without resetting from the list.
 	 * @return 
 	 ****************************************************************************/
-	public ArrayList<HSRRecordStats> peekRecords() {
+	public List<HSRRecordStats> peekRecords() {
 
 		return storedRecords;
 			
@@ -91,7 +101,7 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	 * Returns the stored summary records without resetting from the list.
 	 * @return records
 	 ****************************************************************************/
-	public ArrayList<HSRRecordStats> peekSummaryRecords() {
+	public List<HSRRecordStats> peekSummaryRecords() {
 
 		return storedSummaryRecords;
 			
@@ -117,9 +127,9 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	 * Returns the stored records and empties the list of stored records.
 	 * @return records
 	 ****************************************************************************/
-	public ArrayList<HSRRecordStats> pollRecords() {
+	public List<HSRRecordStats> pollRecords() {
 
-		ArrayList<HSRRecordStats> returnThis = storedRecords;
+		List<HSRRecordStats> returnThis = storedRecords;
 		storedRecords = new ArrayList<>();
 		
 		return returnThis;
@@ -144,9 +154,9 @@ public class HSRReporterPeekPoll implements HSRReporter {
 	 * Returns the stored summary records and empties the list of stored records.
 	 * @return records
 	 ****************************************************************************/
-	public ArrayList<HSRRecordStats> pollSummaryRecords() {
+	public List<HSRRecordStats> pollSummaryRecords() {
 
-		ArrayList<HSRRecordStats> returnThis = storedSummaryRecords;
+		List<HSRRecordStats> returnThis = storedSummaryRecords;
 		storedSummaryRecords = new ArrayList<>();
 		
 		return returnThis;

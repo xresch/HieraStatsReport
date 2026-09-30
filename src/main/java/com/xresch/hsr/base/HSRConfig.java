@@ -108,7 +108,7 @@ public class HSRConfig {
 			//-----------------------------
 			// Set Default Log Interceptor
 
-			setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN) );
+			setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );
 		}catch(Throwable e) {
 			logger.error("Error in static block: "+e.getMessage(), e);
 		}

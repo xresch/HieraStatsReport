@@ -1,6 +1,6 @@
 package com.xresch.hsr.reporting;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import com.xresch.hsr.base.HSRTestSettings;
 
@@ -12,6 +12,6 @@ import com.xresch.hsr.base.HSRTestSettings;
  **************************************************************************************************************/
 public abstract class HSRReporterDatabase implements HSRReporter {
 
-	public abstract void firstReport(ArrayList<HSRTestSettings> testsettings);
+	public abstract void firstReport(List<HSRTestSettings> testsettings);
 	
 }

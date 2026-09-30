@@ -264,13 +264,13 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 
 	
 	private static String csvHeaderTemplate = fieldNamesJoined+","+valueNamesJoined;
-	private static String sqlCreateTableTemplate = "CREATE TABLE IF NOT EXISTS {tablename} "
+	private static String sqlCreateTableStatsTemplate = "CREATE TABLE IF NOT EXISTS {tablename} "
 															+sqlTableColumnDefinitions.substring(0, sqlTableColumnDefinitions.length() - 1) // remove ")" 
 															+", FOREIGN KEY (testid) REFERENCES {parentTablename} (id) ON DELETE CASCADE "
 															+")";
 			
 	
-	private static String sqlInsertIntoTemplate = "INSERT INTO {tablename} "+sqlTableColumnNames
+	private static String sqlInsertIntoStatsTemplate = "INSERT INTO {tablename} "+sqlTableColumnNames
 													  + " VALUES (?"+ 
 													  			", ?".repeat( fieldNames.size() + valueNames.size() ) 
 													  +")";
@@ -637,7 +637,7 @@ public class HSRRecordStats implements Comparable<HSRRecordStats> {
 	 * with the provided table name inserted.
 	 ***********************************************************************/
 	public static String createSQL_CreateTableStats(String tableName, String parentTablename) {
-		return sqlCreateTableTemplate
+		return sqlCreateTableStatsTemplate
 				.replace("{tablename}", tableName)
 				.replace("{parentTablename}", parentTablename)
 				;
@@ -748,7 +748,7 @@ GROUP BY "type","test","usecase","path","metric","code","granularity"
 
 		if(db == null || tableName == null) { return false; }
 		
-		String insertSQL = sqlInsertIntoTemplate.replace("{tablename}", tableName);
+		String insertSQL = sqlInsertIntoStatsTemplate.replace("{tablename}", tableName);
 	
 		ArrayList<Object> valueList = new ArrayList<>();
 		

@@ -3,6 +3,7 @@ package com.xresch.hsr.base;
 import java.math.BigDecimal;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import com.xresch.hsr.stats.HSRRecordStats.HSRMetric;
 import com.xresch.hsr.stats.HSRSLA;
 import com.xresch.hsr.stats.HSRStatsEngine;
 import com.xresch.hsr.utils.HSRLog;
+import com.xresch.hsr.utils.HSRLogInterceptorDefault;
 import com.xresch.xrutils.utils.XRCSV;
 import com.xresch.xrutils.utils.XRFiles;
 import com.xresch.xrutils.utils.XRJson;
@@ -54,7 +56,6 @@ public class HSR {
 	
 	private static Logger logger = (Logger) LoggerFactory.getLogger(HSR.class.getName());
 	
-
 	/***********************************************************************************
 	 * Utility References
 	 ***********************************************************************************/
@@ -710,6 +711,28 @@ public class HSR {
 		
 		addLogMessage( level, message);
 		addException(t);
+	}
+	
+	/***********************************************************************************
+	 * Reports a log to the log reporting which is separate from the other reporting.
+	 * Logs are automatically reported by the default HSRLogInterceptor. If you want
+	 * to change the log level of reported logs use:
+	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
+	 * 
+	 ***********************************************************************************/
+	public static void addLogStatement(Level level, String message){
+		HSRStatsEngine.addLogStatement(level, message, null);
+	}
+	
+	/***********************************************************************************
+	 * Reports a log to the log reporting which is separate from the other reporting.
+	 * Logs are automatically reported by the default HSRLogInterceptor. If you want
+	 * to change the log level of reported logs use:
+	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
+	 * 
+	 ***********************************************************************************/
+	public static void addLogStatement(Level level, String message, Throwable t){
+		HSRStatsEngine.addLogStatement(level, message, t);
 	}
 	
 	/***********************************************************************************

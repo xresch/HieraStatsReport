@@ -1,11 +1,13 @@
 package com.xresch.hsr.reporting;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.xresch.hsr.base.HSRTestSettings;
+import com.xresch.hsr.database.HSRDBInterface.LogStatement;
 import com.xresch.hsr.stats.HSRRecordStats;
 import com.xresch.hsr.stats.HSRStatsEngine;
 
@@ -21,18 +23,18 @@ import com.xresch.hsr.stats.HSRStatsEngine;
 public class HSRReporterTesting implements HSRReporter {
 
 	/** List of every report made (List of Lists of records). */
-	public ArrayList<ArrayList<HSRRecordStats>> reports = new ArrayList<>();
+	public List<List<HSRRecordStats>> reports = new ArrayList<>();
 	
 	/** List of every reported record. */
-	public ArrayList<HSRRecordStats> allReportedRecords = new ArrayList<>();
+	public List<HSRRecordStats> allReportedRecords = new ArrayList<>();
 	
 	/** Reported summary records. */
-	public ArrayList<HSRRecordStats> summaryRecords = new ArrayList<>();
+	public List<HSRRecordStats> summaryRecords = new ArrayList<>();
 	
 	public JsonArray summaryRecordsWithSeries;
 	public TreeMap<String, String> properties;
 	public JsonObject slaForRecords;
-	public ArrayList<HSRTestSettings> testSettings;
+	public List<HSRTestSettings> testSettings;
 	
 	// needed as data is sent to reporters asynchronously
 	private boolean reportReceived = false;
@@ -43,10 +45,18 @@ public class HSRReporterTesting implements HSRReporter {
 	 * 
 	 *********************************************************************/
 	@Override
-	public void reportRecords(ArrayList<HSRRecordStats> records) {
+	public void reportRecords(List<HSRRecordStats> records) {
 		reports.add(records);
 		allReportedRecords.addAll(records);
 		reportReceived = true;
+	}
+	
+	/****************************************************************************
+	 * 
+	 ****************************************************************************/
+	@Override
+	public void reportLogs(List<LogStatement> logs) {
+		// do nothing
 	}
 	
 	/*********************************************************************
@@ -54,11 +64,11 @@ public class HSRReporterTesting implements HSRReporter {
 	 *********************************************************************/
 	@Override
 	public void reportSummary(
-				  ArrayList<HSRRecordStats> summaryRecords
+				  List<HSRRecordStats> summaryRecords
 				, JsonArray summaryRecordsWithSeries
 				, TreeMap<String, String> properties
 				, JsonObject slaForRecords
-				, ArrayList<HSRTestSettings> testSettings
+				, List<HSRTestSettings> testSettings
 				){
 		this.summaryRecords				= summaryRecords;           
 		this.summaryRecordsWithSeries	= summaryRecordsWithSeries; 
