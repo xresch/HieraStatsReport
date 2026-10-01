@@ -121,7 +121,7 @@ public class HSRReporterPeekPoll implements HSRReporter {
 		JsonArray array = new JsonArray();
 		
 		for(LogStatement log : storedLogs) {
-			array.add( XR.JSON.toJSON(log) );
+			array.add( XR.JSON.toJSONElement(log) );
 		}
 
 		return array;
