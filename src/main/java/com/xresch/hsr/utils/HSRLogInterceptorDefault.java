@@ -139,7 +139,15 @@ public class HSRLogInterceptorDefault extends TurboFilter {
 							 expectionStacktrace[i] = proxyStack[i].getStackTraceElement();
 						 }
 						 
-						 stacktrace = XR.Text.stacktraceToString(exceptionClassName, formattedMsg, expectionStacktrace);
+						 String newline = "\n\t";
+						 String shortStacktrace = XR.Text.shortStacktrace(expectionStacktrace, newline);
+						 
+						 
+						 stacktrace = exceptionClassName 
+								 		+ ":"
+								 		+ newline 
+								 		+ shortStacktrace 
+								 		;
 					}
 				}catch(Throwable t) {
 					System.out.println("Error while creating Exception Stacktrace: "+t.getMessage());
