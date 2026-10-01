@@ -721,7 +721,7 @@ public class HSR {
 	 * 
 	 ***********************************************************************************/
 	public static void addLogStatement(Level level, String source, String message){
-		addLogStatement(level, source, message, null);
+		addLogStatement(level, null, source, message, null);
 	}
 	
 	/***********************************************************************************
@@ -731,8 +731,8 @@ public class HSR {
 	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
 	 * 
 	 ***********************************************************************************/
-	public static void addLogStatement(Level level, String source, String message, String stacktrace ){
-		HSRStatsEngine.addLogStatement(System.currentTimeMillis(), level, source, message, stacktrace);
+	public static void addLogStatement(Level level, String thread, String source, String message, String stacktrace ){
+		HSRStatsEngine.addLogStatement(System.currentTimeMillis(), level, thread, source, message, stacktrace);
 	}
 	
 	/***********************************************************************************

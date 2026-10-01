@@ -397,11 +397,21 @@ public class HSRStatsEngine {
 	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
 	 * 
 	 ***********************************************************************************/
-	public static void addLogStatement(Long time, Level level, String source, String message, String stacktrace){
+	public static void addLogStatement(Long time, Level level, String thread, String source, String message, String stacktrace){
 		
 		String finalLevel = (level != null) ? level.toString() : "";
 		
-		logsStatements.add( new LogStatement(time, hostname, finalLevel, source, message, stacktrace) );
+		logsStatements.add( 
+				new LogStatement(
+						  time
+						, hostname
+						, thread
+						, finalLevel
+						, source
+						, message
+						, stacktrace
+						) 
+				);
 	}
 	
 	/***********************************************************************************

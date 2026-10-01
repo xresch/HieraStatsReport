@@ -122,6 +122,7 @@ public class HSRLogInterceptorDefault extends TurboFilter {
 				String formattedMsg = event.getFormattedMessage();
 				
 				
+				
 				IThrowableProxy throwableProxy = event.getThrowableProxy();
 
 				String stacktrace = null;
@@ -142,7 +143,6 @@ public class HSRLogInterceptorDefault extends TurboFilter {
 						 String newline = "\n\t";
 						 String shortStacktrace = XR.Text.shortStacktrace(expectionStacktrace, newline);
 						 
-						 
 						 stacktrace = exceptionClassName 
 								 		+ ":"
 								 		+ newline 
@@ -152,8 +152,6 @@ public class HSRLogInterceptorDefault extends TurboFilter {
 				}catch(Throwable t) {
 					System.out.println("Error while creating Exception Stacktrace: "+t.getMessage());
 				}
-				
-				
 
 				//---------------------------------
 				// Get Log Source
@@ -174,6 +172,7 @@ public class HSRLogInterceptorDefault extends TurboFilter {
 				LogStatement statement = new LogStatement(
 							  event.getInstant().toEpochMilli()
 							, HSRStatsEngine.getHostname()
+							, event.getThreadName()
 							, level.toString()
 							, logSource
 							, formattedMsg

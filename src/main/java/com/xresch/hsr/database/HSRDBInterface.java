@@ -111,6 +111,7 @@ public class HSRDBInterface {
 	public record LogStatement(
 					  Long time
 					, String host
+					, String thread
 					, String level
 					, String source
 					, String message
@@ -120,7 +121,7 @@ public class HSRDBInterface {
 	};
 		
 	public enum LogColumns {
-		testid, time, host, level, source, message, stacktrace
+		testid, time, host, thread, level, source, message, stacktrace
 	}
 				
 	private static final String sqlCreateTableLogsTemplate = """
@@ -128,6 +129,7 @@ public class HSRDBInterface {
 			    testid BIGINT
 			  , time BIGINT
 			  , host VARCHAR(4096)
+			  , thread VARCHAR(4096)
 			  , level VARCHAR(16)
 			  , source VARCHAR(4096)
 			  , message VARCHAR
@@ -138,8 +140,8 @@ public class HSRDBInterface {
 	
 	private static String sqlInsertIntoLogsTemplate = """
 			INSERT INTO {tablename}
-				(testid, time, host, level, source, message, stacktrace)
-				VALUES (?,?,?,?,?,?,?)"""
+				(testid, time, host, thread, level, source, message, stacktrace)
+				VALUES (?,?,?,?,?,?,?,?)"""
 			;	
 	
 	/************************************************************************
@@ -262,6 +264,7 @@ public class HSRDBInterface {
 		valueList.add( testid );
 		valueList.add( log.time() );
 		valueList.add( log.host() ); //report nothing for endtime
+		valueList.add( log.thread() ); //report nothing for endtime
 		valueList.add( log.level().toString() );
 		valueList.add( log.source() );
 		valueList.add( log.message() );
