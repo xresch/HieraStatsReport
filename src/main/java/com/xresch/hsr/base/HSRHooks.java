@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.xresch.hsr.stats.HSRRecord;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordStatus;
 import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
+import com.xresch.xrutils.base.XR;
 
 /**************************************************************************************************************
  * Class that can be extended and overridden to hook into specific points of the HSR Framework.
@@ -13,13 +14,7 @@ import com.xresch.hsr.stats.HSRRecord.HSRRecordType;
  * @license EPL-License
  **************************************************************************************************************/
 public class HSRHooks {
-	
-	// packages to skip in the stack trace to get more meaningful information and reduce overhead
-	protected static ArrayList<String> skippedPackageList = new ArrayList<String>();
-	
-	protected static int bottomStackElements = 3;
-	protected static int maxStackElements = 10;
-	
+		
 	/*****************************************************************************************
 	 * You may call this a constructor, I call it the reincarnation of characters that
 	 * have been slaughtered by the mighty Lord of Digital Erasure.
@@ -39,7 +34,7 @@ public class HSRHooks {
 	 * @param packageName a package like "com.myproject.awesomeapp"
 	 *****************************************************************************************/
 	public static void addSkippedPackage(String packageName) {
-		HSRHooks.skippedPackageList.add(packageName);
+		XR.Text.shortStacktraceAddSkippedPackage(packageName);
 	}
 	
 	/*****************************************************************************************
@@ -48,7 +43,7 @@ public class HSRHooks {
 	 * @param bottomStackElements number of  bottom elements to be shown in stack traces
 	 *****************************************************************************************/
 	public static void bottomStackElements(int bottomStackElements) {
-		HSRHooks.bottomStackElements = bottomStackElements;
+		XR.Text.shortStacktraceBottomElements(bottomStackElements);
 	}
 	/*****************************************************************************************
 	 * Defines the maximum amount of stack elements that should be shown in exception stack
@@ -57,7 +52,7 @@ public class HSRHooks {
 	 * @param maxStackElements max number of elements to be shown in stack traces
 	 *****************************************************************************************/
 	public static void maxStackElements(int maxStackElements) {
-		HSRHooks.maxStackElements = maxStackElements;
+		XR.Text.shortStacktraceMaxElements(maxStackElements);
 	}
 	
 	/*****************************************************************************************
@@ -121,67 +116,13 @@ public class HSRHooks {
 		builder.append(e.getMessage());
 		
 		StackTraceElement[] stacktrace = e.getStackTrace();
-		int appendedCount = 0;
 		
-		int stacksize = stacktrace.length;
-		for(int i = 0; i < stacksize; i++) {
-			
-			StackTraceElement element = stacktrace[i];
-			
-			//--------------------------
-			// Always show first 3 elements
-			if( i < bottomStackElements ) { 
-				builder.append("\n\tat ").append(element.toString());
-				appendedCount++;
-				continue;
-			}else {
-				
-				//--------------------------
-				// Skip any Skippables
-				boolean keepSkipping = true;
-				int skipCount = 0;
-				
-				while(keepSkipping && i < stacksize ){
-					
-					String classname = element.getClassName();
-					
-					boolean isSkipped = false;
-					for(String skipPackage : skippedPackageList) {
-						if( classname.startsWith(skipPackage) ) {
-							skipCount++;
-							isSkipped = true;
-							break;
-						}
-					}
-					
-					keepSkipping = isSkipped;
-					i++;
-					if(i < stacksize) {
-						element = stacktrace[i];
-					}
-				}
-				
-				//--------------------------
-				// Add [... # skipped ...]
-				if(skipCount > 0) {
-					builder.append("\n\tat [... ").append(skipCount).append(" skipped ...]");
-				}
-				
-				//--------------------------
-				// Keep Appending
-				builder.append("\n\tat ").append(element.toString());
-				appendedCount++;
-			}
-			
-			//--------------------------
-			// Stop adding elements
-			// min 3 max 10
-			if(appendedCount >= maxStackElements){
-				break;
-			}
-		}
 
+		String shortStacktrace = XR.Text.shortStacktrace(stacktrace, "\n\t");
+		
+		builder.append("\n\t").append(shortStacktrace);
 		
 		return builder.toString();
 	}
+
 }
