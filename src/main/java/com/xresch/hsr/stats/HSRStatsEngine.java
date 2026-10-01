@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -88,6 +89,9 @@ public class HSRStatsEngine {
 	private static Thread threadSystemInfo;
 	private static boolean isFirstReport = true;
 	
+	// used to monitor if the reporting Threads have finished reporting
+	private static CountDownLatch reportingThreadsLatch = new CountDownLatch(0);
+	
 	private static final double MB = 1024.0 * 1024.0;
 	
 	//=========================================
@@ -118,11 +122,19 @@ public class HSRStatsEngine {
 	private static TreeMap<String, Double> diskUsageMB_WriteBytesPerSec = new TreeMap<>();
 	
 	/***************************************************************************
-	 * Starts the reporting of the statistics.
+	 * Sets the hooks.
 	 *  
 	 ***************************************************************************/
 	public static void setHooks(HSRStatsEngineHooks hooks) {
 		HSRStatsEngine.hooks = hooks;
+	}
+	
+	/***************************************************************************
+	 * Returns the hostname.
+	 *  
+	 ***************************************************************************/
+	public static String getHostname() {
+		return hostname;
 	}
 
 	/***************************************************************************
@@ -330,14 +342,26 @@ public class HSRStatsEngine {
 			if(!isStopped) {
 				
 				isStopped = true; // do this first to avoid errors caused by race conditions
-				
+
 				schedulerStatsEngine.shutdown();
 				threadSystemInfo.interrupt();
-			
+				
 				aggregateAndReport();
 				generateSummaryReport();
+				
+				//-------------------------
+				// Wait for Reporters to Finish
+				try {
+					reportingThreadsLatch.await(5, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
+					logger.error("Waiting for coutndown interrupted.", e);
+					Thread.currentThread().interrupt(); // restore interrupt flag		
+				}
+				
+				//-------------------------
+				// Wait Terminate Reporters
 				terminateReporters();
-			
+				
 				//reset values
 				schedulerStatsEngine = null;
 				isFirstReport = true;
@@ -373,18 +397,11 @@ public class HSRStatsEngine {
 	 * <pre><code>HSRConfig.setLogInterceptor(new HSRLogInterceptorDefault(Level.WARN, Level.INFO) );</code></pre>
 	 * 
 	 ***********************************************************************************/
-	public static void addLogStatement(Long time, Level level, String message, Throwable t){
+	public static void addLogStatement(Long time, Level level, String source, String message, String stacktrace){
 		
 		String finalLevel = (level != null) ? level.toString() : "";
 		
-		String messageWithStacktrace =  message 
-					+ ( 
-						(t == null) 
-						? ""
-						: XR.Text.stacktraceToString(t)
-					);
-
-		logsStatements.add( new LogStatement(time, hostname, finalLevel, messageWithStacktrace) );
+		logsStatements.add( new LogStatement(time, hostname, finalLevel, source, message, stacktrace) );
 	}
 	
 	/***********************************************************************************
@@ -1202,16 +1219,21 @@ public class HSRStatsEngine {
 		//-------------------------
 		// Send unmodifiable list to each Reporter
 		//CountDownLatch latch = new CountDownLatch(HSRConfig.getReporterList().size());
+		
+		reportingThreadsLatch = new CountDownLatch(HSRConfig.getReporterList().size());
+		
 		for (HSRReporter reporter : HSRConfig.getReporterList()){
 			
 			// wrap with try catch to not stop reporting to all reporters
 			try {
 				
+				
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
 
-						if(!isStopped) { // prevent some exceptions
+						try {
+							//if(!isStopped) { // prevent some exceptions
 							logger.debug("Report data to: "+reporter.getClass().getName());
 							
 							//-----------------------------
@@ -1229,7 +1251,9 @@ public class HSRStatsEngine {
 							}catch(Throwable t) {
 								logger.error("Error while reporting logs: "+t.getMessage(), t);
 							}
-							
+							//}
+						}finally {
+							reportingThreadsLatch.countDown();
 						}
 
 					}
@@ -1239,14 +1263,6 @@ public class HSRStatsEngine {
 				logger.error("Exception while reporting data.", e);
 			}
 		}
-		//-------------------------
-		// Wait for Completion
-//		try {
-//			latch.await();
-//		} catch (InterruptedException e) {
-//			logger.error("Waiting for coutndown interrupted.", e);
-//			Thread.currentThread().interrupt(); // restore interrupt flag		
-//		}
 
 	}
 	

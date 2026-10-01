@@ -112,24 +112,15 @@ public class HSRDBInterface {
 					  Long time
 					, String host
 					, String level
+					, String source
 					, String message
+					, String stacktrace
 				) {
 				
-		public JsonObject toJson() {
-			
-			JsonObject result = new JsonObject();
-			result.addProperty("time", time() );
-			result.addProperty("host", host() );
-			result.addProperty("level", level() );
-			result.addProperty("message", message() );
-			
-			return result;
-			
-		}
 	};
 		
 	public enum LogColumns {
-		testid, time, host, level, message
+		testid, time, host, level, source, message, stacktrace
 	}
 				
 	private static final String sqlCreateTableLogsTemplate = """
@@ -138,15 +129,17 @@ public class HSRDBInterface {
 			  , time BIGINT
 			  , host VARCHAR(4096)
 			  , level VARCHAR(16)
+			  , source VARCHAR(4096)
 			  , message VARCHAR
+			  , stacktrace VARCHAR
 			  , FOREIGN KEY (testid) REFERENCES {parentTablename} (id) ON DELETE CASCADE
 			)"""
 			;
 	
 	private static String sqlInsertIntoLogsTemplate = """
 			INSERT INTO {tablename}
-				(testid, time, host, level, message)
-				VALUES (?,?,?,?,?)"""
+				(testid, time, host, level, source, message, stacktrace)
+				VALUES (?,?,?,?,?,?,?)"""
 			;	
 	
 	/************************************************************************
@@ -270,7 +263,9 @@ public class HSRDBInterface {
 		valueList.add( log.time() );
 		valueList.add( log.host() ); //report nothing for endtime
 		valueList.add( log.level().toString() );
+		valueList.add( log.source() );
 		valueList.add( log.message() );
+		valueList.add( log.stacktrace() );
 	
 		return db.preparedExecute(insertSQL, valueList.toArray());
 		
