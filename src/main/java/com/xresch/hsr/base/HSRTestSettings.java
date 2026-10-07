@@ -75,7 +75,7 @@ public class HSRTestSettings {
 	
 		ArrayList<Object> valueList = new ArrayList<>();
 		
-		valueList.add(HSRConfig.STARTTIME_MILLIS);
+		valueList.add(HSRConfig.getStarttime());
 		valueList.add(null); //report nothing for endtime
 		valueList.add(testid);
 		valueList.add(HSRConfig.getExecID());
@@ -94,7 +94,7 @@ public class HSRTestSettings {
 		
 		JsonObject object = new JsonObject();
 
-		object.addProperty("starttime", HSRConfig.STARTTIME_MILLIS);
+		object.addProperty("starttime", HSRConfig.getStarttime());
 		object.addProperty("execid", HSRConfig.getExecID());
 		object.addProperty("test", HSR.getTest());
 		object.addProperty("usecase", usecase);

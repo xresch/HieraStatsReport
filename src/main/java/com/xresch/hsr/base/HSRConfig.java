@@ -80,7 +80,7 @@ public class HSRConfig {
 	//----------------------
 	// Report Properties
 	private static String executionID = null;
-	public static final long STARTTIME_MILLIS = System.currentTimeMillis();
+	private static long starttimeMillis = System.currentTimeMillis();
 	
 	private static boolean debug = false;
 	private static boolean isEnabled = false; 
@@ -139,6 +139,14 @@ public class HSRConfig {
 	
 	/******************************************************************
 	 * <b>Scope:</b> Global <br>
+	 * Returns the report interval in seconds.
+	 ******************************************************************/
+	public static long getStarttime() {
+		return starttimeMillis;
+	}
+	
+	/******************************************************************
+	 * <b>Scope:</b> Global <br>
 	 * 
 	 * Resets the state of the engine and prepares is for another 
 	 * execution;
@@ -190,6 +198,8 @@ public class HSRConfig {
 		
 		if(!isEnabled) {
 			
+			starttimeMillis = System.currentTimeMillis();
+			
 			//----------------------------
 			// Add Default Properties
 			if(executionID == null) {
@@ -202,8 +212,8 @@ public class HSRConfig {
 			//----------------------------
 			// Add Default Properties
 			HSRConfig.addProperty("[HSR] reportingInterval", reportingIntervalSec + " sec");
-			HSRConfig.addProperty("[HSR] timeStartMillis", "" + STARTTIME_MILLIS);
-			HSRConfig.addProperty("[HSR] timeStartTimestamp", HSR.Time.formatMillisAsTimestamp(STARTTIME_MILLIS));
+			HSRConfig.addProperty("[HSR] timeStartMillis", "" + starttimeMillis);
+			HSRConfig.addProperty("[HSR] timeStartTimestamp", HSR.Time.formatMillisAsTimestamp(starttimeMillis));
 			HSRConfig.addProperty("[HSR] enableStatsProcessMemory", "" + enableStatsProcessMemory);
 			HSRConfig.addProperty("[HSR] enableStatsCPU", "" + enableStatsCPU);
 			HSRConfig.addProperty("[HSR] enableStatsHostMemory", "" + enableStatsHostMemory);

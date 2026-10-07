@@ -240,7 +240,7 @@ public class HSRDBInterface {
 		
 		//(execid, time, endtime, name, properties)
 		valueList.add( HSRConfig.getExecID() );
-		valueList.add(HSRConfig.STARTTIME_MILLIS);
+		valueList.add(HSRConfig.getStarttime());
 		valueList.add(null); //report nothing for endtime
 		valueList.add(HSR.getTest());
 		valueList.add(HSR.JSON.toJSON(HSRConfig.getProperties()));

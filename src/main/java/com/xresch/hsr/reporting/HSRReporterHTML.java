@@ -123,7 +123,7 @@ public class HSRReporterHTML implements HSRReporter {
     	// Make Data Object
     	JsonObject data = makeReportDataObject(
     							  HSR.getTest()
-    							, HSRConfig.STARTTIME_MILLIS
+    							, HSRConfig.getStarttime()
     							, System.currentTimeMillis()
     							, summaryRecordsWithSeries
     							, HSR.JSON.toJSONElement(properties).getAsJsonObject()
