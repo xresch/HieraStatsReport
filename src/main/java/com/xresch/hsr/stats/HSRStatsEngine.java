@@ -176,8 +176,9 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	private static void startThreadStatsEngine(int reportInterval) {
 		
-		
-		Thread threadStatsengine = new Thread(new Runnable() {
+		//------------------------------------
+		// Create Reporting Thread
+		Thread threadStatsEngine = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -188,13 +189,15 @@ public class HSRStatsEngine {
 
 			}
 		});
+		threadStatsEngine.setName("HSRStatsEngineThread");
+		threadStatsEngine.setPriority(9); // to get smoother reporting
+		threadStatsEngine.setDaemon(true);
 		
+		//------------------------------------
+		// Create Thread Scheduler
 		schedulerStatsEngine = Executors.newScheduledThreadPool(1);
 		
-		threadStatsengine.setName("statsengine");
-		threadStatsengine.setPriority(9); // to get smoother reporting
-		//threadStatsengine.start();
-		schedulerStatsEngine.scheduleAtFixedRate(threadStatsengine, reportInterval, reportInterval, TimeUnit.SECONDS);
+		schedulerStatsEngine.scheduleAtFixedRate(threadStatsEngine, reportInterval, reportInterval, TimeUnit.SECONDS);
 		
 	}
 	
