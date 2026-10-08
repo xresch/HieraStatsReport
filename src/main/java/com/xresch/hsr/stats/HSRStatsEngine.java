@@ -357,7 +357,7 @@ public class HSRStatsEngine {
 				try {
 					reportingThreadsLatch.await(5, TimeUnit.SECONDS);
 				} catch (InterruptedException e) {
-					logger.error("Waiting for coutndown interrupted.", e);
+					logger.error("Waiting for countdown interrupted.", e);
 					Thread.currentThread().interrupt(); // restore interrupt flag		
 				}
 				
