@@ -441,14 +441,28 @@ public class HSRDBInterface {
 	 * @param tableNamePrefix
 	 * @param testID
 	 * @param minTime minimum time in epochMillis of the logs returned, returns all if null
+	 * @param maxRows to return, returns the last N logs by time
 	 * 
 	 * @return Test or null if not found
 	 ****************************************************************/
-	public static JsonArray selectLogsForTest(XRDBInterface dbInterface, String tableNamePrefix, int testID, Long minTime  ) {
+	public static JsonArray selectLogsForTest(XRDBInterface dbInterface, String tableNamePrefix, int testID, Long minTime, int maxRows  ) {
 
-		String sql = 
-				  " SELECT * FROM " + tableNamePrefix + TABLE_SUFFIX_LOGS
-				+ " WHERE testid = ?";
+//	Following is the query that will be created, used to get last N logs by time in ascending order
+//		SELECT *
+//		FROM (
+//		    SELECT *
+//		    FROM xxx_logs
+//			WHERE testid = ?
+//			  AND time > ?
+//		    ORDER BY time DESC
+//		    LIMIT 1000
+//		) AS last_records
+//		ORDER BY time ASC;
+		
+		String sql = "SELECT * FROM ("
+				+ " SELECT * FROM " + tableNamePrefix + TABLE_SUFFIX_LOGS
+				+ " WHERE testid = ?"
+				;
 		
 		ArrayList<Object> values = new ArrayList<>();
 		values.add(testID);
@@ -462,7 +476,11 @@ public class HSRDBInterface {
 		
 		//--------------------------
 		// Sort By Time
-		sql += " ORDER BY time";
+		sql += " ORDER BY time DESC"
+			 + " LIMIT " + maxRows
+			 + " ) AS last_records "
+			 + " ORDER BY time ASC "
+			 ;
 		
 		//--------------------------
 		// Fetch and Return
