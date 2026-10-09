@@ -456,10 +456,16 @@ public class HSRDBInterface {
 		//--------------------------
 		// Add Min Time
 		if( minTime != null ) {
-			sql += " AND time >= ?";
+			sql += " AND time > ?";
 			values.add(minTime);
 		}
 		
+		//--------------------------
+		// Sort By Time
+		sql += " ORDER BY time";
+		
+		//--------------------------
+		// Fetch and Return
 		ResultSet result = dbInterface.preparedExecuteQuery(sql, values.toArray());
 
 		return new XRResultSetConverter(dbInterface, result).toJSONArray();
