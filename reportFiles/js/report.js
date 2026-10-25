@@ -68,15 +68,19 @@ var RECORDS_ALL_DATAPOINTS = [];
 
 var TEST_NAMES = [];
 
+// contains the values for the stats calculation
+var OVERALL_STATS_VALUES = {};
+// contains the calculated statistics as key=Label / value=value
+var OVERALL_STATS_TOTAL = [];
+
 //================================================
 // ENUM: STATUS
 //================================================
 const RECORDSTATUS = {
-		Success: "Success",
-		Skipped: "Skipped",
-		Fail: "Fail",
-		None: "None",
-		
+	Success: "Success",
+	Skipped: "Skipped",
+	Fail: "Fail",
+	None: "None",	
 }
 
 //================================================
@@ -87,30 +91,63 @@ const RECORDSTATE =  [
 	"nok",
 ]
 
+
 //================================================
 // ENUM: METRIC
 //================================================
-const RECORDMETRIC =  {
-	"count": 		{ isOkNok: true }
-	, "cph": 		{ isOkNok: true }
-	, "min": 		{ isOkNok: true }
-	, "avg": 		{ isOkNok: true }
-	, "max": 		{ isOkNok: true }
-	, "stdev": 		{ isOkNok: true }
-	, "p25": 		{ isOkNok: true }
-	, "p50": 		{ isOkNok: true }
-	, "p75": 		{ isOkNok: true }
-	, "p90": 		{ isOkNok: true }
-	, "p95": 		{ isOkNok: true }
-	, "p99": 		{ isOkNok: true }
-	, "sla": 		{ isOkNok: true }
-	, "success": 	{ isOkNok: false }
-	, "failed": 	{ isOkNok: false }
-	, "skipped": 	{ isOkNok: false }
-	, "aborted": 	{ isOkNok: false }
-	, "none": 		{ isOkNok: false }
-	, "failrate": 	{ isOkNok: false }
+function metricStatsAvg(metricName, values, targetArray){
+	targetArray.push( { name: metricName+"[avg]", value: calculateAvg(values, 0, true) });
 }
+
+function metricStatsAvgPrecise(metricName, values, targetArray){
+	targetArray.push( { name: metricName+"[avg]", value: calculateAvg(values, 3, true) });
+}
+
+function metricStatsSum(metricName, values, targetArray){
+	targetArray.push( { name: metricName+"[sum]", value: calculateSum(values, 0, true) });
+}
+
+function metricStatsSumAndAvg(metricName, values, targetArray){
+	let sum = calculateSum(values, 0, true);
+	targetArray.push( { name: metricName+"[avg]", value: calculateAvg(values, 3, true, sum) });
+	targetArray.push( { name: metricName+"[sum]", value: sum });
+}
+
+function metricStatsPercentile(metricName, values, targetArray){
+	let perc = metricName.slice(-2);
+	
+	if(isNaN(perc)){
+		return null;
+	}
+	
+	perc = Number(perc);
+
+	targetArray.push( { name: metricName, value: calculatePercentile(perc, values) });
+	
+}
+
+const RECORDMETRIC =  {
+	"count": 		{ isOkNok: true, statsFunc: metricStatsSumAndAvg }
+	, "cph": 		{ isOkNok: true, statsFunc: metricStatsSumAndAvg }
+	, "min": 		{ isOkNok: true, statsFunc: metricStatsAvg }
+	, "avg": 		{ isOkNok: true, statsFunc: metricStatsAvg }
+	, "max": 		{ isOkNok: true, statsFunc: metricStatsAvg }
+	, "stdev": 		{ isOkNok: true, statsFunc: metricStatsAvg }
+	, "p25": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
+	, "p50": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
+	, "p75": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
+	, "p90": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
+	, "p95": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
+	, "p99": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
+	, "sla": 		{ isOkNok: true, statsFunc: metricStatsAvgPrecise }
+	, "success": 	{ isOkNok: false, statsFunc: metricStatsSum }
+	, "failed": 	{ isOkNok: false, statsFunc: metricStatsSum }
+	, "skipped": 	{ isOkNok: false, statsFunc: metricStatsSum }
+	, "aborted": 	{ isOkNok: false, statsFunc: metricStatsSum }
+	, "none": 		{ isOkNok: false, statsFunc: metricStatsSum }
+	, "failrate": 	{ isOkNok: false, statsFunc: metricStatsAvg }
+}
+
 
 //================================================
 // ENUM: TYPE
@@ -913,18 +950,79 @@ function initialize(){
 		RECORDS_ALL = RECORDS_ALL.concat(DATA[i].records);
 	}	
 	
+	
+	//-----------------------------
+	// Prepare OVERALL_STATS_VALUES structure
+	OVERALL_STATS_VALUES = {};
+	
+	for(let name in RECORDMETRIC){
+		let metric 	= RECORDMETRIC[name];
+		if(metric.isOkNok){
+			OVERALL_STATS_VALUES["ok_"+name] = [];
+			OVERALL_STATS_VALUES["nok_"+name] = [];
+		}else{
+			OVERALL_STATS_VALUES[name] = [];
+		}
+
+	}
+	
 	//------------------------------------------
 	// Create CFW Style data
 	RECORDS_ALL_DATAPOINTS = [];
+
 	for(let i in RECORDS_ALL){
 		let record = RECORDS_ALL[i];
+		
 		
 		record.statsid = getStatsIDHash(record);
 		record.total_count = record.ok_count + record.nok_count;
 		
+		let type = RECORDTYPE[record.type];
 		let arrayTime = record.series.time;
 		let arraysOK = record.series.ok;
 		let arraysNOK = record.series.nok;
+		
+		//--------------------------------------------------------
+		// Copy Summary Stats for each record
+		if( ! type.isCount && ! type.isGauge ){
+			for(let name in RECORDMETRIC){
+				let metric 	= RECORDMETRIC[name];
+				
+				if(metric.isOkNok){
+					let valueOK 	= record["ok_"+name];
+					let valueNOK 	= record["nok_"+name];				
+					
+					OVERALL_STATS_VALUES["ok_"+name].push(valueOK);
+					OVERALL_STATS_VALUES["nok_"+name].push(valueNOK);
+				}else{
+					let valueOK = record[name];
+					OVERALL_STATS_VALUES[name].push(valueOK);
+				}
+		
+			}
+		}
+		
+		//-----------------------------
+		// Calculate OVERALL_STATS_TOTAL
+		OVERALL_STATS_TOTAL = [];
+
+		for(let name in RECORDMETRIC){
+			let metric 	= RECORDMETRIC[name];
+			if(metric.isOkNok){
+				let metricName = "ok_"+name;
+				let values = OVERALL_STATS_VALUES[metricName];
+				metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
+				
+				metricName = "nok_"+name;
+				values = OVERALL_STATS_VALUES[metricName];
+				metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
+								
+			}else{
+				let values = OVERALL_STATS_VALUES[name];
+				metric.statsFunc(name, values, OVERALL_STATS_TOTAL);
+			}
+
+		}
 		
 		//--------------------------------------------------------
 		// clone everything except series
@@ -948,7 +1046,8 @@ function initialize(){
 					timedClone["ok_"+name] = valueOK;
 					timedClone["nok_"+name] = valueNOK;
 				}else{
-					timedClone[name] = record.series.ok[name][t];
+					let valueOK = record.series.ok[name][t];
+					timedClone[name] = valueOK;
 				}
 		
 			}
@@ -1210,6 +1309,96 @@ function calculateStatisticsByField(currentItem, fieldName, statistics){
 	}
 	
 	return statistics;
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function calculateAvg(values, precision, removeNulls, sum) {
+
+	//-------------------------------
+	// Filter
+	if(removeNulls){
+		values = _.filter(values, v => v != null);
+	}
+	
+	//-------------------------------
+	// Check has Values
+    if (values.length === 0) {
+        return null;
+    }
+
+	//-------------------------------
+	// Sum
+	if(sum == null){
+		sum = calculateSum(values, precision, removeNulls);
+	}
+	
+	let avg = sum / values.length;
+	if(precision != null){
+		avg = Number(avg.toFixed(2));
+	}
+	
+	return avg;
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function calculateSum(values, precision, removeNulls) {
+
+	//-------------------------------
+	// Filter
+	if(removeNulls){
+		values = _.filter(values, v => v != null);
+	}
+	
+	//-------------------------------
+	// Check has Values
+    if (values.length === 0) {
+        return null;
+    }
+
+	//-------------------------------
+	// Sum
+	let sum = 0;
+	for(let i = 0; i < values.length; i++ ){
+		sum += values[i];
+	}
+	
+	if(precision != null){
+		sum = Number(sum.toFixed(2));
+	}
+	
+	return sum;
+}
+
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function calculatePercentile(percentile, values) {
+
+	//-------------------------------
+	// Filter & Sort
+	values = _.filter(values, v => v != null);
+    values = _.sortBy(values);
+	
+	//-------------------------------
+	// Check has Values
+    if (values.length === 0) {
+        return null;
+    }
+
+	//-------------------------------
+	// Filter & Sort
+    const percentilePosition = Math.ceil(values.length * (percentile / 100) );
+
+    if (percentilePosition > 0) {
+        return values[percentilePosition - 1];
+    } else {
+        return values[0];
+    }
 }
 
 
@@ -1932,7 +2121,6 @@ function drawChartsHostMemory(target, chartOptions){
 	
 	//---------------------
 	// Draw
-	
 	drawChartByFields(
 		  target
 		, datapoints
@@ -2509,7 +2697,28 @@ function drawSummaryPage(target){
 		
 	resultDiv.append(row);
 	
+	//----------------------------
+	// Create Overall Stats
+	resultDiv.append('<a name="overall-stats"><h3>Overall Statistics<h3></a>');
+	resultDiv.append('<p>List of overall statistics based on all records that are not pure count or gauge.</p>');
+	
+	let overallStatsRendeDef = {
+		idfield: null,
+		data: OVERALL_STATS_TOTAL,
+		visiblefields: ["name", "value"],
+		labels: FIELDLABELS,
+		actions: {},
+		customizers: {},
+		rendererSettings: {
+			dataviewer:{ storeid: "overall-stats", download: true, print: true, sortable: false },
+			table: {filterable: false, narrow: true, stickyheader: true},
+		},
+	}
 
+	let overallStatsTable = CFW.render.getRenderer('dataviewer').render(overallStatsRendeDef);	
+
+	resultDiv.append(overallStatsTable);	
+	
 	//----------------------------
 	// Create SLA Table OK
 	resultDiv.append('<a name="sla-ok"><h3>SLA Analysis - OK<h3></a>');
