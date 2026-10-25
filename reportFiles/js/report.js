@@ -1024,6 +1024,21 @@ function initialize(){
 
 		}
 		
+		//-----------------------------
+		// Enhance OVERALL_STATS_TOTAL
+		TEMP_STATS = [];
+		
+		let tot_ok_count = _.find(OVERALL_STATS_TOTAL, { name: "ok_count[sum]" }).value;;
+		let tot_nok_count = _.find(OVERALL_STATS_TOTAL, { name: "nok_count[sum]" }).value;;
+		let tot_count = tot_ok_count + tot_nok_count;
+		let percentOK =  tot_ok_count / tot_count * 100
+		let percentNOK = 100 - percentOK;
+		let okVsNokCount = percentOK.toFixed(1) + "% OK / " + percentNOK.toFixed(1) + "% NOK";
+		
+		TEMP_STATS.push( {name: "OK vs NOK", value: okVsNokCount} );
+		
+		OVERALL_STATS_TOTAL = _.concat(TEMP_STATS, OVERALL_STATS_TOTAL);
+		
 		//--------------------------------------------------------
 		// clone everything except series
 		// do this here to not clone series every time
@@ -2708,7 +2723,22 @@ function drawSummaryPage(target){
 		visiblefields: ["name", "value"],
 		labels: FIELDLABELS,
 		actions: {},
-		customizers: {},
+		customizers: {
+			"value": function(record, value, rendererName, fieldname){
+				if( ! isNaN(value) ){
+					
+					let formatted = CFW.customizer.number(record, value.toFixed(2), rendererName, fieldname);
+					
+					if(fieldname == 'failrate'){
+						formatted = $(formatted).append(" %");
+					}
+					
+					return formatted;
+				}else {
+					return value;
+				}
+			}
+		},
 		rendererSettings: {
 			dataviewer:{ storeid: "overall-stats", download: true, print: true, sortable: false },
 			table: {filterable: false, narrow: true, stickyheader: true},
