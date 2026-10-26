@@ -2290,6 +2290,190 @@ function drawChartsHostMemory(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
+function drawChartThroughput(target, chartOptions){
+	
+	target.append("<h5>Throughput [count/hour]<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'area'
+			, stacked: true
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.ok_cph != null && record.ok_avg != null; 
+	});
+	
+	//---------------------
+	// Aggregate
+	let groupedByTime = _(datapoints)
+		.groupBy("time")
+	    .map((items, time) => ({
+	        time: items[0].time, // groupBy converts "time" to string, use original number time to prevent issues with charts
+			name: "Throughput",
+	        "count": _.sumBy(items, "ok_cph")
+	    }))
+	    .value();
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, groupedByTime
+		, ["name"]
+		, ["count"]
+		, finalChartOptions
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartOverallResponseTime(target, chartOptions){
+	
+	target.append("<h5>Overall Response Times<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'area'
+			, stacked: false
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.ok_cph != null && record.ok_avg != null; 
+	});
+	
+	//---------------------
+	// Aggregate
+	let groupedByTime = _(datapoints)
+		.groupBy("time")
+	    .map((items, time) => (
+			{time: items[0].time, // groupBy converts "time" to string, use original number time to prevent issues with charts
+			name: "Response Time",
+	        "ok_min": calculateMin( _.map(items, "ok_min"), true ),
+	        "ok_avg": calculateAvg( _.map(items, "ok_avg"), 0, true ),
+	        "ok_max": calculateMax( _.map(items, "ok_max"), true ),
+	        "ok_p90": calculatePercentile(90, _.map(items, "ok_p90"))
+	    }))
+	    .value();
+	
+	console.log(groupedByTime);
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, groupedByTime
+		, ["name"]
+		, ["ok_min", "ok_avg", "ok_p90", "ok_max"]
+		, finalChartOptions
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartRequestsOKvsNOK(target, chartOptions){
+	
+	target.append("<h5>Requests By OK/NOK<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'steppedarea'
+			, pointradius: 0
+			, colors: ["limegreen", "red"]
+			, stacked: true
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return record.ok_cph != null && record.ok_avg != null; 
+	});
+	
+	//---------------------
+	// Aggregate
+	let groupedByTime = _(datapoints)
+		.groupBy("time")
+	    .map((items, time) => ({
+	        time: items[0].time, // groupBy converts "time" to string, use original number time to prevent issues with charts
+			name: "Status",
+	        "ok_count": _.sumBy(items, "ok_count"),
+	        "nok_count": _.sumBy(items, "nok_count")
+	    }))
+	    .value();
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, groupedByTime
+		, ["name"]
+		, ["ok_count", "nok_count"]
+		, finalChartOptions
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawChartRequestsByCode(target, chartOptions){
+	
+	target.append("<h5>Requests By Code<h5>");
+	
+	//---------------------------
+	// Render Settings
+	let defaultChartOptions = { 
+			 charttype: 'steppedarea'
+			, pointradius: 0
+			, stacked: true
+		}
+	
+	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	//---------------------
+	// Filter
+	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+		return ! CFW.utils.isNullOrEmpty(record.code); 
+	});
+	
+	//---------------------
+	// Aggregate
+	let groupedByTime = _(datapoints)
+		.groupBy(item => `${item.time}_${item.code}`)
+	    .map((items, time) => ({
+	        time: items[0].time, // groupBy converts "time" to string, use original number time to prevent issues with charts
+			code: items[0].code,
+	        "count": _.sumBy(items, "ok_count") + _.sumBy(items, "nok_count")
+	    }))
+	    .value();
+	
+	//---------------------
+	// Draw
+	drawChartByFields(
+		  target
+		, groupedByTime
+		, ["code"]
+		, ["count"]
+		, finalChartOptions
+	);
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
 function drawProperties(target){
 	
 	target = $(target);
@@ -2673,6 +2857,7 @@ function drawSummaryPage(target){
 	let resultDiv = $('<div class="container minvw-90">');
 	
 	resultDiv.append(`<div id="summary-nav">
+			<a class="btn btn-sm btn-primary" href="#overall-stats">Overall Statistics</a> 
 			<a class="btn btn-sm btn-primary" href="#sla-ok">SLA OK</a> 
 			<a class="btn btn-sm btn-primary" href="#sla-nok">SLA NOK</a>
 			<a class="btn btn-sm btn-primary" href="#boxplot">Boxplot</a>
@@ -2824,10 +3009,16 @@ function drawSummaryPage(target){
 	resultDiv.append(row);
 	
 	//==================================================================
-	// FORTH ROW - USERS
+	// 4- ROW - Users
 	//==================================================================
 	row = $('<div class ="row pt-5">');
 			
+		//--------------------------
+		// Disk
+		let diskUsage = $('<div class="col-3">');
+		drawChartsDiskusage(diskUsage, chartOptions);
+		row.append(diskUsage);		
+
 		//--------------------------
 		// Users Active
 		let usersActive = $('<div class="col-3">');
@@ -2846,11 +3037,36 @@ function drawSummaryPage(target){
 		drawChartsUsers(usersStopped, chartOptions, "Stopped");
 		row.append(usersStopped);
 		
+	resultDiv.append(row);
+	
+	//==================================================================
+	// 5. ROW - Performance Statistics
+	//==================================================================
+	row = $('<div class ="row pt-5">');
+			
 		//--------------------------
-		// Disk
-		let diskUsage = $('<div class="col-3">');
-		drawChartsDiskusage(diskUsage, chartOptions);
-		row.append(diskUsage);		
+		// Throughput
+		let throughput = $('<div class="col-3">');
+		drawChartThroughput(throughput, chartOptions);
+		row.append(throughput);		
+
+		//--------------------------
+		// Overall Response Time
+		let overallResponseTime = $('<div class="col-3">');
+		drawChartOverallResponseTime(overallResponseTime, chartOptions);
+		row.append(overallResponseTime);
+		
+		//--------------------------
+		// Requests OK/NOK
+		let requestsOKvsNOK = $('<div class="col-3">');
+		drawChartRequestsOKvsNOK(requestsOKvsNOK, chartOptions);
+		row.append(requestsOKvsNOK);
+		
+		//--------------------------
+		// Requests By Code
+		let requestsByCode = $('<div class="col-3">');
+		drawChartRequestsByCode(requestsByCode, chartOptions,);
+		row.append(requestsByCode);
 		
 	resultDiv.append(row);
 	
