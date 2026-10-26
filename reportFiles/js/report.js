@@ -95,6 +95,13 @@ const RECORDSTATE =  [
 //================================================
 // ENUM: METRIC
 //================================================
+function metricStatsMin(metricName, values, targetArray){
+	targetArray.push( { name: metricName+"[min]", value: calculateMin(values, true) });
+}
+function metricStatsMax(metricName, values, targetArray){
+	targetArray.push( { name: metricName+"[max]", value: calculateMax(values, true) });
+}
+
 function metricStatsAvg(metricName, values, targetArray){
 	targetArray.push( { name: metricName+"[avg]", value: calculateAvg(values, 0, true) });
 }
@@ -129,9 +136,9 @@ function metricStatsPercentile(metricName, values, targetArray){
 const RECORDMETRIC =  {
 	"count": 		{ isOkNok: true, statsFunc: metricStatsSumAndAvg }
 	, "cph": 		{ isOkNok: true, statsFunc: metricStatsSumAndAvg }
-	, "min": 		{ isOkNok: true, statsFunc: metricStatsAvg }
+	, "min": 		{ isOkNok: true, statsFunc: metricStatsMin }
 	, "avg": 		{ isOkNok: true, statsFunc: metricStatsAvg }
-	, "max": 		{ isOkNok: true, statsFunc: metricStatsAvg }
+	, "max": 		{ isOkNok: true, statsFunc: metricStatsMax }
 	, "stdev": 		{ isOkNok: true, statsFunc: metricStatsAvg }
 	, "p25": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
 	, "p50": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
@@ -1002,43 +1009,6 @@ function initialize(){
 			}
 		}
 		
-		//-----------------------------
-		// Calculate OVERALL_STATS_TOTAL
-		OVERALL_STATS_TOTAL = [];
-
-		for(let name in RECORDMETRIC){
-			let metric 	= RECORDMETRIC[name];
-			if(metric.isOkNok){
-				let metricName = "ok_"+name;
-				let values = OVERALL_STATS_VALUES[metricName];
-				metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
-				
-				metricName = "nok_"+name;
-				values = OVERALL_STATS_VALUES[metricName];
-				metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
-								
-			}else{
-				let values = OVERALL_STATS_VALUES[name];
-				metric.statsFunc(name, values, OVERALL_STATS_TOTAL);
-			}
-
-		}
-		
-		//-----------------------------
-		// Enhance OVERALL_STATS_TOTAL
-		TEMP_STATS = [];
-		
-		let tot_ok_count = _.find(OVERALL_STATS_TOTAL, { name: "ok_count[sum]" }).value;;
-		let tot_nok_count = _.find(OVERALL_STATS_TOTAL, { name: "nok_count[sum]" }).value;;
-		let tot_count = tot_ok_count + tot_nok_count;
-		let percentOK =  tot_ok_count / tot_count * 100
-		let percentNOK = 100 - percentOK;
-		let okVsNokCount = percentOK.toFixed(1) + "% OK / " + percentNOK.toFixed(1) + "% NOK";
-		
-		TEMP_STATS.push( {name: "OK vs NOK", value: okVsNokCount} );
-		
-		OVERALL_STATS_TOTAL = _.concat(TEMP_STATS, OVERALL_STATS_TOTAL);
-		
 		//--------------------------------------------------------
 		// clone everything except series
 		// do this here to not clone series every time
@@ -1072,7 +1042,11 @@ function initialize(){
 		}
 				
 	}
-		
+	
+	//------------------------------------
+	// Calculate Overall Stats
+	initializeCalculateOverallStats();
+	
 	//------------------------------------
 	// Calculate Statistics per Type
 	for(var type in RECORDTYPE){
@@ -1092,6 +1066,125 @@ function initialize(){
 	}
 		
 	initialDraw({view: "tableAll"});
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function initializeCalculateOverallStats(){
+	
+	OVERALL_STATS_TOTAL = [];
+	
+	//-----------------------------
+	// Calculate OVERALL_STATS_TOTAL
+
+	for(let name in RECORDMETRIC){
+		let metric 	= RECORDMETRIC[name];
+		if(metric.isOkNok){
+			let metricName = "ok_"+name;
+			let values = OVERALL_STATS_VALUES[metricName];
+			metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
+			
+			metricName = "nok_"+name;
+			values = OVERALL_STATS_VALUES[metricName];
+			metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
+							
+		}else{
+			let values = OVERALL_STATS_VALUES[name];
+			metric.statsFunc(name, values, OVERALL_STATS_TOTAL);
+		}
+
+	}
+
+	//===================================================
+	// Add Manual Calculations
+	TEMP_STATS = [];
+
+	if(DATA.length > 0){
+		let starttime = DATA[0].starttime;
+		let endtime = DATA[0].endtime;
+		TEMP_STATS.push( {name: "Test Start", value: CFW.format.epochToTimestamp(starttime) } );
+		TEMP_STATS.push( {name: "Test End", value: CFW.format.epochToTimestamp(endtime) } );
+		TEMP_STATS.push( {name: "Test Duration", value: CFW.format.millisToDuration(endtime - starttime) } );
+	}
+	//--------------------------------
+	// OK vs NOK
+	let tot_ok_count = _.find(OVERALL_STATS_TOTAL, { name: "ok_count[sum]" }).value;
+	let tot_nok_count = _.find(OVERALL_STATS_TOTAL, { name: "nok_count[sum]" }).value;
+	let tot_count = tot_ok_count + tot_nok_count;
+	let percentOK =  tot_ok_count / tot_count * 100
+	let percentNOK = 100 - percentOK;
+	let okVsNokCount = percentOK.toFixed(1) + "% OK / " + percentNOK.toFixed(1) + "% NOK";
+
+	TEMP_STATS.push( {name: "Counts OK vs NOK", value: okVsNokCount} );
+
+	//--------------------------------
+	// SLA OK vs NOK
+	let tot_ok_sla = _.find(OVERALL_STATS_TOTAL, { name: "ok_sla[avg]" }).value;
+	let percentSlaOK =  tot_ok_sla * 100
+	let percentSlaNOK = 100 - percentSlaOK;
+	let SlaOkVsNokCount = "SLA: " + percentSlaOK.toFixed(1) + "% OK / " + percentSlaNOK.toFixed(1) + "% NOK";
+
+	TEMP_STATS.push( {name: "SLA OK vs NOK", value: SlaOkVsNokCount} );
+	
+	//--------------------------------
+	// Success vs Fail
+	let tot_success = _.find(OVERALL_STATS_TOTAL, { name: "success[sum]" } ).value;
+	let tot_failed = _.find(OVERALL_STATS_TOTAL, { name: "failed[sum]" } ).value;
+	let tot_skipped = _.find(OVERALL_STATS_TOTAL, { name: "skipped[sum]" } ).value;
+	let tot_aborted = _.find(OVERALL_STATS_TOTAL, { name: "aborted[sum]" } ).value;
+	let tot_none = _.find(OVERALL_STATS_TOTAL, { name: "none[sum]" } ).value;
+	let total = tot_success + tot_failed + tot_skipped + tot_aborted + tot_none;
+	let percentSuccess =  (tot_success + tot_none) / total * 100;
+	let percentFailed = 100 - percentSuccess;
+	let successVsFailed = percentSuccess.toFixed(1) + "% Success / " + percentFailed.toFixed(1) + "% Failed";
+
+	TEMP_STATS.push( {name: "Success vs Failed", value: successVsFailed} );
+
+	//--------------------------------
+	// Throughput Count/Hour
+	let tot_cph = _.find(OVERALL_STATS_TOTAL, { name: "ok_cph[sum]" } ).value;
+	let tot_cpm = (tot_cph / 60).toFixed(1);
+	let tot_cps = (tot_cph / 3600).toFixed(1);
+	TEMP_STATS.push( {name: "Throughput Hour", value: CFW.format.numberSeparators(tot_cph) + " count/h"} );
+	TEMP_STATS.push( {name: "Throughput Minute", value: CFW.format.numberSeparators(tot_cpm) + " count/m"} );
+	TEMP_STATS.push( {name: "Throughput Second", value: CFW.format.numberSeparators(tot_cps) + " count/s"} );
+	
+	//--------------------------------
+	// Time Min, Avg, Max
+	let time_min = _.find(OVERALL_STATS_TOTAL, { name: "ok_min[min]" } ).value;
+	TEMP_STATS.push( {name: "Time Min", value: CFW.format.numberSeparators(time_min) + " ms"} );
+	
+	let time_avg = _.find(OVERALL_STATS_TOTAL, { name: "ok_avg[avg]" } ).value;
+	TEMP_STATS.push( {name: "Time Average", value: CFW.format.numberSeparators(time_avg) + " ms"} );
+
+	let time_max = _.find(OVERALL_STATS_TOTAL, { name: "ok_max[max]" } ).value;
+	TEMP_STATS.push( {name: "Time Max", value: CFW.format.numberSeparators(time_max) + " ms"} );
+
+	//--------------------------------
+	// Time Percentiles
+	let time_p25 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p25" } ).value;
+	TEMP_STATS.push( {name: "Time 25th Percentile", value: CFW.format.numberSeparators(time_p25) + " ms" } );
+
+	let time_p50 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p50" } ).value;
+	TEMP_STATS.push( {name: "Time 50th Percentile", value: CFW.format.numberSeparators(time_p50) + " ms" } );
+
+	let time_p75 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p75" } ).value;
+	TEMP_STATS.push( {name: "Time 75th Percentile", value: CFW.format.numberSeparators(time_p75) + " ms" } );
+
+	let time_p90 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p90" } ).value;
+	TEMP_STATS.push( {name: "Time 90th Percentile", value: CFW.format.numberSeparators(time_p90) + " ms" } );
+	
+	let time_p95 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p95" } ).value;
+	TEMP_STATS.push( {name: "Time 95th Percentile", value: CFW.format.numberSeparators(time_p95) + " ms" } );
+
+	let time_p99 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p99" } ).value;
+	TEMP_STATS.push( {name: "Time 99th Percentile", value: CFW.format.numberSeparators(time_p99) + " ms" } );
+
+
+	//===================================================
+	// Merge
+	OVERALL_STATS_TOTAL = _.concat(TEMP_STATS, OVERALL_STATS_TOTAL);
 }
 
 /**************************************************************************************
@@ -1356,6 +1449,55 @@ function calculateAvg(values, precision, removeNulls, sum) {
 	
 	return avg;
 }
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function calculateMin(values, removeNulls) {
+
+	//-------------------------------
+	// Filter
+	if(removeNulls){
+		values = _.filter(values, v => v != null);
+	}
+	
+	//-------------------------------
+	// Check has Values
+    if (values.length === 0) {
+        return null;
+    }
+
+	//-------------------------------
+	// Sum
+	let min = _.min(values);
+	
+	return min;
+}
+
+/**************************************************************************************
+ * 
+ *************************************************************************************/
+function calculateMax(values, removeNulls) {
+
+	//-------------------------------
+	// Filter
+	if(removeNulls){
+		values = _.filter(values, v => v != null);
+	}
+	
+	//-------------------------------
+	// Check has Values
+    if (values.length === 0) {
+        return null;
+    }
+
+	//-------------------------------
+	// Sum
+	let max = _.max(values);
+	
+	return max;
+}
+
 
 /**************************************************************************************
  * 
@@ -2715,7 +2857,9 @@ function drawSummaryPage(target){
 	//----------------------------
 	// Create Overall Stats
 	resultDiv.append('<a name="overall-stats"><h3>Overall Statistics<h3></a>');
-	resultDiv.append('<p>List of overall statistics based on all records that are not pure count or gauge.</p>');
+	resultDiv.append('<p>List of overall statistics based on the summary statistics of all records that have metrics(min,avg ...) and not only count values.'
+						+' These stats will be influenced by double reporting of metrics, e.g. when using ranged metrics.'
+					+'</p>');
 	
 	let overallStatsRendeDef = {
 		idfield: null,
