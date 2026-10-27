@@ -57,11 +57,38 @@ var FILELIST;
 //}
 //================================================
 
+class DataContext{
+	
+	 constructor(){
+		 
+		// use DATA = DATA.concat() to add your data JsonObjects
+		this.DATA = [];
+
+		// list of all records of all DATA entries
+		this.RECORDS_ALL = [];
+
+		// one record per datapoint, for easier filtering and charting with CFW Renderers
+		this.RECORDS_ALL_DATAPOINTS = [];
+
+		this.TEST_NAMES = [];
+
+		// contains the values for the stats calculation
+		this.OVERALL_STATS_VALUES = {};
+		
+		// contains the calculated statistics as key=Label / value=value
+		this.OVERALL_STATS_TOTAL = [];
+	 
+	}
+}
+
+var main = new DataContext();
+var compare = new DataContext();
+
 // use DATA = DATA.concat() to add your data JsonObjects
-var DATA = [];
+//var DATA = [];
 
 // list of all records of all DATA entries
-var RECORDS_ALL = [];
+/*var RECORDS_ALL = [];
 
 // one record per datapoint, for easier filtering and charting with CFW Renderers
 var RECORDS_ALL_DATAPOINTS = [];
@@ -71,7 +98,7 @@ var TEST_NAMES = [];
 // contains the values for the stats calculation
 var OVERALL_STATS_VALUES = {};
 // contains the calculated statistics as key=Label / value=value
-var OVERALL_STATS_TOTAL = [];
+var OVERALL_STATS_TOTAL = []; */
 
 //================================================
 // ENUM: STATUS
@@ -415,10 +442,10 @@ const CUSTOMIZERS = {
 /**************************************************************************************
  * Returns the SLA description for a specific record Name
  *************************************************************************************/
-function slaForRecord(record){
+function slaForRecord(context, record){
 	
-	for(i in DATA){
-		let sla = DATA[i].sla;
+	for(i in context.DATA){
+		let sla = context.DATA[i].sla;
 
 		if(sla.hasOwnProperty(record.pathrecord) ){
 			return sla[record.pathrecord];
@@ -431,9 +458,9 @@ function slaForRecord(record){
 /**************************************************************************************
  * Returns the record for a statsid.
  *************************************************************************************/
-function recordForStatsID(statsid){
+function recordForStatsID(statsid, context){
 	return _.cloneDeep(
-		_.filter(RECORDS_ALL, function(r) { 		
+		_.filter(context.RECORDS_ALL, function(r) { 		
 			return r.statsid == statsid; 
 		})[0]
 	);
@@ -442,17 +469,19 @@ function recordForStatsID(statsid){
 /**************************************************************************************
  * Returns cloned datapoints for a record.
  *************************************************************************************/
-function datapointsForRecord(record){
-	return datapointsForStatsID(record.statsid);
+function datapointsForRecord(record, context){
+	
+	if(context == null){ context = main; }
+	return datapointsForStatsID(record.statsid, context);
 }
 
 
 /**************************************************************************************
  * Returns cloned datapoints for a statsid.
  *************************************************************************************/
-function datapointsForStatsID(statsid){
+function datapointsForStatsID(statsid, context){
 	return _.cloneDeep(
-		_.filter(RECORDS_ALL_DATAPOINTS, function(r) { 		
+		_.filter(context.RECORDS_ALL_DATAPOINTS, function(r) { 		
 			return r.statsid == statsid; 
 		})
 	);
@@ -470,7 +499,7 @@ function customizerSLA(record, value, rendererName, fieldname){
 	//----------------------
 	// Popover
 	let popoverSettings = Object.assign({}, cfw_renderer_common_getPopoverDefaults());
-	popoverSettings.content = '<span class="text-white">' + slaForRecord(record)+"</span>";
+	popoverSettings.content = '<span class="text-white">' + slaForRecord(main, record)+"</span>";
 	popoverSettings.placement = 'top';
 
 	//----------------------
@@ -556,7 +585,7 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 		
 		//---------------------
 		// Filter
-		let datapoints = datapointsForRecord(record);
+		let datapoints = datapointsForRecord(record, context);
 		
 		//---------------------------
 		// Render Settings
@@ -774,11 +803,12 @@ function customizerSparkchartStats(record, value, rendererName, fieldname, metri
 
 
 /**************************************************************************************
- * The first method called, it starts to load the data from the data files.
+ * The first method called, it starts to load the data from the data files into the main
+ * data context.
  *************************************************************************************/
-loadData();
+loadData(main);
 
-function loadData(){
+function loadData(context){
 	
 	if(LOAD_DATA_URL != null){
 		
@@ -787,8 +817,8 @@ function loadData(){
 		CFW.http.getJSON(LOAD_DATA_URL, params, 
 			function(data) {
 				if(data.success){
-					DATA = DATA.concat(data.payload);
-					initialize();
+					context.DATA = context.DATA.concat(data.payload);
+					initialize(context);
 				}else{
 					// do nothing
 				}
@@ -808,7 +838,8 @@ function loadData(){
 	
 		//------------------------------------------
 		// Concatenate all data into var DATA
-		loadDataScript(0);
+		loadDataScript(0, context);
+		
 	}
 	
 	//------------------------------------------
@@ -865,7 +896,7 @@ function exportData(renderer, isStats) {
 	if(isStats){
 		
 		
-		exportThis = _.cloneDeep(RECORDS_ALL);
+		exportThis = _.cloneDeep(main.RECORDS_ALL);
 		
 		if(renderer == 'csv'){		
 			_.forEach(exportThis, function(r){ 
@@ -875,7 +906,7 @@ function exportData(renderer, isStats) {
 		
 		filename = "export-statistics." + renderer;
 	}else{
-		exportThis = _.cloneDeep(RECORDS_ALL_DATAPOINTS);
+		exportThis = _.cloneDeep(main.RECORDS_ALL_DATAPOINTS);
 		filename = "export-datapoints." + renderer;
 	}
 	
@@ -911,11 +942,17 @@ function loadDataScript(scriptIndex){
 		if((scriptIndex+1) == FILELIST.length){
 			script.onload = function(){
 				console.log("all data loaded");
-				initialize();
+				initialize(main);
+				initialize(compare);
+					
+				initialDraw({view: "tableAll"});
 			}
 			script.onerror = function(){
 				console.log("Could not load file >> "+FILELIST[scriptIndex]);
-				initialize();
+				initialize(main);
+				initialize(compare);
+				
+				initialDraw({view: "tableAll"});
 			}
 		}else{
 			script.onload = function(){
@@ -938,11 +975,15 @@ function loadDataScript(scriptIndex){
  * populating the test dropdown.
  * 
  *************************************************************************************/
-function initialize(){
+function initialize(context){
+	
+	//------------------------------------------
+	// Variables
+	let data = context.DATA;
 	
 	//------------------------------------------
 	// Sort the Data
-	DATA = _.orderBy(DATA, ['test', 'usecase', 'groups', 'name']);
+	data = _.orderBy(data, ['test', 'usecase', 'groups', 'name']);
 		
 	//------------------------------------------
 	// Walkthrough
@@ -952,33 +993,33 @@ function initialize(){
 	
 	//------------------------------------------
 	// Create All Data
-	RECORDS_ALL = [];
-	for(let i in DATA){
-		RECORDS_ALL = RECORDS_ALL.concat(DATA[i].records);
+	context.RECORDS_ALL = [];
+	for(let i in data){
+		context.RECORDS_ALL = context.RECORDS_ALL.concat(data[i].records);
 	}	
 	
 	
 	//-----------------------------
 	// Prepare OVERALL_STATS_VALUES structure
-	OVERALL_STATS_VALUES = {};
+	context.OVERALL_STATS_VALUES = {};
 	
 	for(let name in RECORDMETRIC){
 		let metric 	= RECORDMETRIC[name];
 		if(metric.isOkNok){
-			OVERALL_STATS_VALUES["ok_"+name] = [];
-			OVERALL_STATS_VALUES["nok_"+name] = [];
+			context.OVERALL_STATS_VALUES["ok_"+name] = [];
+			context.OVERALL_STATS_VALUES["nok_"+name] = [];
 		}else{
-			OVERALL_STATS_VALUES[name] = [];
+			context.OVERALL_STATS_VALUES[name] = [];
 		}
 
 	}
 	
 	//------------------------------------------
 	// Create CFW Style data
-	RECORDS_ALL_DATAPOINTS = [];
+	context.RECORDS_ALL_DATAPOINTS = [];
 
-	for(let i in RECORDS_ALL){
-		let record = RECORDS_ALL[i];
+	for(let i in context.RECORDS_ALL){
+		let record = context.RECORDS_ALL[i];
 		
 		
 		record.statsid = getStatsIDHash(record);
@@ -999,11 +1040,11 @@ function initialize(){
 					let valueOK 	= record["ok_"+name];
 					let valueNOK 	= record["nok_"+name];				
 					
-					OVERALL_STATS_VALUES["ok_"+name].push(valueOK);
-					OVERALL_STATS_VALUES["nok_"+name].push(valueNOK);
+					context.OVERALL_STATS_VALUES["ok_"+name].push(valueOK);
+					context.OVERALL_STATS_VALUES["nok_"+name].push(valueNOK);
 				}else{
 					let valueOK = record[name];
-					OVERALL_STATS_VALUES[name].push(valueOK);
+					context.OVERALL_STATS_VALUES[name].push(valueOK);
 				}
 		
 			}
@@ -1037,7 +1078,7 @@ function initialize(){
 		
 			}
 						
-			RECORDS_ALL_DATAPOINTS.push(timedClone);
+			context.RECORDS_ALL_DATAPOINTS.push(timedClone);
 			
 		}
 				
@@ -1045,7 +1086,7 @@ function initialize(){
 	
 	//------------------------------------
 	// Calculate Overall Stats
-	initializeCalculateOverallStats();
+	initializeCalculateOverallStats(context);
 	
 	//------------------------------------
 	// Calculate Statistics per Type
@@ -1064,17 +1105,15 @@ function initialize(){
 		currentStats.percentUndefined = ( (undef / all) * 100).toFixed(1);
 					
 	}
-		
-	initialDraw({view: "tableAll"});
+
 }
 
 /**************************************************************************************
  * 
  *************************************************************************************/
-function initializeCalculateOverallStats(){
+function initializeCalculateOverallStats(context){
 	
-	OVERALL_STATS_TOTAL = [];
-	
+	let overallStats =  [];
 	//-----------------------------
 	// Calculate OVERALL_STATS_TOTAL
 
@@ -1082,16 +1121,16 @@ function initializeCalculateOverallStats(){
 		let metric 	= RECORDMETRIC[name];
 		if(metric.isOkNok){
 			let metricName = "ok_"+name;
-			let values = OVERALL_STATS_VALUES[metricName];
-			metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
+			let values = context.OVERALL_STATS_VALUES[metricName];
+			metric.statsFunc(metricName, values, overallStats);
 			
 			metricName = "nok_"+name;
-			values = OVERALL_STATS_VALUES[metricName];
-			metric.statsFunc(metricName, values, OVERALL_STATS_TOTAL);
+			values = context.OVERALL_STATS_VALUES[metricName];
+			metric.statsFunc(metricName, values, overallStats);
 							
 		}else{
-			let values = OVERALL_STATS_VALUES[name];
-			metric.statsFunc(name, values, OVERALL_STATS_TOTAL);
+			let values = context.OVERALL_STATS_VALUES[name];
+			metric.statsFunc(name, values, overallStats);
 		}
 
 	}
@@ -1100,17 +1139,18 @@ function initializeCalculateOverallStats(){
 	// Add Manual Calculations
 	TEMP_STATS = [];
 
-	if(DATA.length > 0){
-		let starttime = DATA[0].starttime;
-		let endtime = DATA[0].endtime;
+	let data = context.DATA;
+	if(data.length > 0){
+		let starttime = data[0].starttime;
+		let endtime = data[0].endtime;
 		TEMP_STATS.push( {name: "Test Start", value: CFW.format.epochToTimestamp(starttime) } );
 		TEMP_STATS.push( {name: "Test End", value: CFW.format.epochToTimestamp(endtime) } );
 		TEMP_STATS.push( {name: "Test Duration", value: CFW.format.millisToDuration(endtime - starttime) } );
 	}
 	//--------------------------------
 	// OK vs NOK
-	let tot_ok_count = _.find(OVERALL_STATS_TOTAL, { name: "ok_count[sum]" }).value;
-	let tot_nok_count = _.find(OVERALL_STATS_TOTAL, { name: "nok_count[sum]" }).value;
+	let tot_ok_count = _.find(overallStats, { name: "ok_count[sum]" }).value;
+	let tot_nok_count = _.find(overallStats, { name: "nok_count[sum]" }).value;
 	let tot_count = tot_ok_count + tot_nok_count;
 	let percentOK =  tot_ok_count / tot_count * 100
 	let percentNOK = 100 - percentOK;
@@ -1120,7 +1160,7 @@ function initializeCalculateOverallStats(){
 
 	//--------------------------------
 	// SLA OK vs NOK
-	let tot_ok_sla = _.find(OVERALL_STATS_TOTAL, { name: "ok_sla[avg]" }).value;
+	let tot_ok_sla = _.find(overallStats, { name: "ok_sla[avg]" }).value;
 	let percentSlaOK =  tot_ok_sla * 100
 	let percentSlaNOK = 100 - percentSlaOK;
 	let SlaOkVsNokCount = "SLA: " + percentSlaOK.toFixed(1) + "% OK / " + percentSlaNOK.toFixed(1) + "% NOK";
@@ -1129,11 +1169,11 @@ function initializeCalculateOverallStats(){
 	
 	//--------------------------------
 	// Success vs Fail
-	let tot_success = _.find(OVERALL_STATS_TOTAL, { name: "success[sum]" } ).value;
-	let tot_failed = _.find(OVERALL_STATS_TOTAL, { name: "failed[sum]" } ).value;
-	let tot_skipped = _.find(OVERALL_STATS_TOTAL, { name: "skipped[sum]" } ).value;
-	let tot_aborted = _.find(OVERALL_STATS_TOTAL, { name: "aborted[sum]" } ).value;
-	let tot_none = _.find(OVERALL_STATS_TOTAL, { name: "none[sum]" } ).value;
+	let tot_success = _.find(overallStats, { name: "success[sum]" } ).value;
+	let tot_failed = _.find(overallStats, { name: "failed[sum]" } ).value;
+	let tot_skipped = _.find(overallStats, { name: "skipped[sum]" } ).value;
+	let tot_aborted = _.find(overallStats, { name: "aborted[sum]" } ).value;
+	let tot_none = _.find(overallStats, { name: "none[sum]" } ).value;
 	let total = tot_success + tot_failed + tot_skipped + tot_aborted + tot_none;
 	let percentSuccess =  (tot_success + tot_none) / total * 100;
 	let percentFailed = 100 - percentSuccess;
@@ -1143,7 +1183,7 @@ function initializeCalculateOverallStats(){
 
 	//--------------------------------
 	// Throughput Count/Hour
-	let tot_cph = _.find(OVERALL_STATS_TOTAL, { name: "ok_cph[sum]" } ).value;
+	let tot_cph = _.find(overallStats, { name: "ok_cph[sum]" } ).value;
 	let tot_cpm = (tot_cph / 60).toFixed(1);
 	let tot_cps = (tot_cph / 3600).toFixed(1);
 	TEMP_STATS.push( {name: "Throughput Hour", value: CFW.format.numberSeparators(tot_cph) + " count/h"} );
@@ -1152,39 +1192,40 @@ function initializeCalculateOverallStats(){
 	
 	//--------------------------------
 	// Time Min, Avg, Max
-	let time_min = _.find(OVERALL_STATS_TOTAL, { name: "ok_min[min]" } ).value;
+	let time_min = _.find(overallStats, { name: "ok_min[min]" } ).value;
 	TEMP_STATS.push( {name: "Time Min", value: CFW.format.numberSeparators(time_min) + " ms"} );
 	
-	let time_avg = _.find(OVERALL_STATS_TOTAL, { name: "ok_avg[avg]" } ).value;
+	let time_avg = _.find(overallStats, { name: "ok_avg[avg]" } ).value;
 	TEMP_STATS.push( {name: "Time Average", value: CFW.format.numberSeparators(time_avg) + " ms"} );
 
-	let time_max = _.find(OVERALL_STATS_TOTAL, { name: "ok_max[max]" } ).value;
+	let time_max = _.find(overallStats, { name: "ok_max[max]" } ).value;
 	TEMP_STATS.push( {name: "Time Max", value: CFW.format.numberSeparators(time_max) + " ms"} );
 
 	//--------------------------------
 	// Time Percentiles
-	let time_p25 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p25" } ).value;
+	let time_p25 = _.find(overallStats, { name: "ok_p25" } ).value;
 	TEMP_STATS.push( {name: "Time 25th Percentile", value: CFW.format.numberSeparators(time_p25) + " ms" } );
 
-	let time_p50 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p50" } ).value;
+	let time_p50 = _.find(overallStats, { name: "ok_p50" } ).value;
 	TEMP_STATS.push( {name: "Time 50th Percentile", value: CFW.format.numberSeparators(time_p50) + " ms" } );
 
-	let time_p75 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p75" } ).value;
+	let time_p75 = _.find(overallStats, { name: "ok_p75" } ).value;
 	TEMP_STATS.push( {name: "Time 75th Percentile", value: CFW.format.numberSeparators(time_p75) + " ms" } );
 
-	let time_p90 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p90" } ).value;
+	let time_p90 = _.find(overallStats, { name: "ok_p90" } ).value;
 	TEMP_STATS.push( {name: "Time 90th Percentile", value: CFW.format.numberSeparators(time_p90) + " ms" } );
 	
-	let time_p95 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p95" } ).value;
+	let time_p95 = _.find(overallStats, { name: "ok_p95" } ).value;
 	TEMP_STATS.push( {name: "Time 95th Percentile", value: CFW.format.numberSeparators(time_p95) + " ms" } );
 
-	let time_p99 = _.find(OVERALL_STATS_TOTAL, { name: "ok_p99" } ).value;
+	let time_p99 = _.find(overallStats, { name: "ok_p99" } ).value;
 	TEMP_STATS.push( {name: "Time 99th Percentile", value: CFW.format.numberSeparators(time_p99) + " ms" } );
 
 
 	//===================================================
 	// Merge
-	OVERALL_STATS_TOTAL = _.concat(TEMP_STATS, OVERALL_STATS_TOTAL);
+	overallStats = _.concat(TEMP_STATS, overallStats);
+	context.OVERALL_STATS_TOTAL = overallStats;
 }
 
 /**************************************************************************************
@@ -1843,6 +1884,9 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
 		}
 	};
 	
+	console.log("===== dataToRender ====");
+	console.log(dataToRender);
+	
 	//--------------------------
 	// Render 
 	var renderer = CFW.render.getRenderer('chart');
@@ -1858,9 +1902,13 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsUsers(target, chartOptions, userFilter){
+function drawChartsUsers(target, chartOptions, userFilter, context){
 	
 	target.append("<h5>Users "+(userFilter ?? '')+"<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -1876,7 +1924,7 @@ function drawChartsUsers(target, chartOptions, userFilter){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.type == "User" 
 			&& ( userFilter == null 
 			  || record.name == userFilter); 
@@ -1905,10 +1953,14 @@ function drawChartsUsers(target, chartOptions, userFilter){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsDiskusage(target, chartOptions){
+function drawChartsDiskusage(target, chartOptions, context){
 	
 	
 	target.append("<h5>Disk Usage [%]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -1923,7 +1975,7 @@ function drawChartsDiskusage(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.startsWith("Disk Usage"); 
 	});
 	
@@ -1948,11 +2000,14 @@ function drawChartsDiskusage(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsCPUUsage(target, chartOptions){
+function drawChartsCPUUsage(target, chartOptions, context){
 	
 	target.append("<h5>CPU Usage [%]<h5>");
 	
-		
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
+	
 	//---------------------------
 	// Render Settings
 	let defaultChartOptions = { 
@@ -1964,7 +2019,7 @@ function drawChartsCPUUsage(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.startsWith("CPU Usage"); 
 	});
 	
@@ -1989,9 +2044,13 @@ function drawChartsCPUUsage(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsDiskIOReads(target, chartOptions){
+function drawChartsDiskIOReads(target, chartOptions, context){
 	
 	target.append("<h5>Disk I/O Reads [MB/sec]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2004,7 +2063,7 @@ function drawChartsDiskIOReads(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.match(/^Disk I\/O Read.*/g); 
 	});
 	
@@ -2029,9 +2088,13 @@ function drawChartsDiskIOReads(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsDiskIOWrites(target, chartOptions){
+function drawChartsDiskIOWrites(target, chartOptions, context){
 	
 	target.append("<h5>Disk I/O Writes [MB/sec]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2044,7 +2107,7 @@ function drawChartsDiskIOWrites(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.match(/^Disk I\/O Write.*/g); 
 	});
 	
@@ -2069,9 +2132,13 @@ function drawChartsDiskIOWrites(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsNetworkIORecv(target, chartOptions){
+function drawChartsNetworkIORecv(target, chartOptions, context){
 	
 	target.append("<h5>Network I/O Received [MB/sec]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2084,7 +2151,7 @@ function drawChartsNetworkIORecv(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.match(/^Network I\/O Recv.*/g); 
 	});
 	
@@ -2109,9 +2176,13 @@ function drawChartsNetworkIORecv(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsNetworkIOSent(target, chartOptions){
+function drawChartsNetworkIOSent(target, chartOptions, context){
 	
 	target.append("<h5>Network I/O Sent [MB/sec]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2125,7 +2196,7 @@ function drawChartsNetworkIOSent(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.match(/^Network I\/O Sent.*/g); 
 	});
 	
@@ -2160,9 +2231,13 @@ function drawChartsMemoryUsage(target){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsProcessMemoryMB(target, chartOptions){
+function drawChartsProcessMemoryMB(target, chartOptions, context){
 	
 	target.append("<h5>Process Memory Usage [MB]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2177,7 +2252,7 @@ function drawChartsProcessMemoryMB(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.match(/^Process Memory.*\[MB\]/g); 
 	});
 	
@@ -2203,9 +2278,13 @@ function drawChartsProcessMemoryMB(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsProcessMemoryPercent(target, chartOptions){
+function drawChartsProcessMemoryPercent(target, chartOptions, context){
 	
 	target.append("<h5>Process Memory Usage [%]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2221,7 +2300,7 @@ function drawChartsProcessMemoryPercent(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.match(/^Process Memory.*\[%\]/g); 
 	});
 	
@@ -2247,9 +2326,13 @@ function drawChartsProcessMemoryPercent(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartsHostMemory(target, chartOptions){
+function drawChartsHostMemory(target, chartOptions, context){
 	
 	target.append("<h5>Host Memory Usage [%]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2265,7 +2348,7 @@ function drawChartsHostMemory(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.name.match(/^Host Memory.*/g); 
 	});
 	
@@ -2290,9 +2373,13 @@ function drawChartsHostMemory(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartThroughput(target, chartOptions){
+function drawChartThroughput(target, chartOptions, context){
 	
 	target.append("<h5>Throughput [count/hour]<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2305,7 +2392,7 @@ function drawChartThroughput(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.ok_cph != null && record.ok_avg != null; 
 	});
 	
@@ -2334,9 +2421,13 @@ function drawChartThroughput(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartOverallResponseTime(target, chartOptions){
+function drawChartOverallResponseTime(target, chartOptions, context){
 	
 	target.append("<h5>Overall Response Times<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2349,7 +2440,7 @@ function drawChartOverallResponseTime(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.ok_cph != null && record.ok_avg != null; 
 	});
 	
@@ -2383,9 +2474,13 @@ function drawChartOverallResponseTime(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartRequestsOKvsNOK(target, chartOptions){
+function drawChartRequestsOKvsNOK(target, chartOptions, context){
 	
 	target.append("<h5>Requests By OK/NOK<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2400,7 +2495,7 @@ function drawChartRequestsOKvsNOK(target, chartOptions){
 	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return record.ok_cph != null && record.ok_avg != null; 
 	});
 	
@@ -2430,9 +2525,13 @@ function drawChartRequestsOKvsNOK(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartRequestsByCode(target, chartOptions){
+function drawChartRequestsByCode(target, chartOptions, context){
 	
 	target.append("<h5>Requests By Code<h5>");
+	
+	//---------------------------
+	// Set Context
+	if(context == null){ context = main; }
 	
 	//---------------------------
 	// Render Settings
@@ -2443,9 +2542,10 @@ function drawChartRequestsByCode(target, chartOptions){
 		}
 	
 	let finalChartOptions = Object.assign({}, defaultChartOptions, chartOptions);
+	
 	//---------------------
 	// Filter
-	let datapoints = _.filter(RECORDS_ALL_DATAPOINTS, function(record) { 
+	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
 		return ! CFW.utils.isNullOrEmpty(record.code); 
 	});
 	
@@ -2474,11 +2574,16 @@ function drawChartRequestsByCode(target, chartOptions){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawProperties(target){
+function drawProperties(target, context){
+	//---------------------------
+	// Prepare
+	if(context == null){ context = main; }
 	
 	target = $(target);
 	
-	for(i in DATA){
+	//---------------------------
+	// Draw
+	for(i in context.DATA){
 		
 		//-----------------------------------
 		// title
@@ -2496,7 +2601,7 @@ function drawProperties(target){
 		//-----------------------------------
 		// Render Data
 		let rendererSettings = {
-				data: DATA[i].properties,
+				data: context.DATA[i].properties,
 				rendererSettings: {
 					table: {
 						filterable: true
@@ -2518,11 +2623,14 @@ function drawProperties(target){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawSLA(target){
-	
+function drawSLA(target, context){
+	//---------------------------
+	// Prepare
+	if(context == null){ context = main; }
+		
 	target = $(target);
 	
-	for(i in DATA){
+	for(i in context.DATA){
 		
 		//-----------------------------------
 		// title
@@ -2539,7 +2647,7 @@ function drawSLA(target){
 		//-----------------------------------
 		// Render Data
 		let rendererSettings = {
-				data: DATA[i].sla,
+				data: context.DATA[i].sla,
 				rendererSettings: {
 					table: {
 						filterable: true
@@ -2560,11 +2668,15 @@ function drawSLA(target){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawTestsettings(target){
+function drawTestsettings(target, context){
 	
+	//---------------------------
+	// Prepare
+	if(context == null){ context = main; }
+		
 	target = $(target);
 	
-	for(i in DATA){
+	for(i in context.DATA){
 		
 		//-----------------------------------
 		// title
@@ -2582,7 +2694,7 @@ function drawTestsettings(target){
 		//-----------------------------------
 		// Render Data
 		let rendererSettings = {
-				data: DATA[i].testsettings,
+				data: context.DATA[i].testsettings,
 				customizers: {
 					"settings": function(record, value){
 							return CFW.format.objectToHTMLList(value);
@@ -2609,16 +2721,20 @@ function drawTestsettings(target){
  * Shows the details of the record in a modal panel
  * @param record
  *************************************************************************************/
-function showRecordDetails(statsid){
+function showRecordDetails(statsid, context){
 	
+	//----------------------
+	// Set Context
+	if(context == null){ context = main; }
+		
 	//----------------------
 	// Check input
 	if(statsid == null){ return ''; }
 		
 	//---------------------
 	// Filter
-	let datapoints = datapointsForStatsID(statsid);
-	let record = recordForStatsID(statsid);
+	let datapoints = datapointsForStatsID(statsid, context);
+	let record = recordForStatsID(statsid, context);
 	
 	if(datapoints == null || datapoints.length == 0){
 		CFW.ui.showModalLarge(modalTitle, "<span>No data found to display.</span>", null, true);
@@ -2838,12 +2954,12 @@ function addFieldSortOptions(baseOptions, fieldArray) {
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawSummaryPage(target){
+function drawSummaryPage(target, context){
 
 
 	//--------------------------
 	// Stats 
-	let clonedRecord = _.forEach(_.cloneDeep(RECORDS_ALL), function(r){
+	let clonedRecord = _.forEach(_.cloneDeep(context.RECORDS_ALL), function(r){
 		
 		r.count = r.ok_count + r.nok_count;
 		
@@ -2851,6 +2967,7 @@ function drawSummaryPage(target){
 		else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
 		else if (r.type == "MessageError"){ r.error = r.ok_count; }
 	});
+
 
 	//--------------------------
 	// Result 
@@ -3079,12 +3196,14 @@ function drawSummaryPage(target){
 	
 	let overallStatsRendeDef = {
 		idfield: null,
-		data: OVERALL_STATS_TOTAL,
+		data: context.OVERALL_STATS_TOTAL,
 		visiblefields: ["name", "value"],
 		labels: FIELDLABELS,
 		actions: {},
 		customizers: {
 			"value": function(record, value, rendererName, fieldname){
+				
+				if(value == null){ return "null"; }
 				if( ! isNaN(value) ){
 					
 					let formatted = CFW.customizer.number(record, value.toFixed(2), rendererName, fieldname);
@@ -3120,7 +3239,7 @@ function drawSummaryPage(target){
 		labels: FIELDLABELS,
 		actions: ACTION_BUTTONS,
 		customizers: Object.assign({}, CUSTOMIZERS, {
-			  "Rule": function(record){ return slaForRecord(record); }
+			  "Rule": function(record){ return slaForRecord(context, record); }
 			, "status_over_time": customizerStatusBartSLA
 		}),
 		rendererSettings: {
@@ -3144,7 +3263,7 @@ function drawSummaryPage(target){
 		labels: FIELDLABELS,
 		actions: ACTION_BUTTONS,
 		customizers: Object.assign({}, CUSTOMIZERS, {
-			  "Rule": function(record){ return slaForRecord(record); }
+			  "Rule": function(record){ return slaForRecord(context, record); }
 			, "status_over_time": customizerStatusBartSLA
 		}),
 		rendererSettings: {
@@ -3522,7 +3641,7 @@ function drawTable(target, data, showFields, typeFilterArray){
 								data: _.filter(data, function(o){ return o.ok_sla != null; } ),
 								visiblefields: FIELDS_BASE_COUNTS.concat("ok_avg", "ok_p90", "failrate", "Rule", "status_over_time", "ok_sla"),
 								customizers: Object.assign({}, CUSTOMIZERS, {
-									  "Rule": function(record){ return slaForRecord(record); }
+									  "Rule": function(record){ return slaForRecord(context, record); }
 									, "status_over_time": customizerStatusBartSLA
 								}),
 								rendererSettings: {
@@ -3646,8 +3765,8 @@ function initialDraw(){
 	
 	//------------------------
 	// Set Test as Title
-	if(DATA.length != 0){
-		let first = DATA[0];
+	if(main.DATA.length != 0){
+		let first = main.DATA[0];
 		$('#report-title').text("Report: "+ first.test);
 		$('head title').text("Report: "+ first.test);
 	}
@@ -3667,24 +3786,31 @@ function initialDraw(){
 /*************************************************************************************
  * Main Drawing method
  *************************************************************************************/
-function draw(options){
+function draw(options, context){
 	
+	//---------------------------
+	// Prepare
+	if(context == null){ context = main; }
 	
 	CFW.cache.storeValueForPage("last-draw-options", JSON.stringify(options) );
 	
 	cleanup();
 	let target = $('#content');
 	
+	//---------------------------
+	// Draw
 	CFW.ui.toggleLoader(true);
+	
+	console.log(context);
 	
 	window.setTimeout( 
 	function(){
 		switch(options.view){
-			case "summary": 			drawSummaryPage(target); break;
+			case "summary": 			drawSummaryPage(target, context); break;
 			case "manual": 				drawManualPage(target); break;
-			case "properties": 			drawProperties(target); break;
-			case "testsettings": 		drawTestsettings(target); break;
-			case "sla": 				drawSLA(target); break;
+			case "properties": 			drawProperties(target, context); break;
+			case "testsettings": 		drawTestsettings(target, context); break;
+			case "sla": 				drawSLA(target, context); break;
 				
 			case "chartsUsers": 		drawChartsUsers(target, {height: "30vh"} ); break;
 			case "chartsCPUUsage": 		drawChartsCPUUsage(target, {height: "50vh"} ); break;
@@ -3702,55 +3828,55 @@ function draw(options){
 			case "chartsOverallResponseTime": 	drawChartOverallResponseTime(target, {height: "50vh"} ); break;
 			
 			case "tableAll": 			target.append('<h2>Table: All Types</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS); break;
 										
 			case "tableGSMCG": 			target.append('<h2>Table: Groups & Steps & Metrics & Counts & Gauges</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count", "Gauge"]); break;
 										
 			case "tableGSMC": 			target.append('<h2>Table: Groups & Steps & Metrics & Counts</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric", "Count"]); break;
 										
 			case "tableGSM": 			target.append('<h2>Table: Groups & Steps & Metrics</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step", "Metric"]); break;
 										
 			case "tableGroupsSteps": 	target.append('<h2>Table: Groups & Steps</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Group", "Step"]); break;
 										
 			case "tableCountGauges": 	target.append('<h2>Table: Counts & Gauges</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Count", "Gauge"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Count", "Gauge"]); break;
 										
 			case "tableGroups": 		target.append('<h2>Table: Groups</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Group"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Group"]); break;
 										
 			case "tableSteps": 			target.append('<h2>Table: Steps</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Step"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Step"]); break;
 										
 			case "tableMetrics": 		target.append('<h2>Table: Metrics</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Metric"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Metric"]); break;
 										
 			case "tableCounts": 		target.append('<h2>Table: Counts</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Count"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_COUNTS, ["Count"]); break;
 										
 			case "tableGauges": 		target.append('<h2>Table: Gauges</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Gauge"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_COUNTS, ["Gauge"]); break;
 										
 			case "tableAsserts": 		target.append('<h2>Table: Asserts</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNTS, ["Assert"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_COUNTS, ["Assert"]); break;
 										
 			case "tableMessages": 		target.append('<h2>Table: Messages</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Message"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_COUNT, ["Message"]); break;
 										
 			case "tableExceptions": 	target.append('<h2>Table: Exceptions</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;	
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_COUNT, ["Exception"]); break;	
 										
 			case "tableUsers": 			target.append('<h2>Table: Users</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["User"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_COUNT, ["User"]); break;
 										
 			case "tableSystem": 		target.append('<h2>Table: System</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_COUNT, ["System"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_COUNT, ["System"]); break;
 										
 			case "tableWait": 			target.append('<h2>Table: Wait</h2>');
-										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS, ["Wait"]); break;
+										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Wait"]); break;
 										
 			case "csv": 				drawCSV(); break;
 			case "json": 				drawJSON(); break;
