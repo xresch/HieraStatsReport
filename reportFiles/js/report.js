@@ -3045,14 +3045,14 @@ function drawSummaryPage(target, context){
 	// Result 
 	let resultDiv = $('<div class="container minvw-90">');
 	
-	resultDiv.append(`<div id="summary-nav">
-			<a class="btn btn-sm btn-primary" href="#overall-stats">Overall Statistics</a> 
-			<a class="btn btn-sm btn-primary" href="#sla-ok">SLA OK</a> 
-			<a class="btn btn-sm btn-primary" href="#sla-nok">SLA NOK</a>
-			<a class="btn btn-sm btn-primary" href="#boxplot">Boxplot</a>
-			<a class="btn btn-sm btn-primary" href="#failurerate">Failure Rate</a>
-			<a class="btn btn-sm btn-primary" href="#throughput">Throughput</a>
-			<a class="btn btn-sm btn-primary" href="#statistics">Statistics</a>
+	resultDiv.append(`<div id="summary-nav" class="cfw-sticky">
+			<a class="btn btn-xs btn-primary" href="#overall-stats">Overall Statistics</a> 
+			<a class="btn btn-xs btn-primary" href="#sla-ok">SLA OK</a> 
+			<a class="btn btn-xs btn-primary" href="#sla-nok">SLA NOK</a>
+			<a class="btn btn-xs btn-primary" href="#boxplot">Boxplot</a>
+			<a class="btn btn-xs btn-primary" href="#failurerate">Failure Rate</a>
+			<a class="btn btn-xs btn-primary" href="#throughput">Throughput</a>
+			<a class="btn btn-xs btn-primary" href="#statistics">Statistics</a>
 		</div>
 		`)
 	resultDiv.append('<h2>Report Summary<h>');
@@ -3475,7 +3475,7 @@ function drawCompare(target){
 	// Data Button
 	target.append('<h2>Compare Results<h>');
 
-	target.append('<button class="btn btn-sm btn-primary" accept=".js" onclick="loadDataCompare()">Select File</button>');
+	target.append('<button class="btn btn-sm btn-primary mb-5" accept=".js" onclick="loadDataCompare()">Select File</button>');
 
 	
 	//----------------------------
@@ -3483,8 +3483,17 @@ function drawCompare(target){
 	if(compare.DATA != null && compare.DATA.length > 0){
 		
 		//--------------------------
+		// Find earlier
+		let earlier = compare;
+		let later = main;
+		
+		if(main.DATA[0].starttime < compare.DATA[0].starttime ){
+			earlier = main;
+			later = compare;
+		}
+		//--------------------------
 		// Stats 
-		let clonedMain = _.forEach(_.cloneDeep(main.RECORDS_ALL), function(r){
+		let clonedEarlier = _.forEach(_.cloneDeep(earlier.RECORDS_ALL), function(r){
 			
 			r.count = r.ok_count + r.nok_count;
 			
@@ -3492,7 +3501,8 @@ function drawCompare(target){
 			else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
 			else if (r.type == "MessageError"){ r.error = r.ok_count; }
 		});
-		let clonedCompare = _.forEach(_.cloneDeep(compare.RECORDS_ALL), function(r){
+		
+		let clonedLater = _.forEach(_.cloneDeep(later.RECORDS_ALL), function(r){
 			
 			r.count = r.ok_count + r.nok_count;
 			
@@ -3503,26 +3513,163 @@ function drawCompare(target){
 
 		let col = null;
 		let chartSettings = null;
+		let chartFields = null;
+		let filteredLater = null;
+		let filteredEarlier = null;
+		
 		//==================================================================
-		// FIRST ROW - Counts
+		// Test Info
 		//==================================================================
-		target.append('<h3>Counts OK vs NOK<h3>');
-		let row = $('<div class ="row">');
+		let row = $('<div class ="row cfw-sticky bg-cfw-black">');
 			
-			//--------------------------
-			// Chart: Counts
-			chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["limegreen", "red"]};
-			
-			col = $('<div class="col-6">');
-			drawChartByFields(col, clonedMain, [], ["ok_count","nok_count"], chartSettings);
+			col = $('<div class="col-3 pl-3 text-center">');
+			col.append(earlier.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(earlier.DATA[0].starttime))
 			row.append(col);
 			
-			col = $('<div class="col-6">');
-			drawChartByFields(col, clonedCompare, [], ["ok_count","nok_count"], chartSettings);
+			col = $('<div class="col-3 text-center">');
+			col.append(later.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(later.DATA[0].starttime))
+			row.append(col);
+			
+			col = $('<div class="col-3 pl-3 text-center">');
+			col.append(earlier.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(earlier.DATA[0].starttime))
+			row.append(col);
+			
+			col = $('<div class="col-3 text-center">');
+			col.append(later.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(later.DATA[0].starttime))
 			row.append(col);
 			
 		target.append(row);
 		
+		//==================================================================
+		// Counts And SLA OK vs NOK
+		//==================================================================
+		
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Counts OK vs NOK
+			chartFields = ["ok_count","nok_count"];
+			chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["limegreen", "red"]};
+			col = $('<div class="col-3 pl-3"> <h3>Counts OK vs NOK<h3> </div>');
+			drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
+			row.append(col);
+			
+			col = $('<div class="col-3 pr-3"> <h3>&nbsp;<h3> </div>');
+			drawChartByFields(col, clonedLater, [], chartFields, chartSettings);
+			row.append(col);
+			
+			//------------------------------------
+			// SLA OK vs NOK
+			chartFields = ["ok_sla","nok_sla"];
+
+			col = $('<div class="col-3 border-left pl-3"> <h3>SLA OK vs NOK<h3> </div>');
+			filteredEarlier = _.filter(clonedEarlier, function(o){ return o.ok_sla != null; } )
+			drawChartByFields(col, filteredEarlier, [], chartFields, chartSettings);
+			row.append(col);
+			
+			col = $('<div class="col-3"> <h3>&nbsp;<h3> </div>');
+			filteredLater = _.filter(clonedLater, function(o){ return o.ok_sla != null; } )
+			drawChartByFields(col, filteredLater, [], chartFields, chartSettings);
+			row.append(col);			
+			
+		target.append(row);
+		
+		//==================================================================
+		// Statuses & Messages
+		//==================================================================
+					
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Statuses
+			chartFields = ["success","skipped", "aborted", "failed", "none"];
+			chartSettings = { charttype: 'doughnut', height: "20vh", colors: ["limegreen", "yellow", "orange", "red", "gray"] };
+			
+			col = $('<div class="col-3 pl-3"> <h3>Statuses<h3> </div>');
+			filteredLater = _.filter(clonedLater, function(o){ return o.success != null; } )
+			drawChartByFields(col, filteredLater, [], chartFields, chartSettings);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3"> <h3>&nbsp;<h3> </div>');
+			filteredEarlier = _.filter(clonedEarlier, function(o){ return o.success != null; } )
+			drawChartByFields(col, filteredEarlier, [], chartFields, chartSettings);
+			row.append(col);
+			
+			//------------------------------------
+			// Messages	
+			chartFields = ["info","warn", "error"];
+			chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["cfw-cyan", "orange", "red"]};
+			
+			col = $('<div class="col-3 border-left pl-3"> <h3>Messages<h3> </div>');
+			drawChartByFields(col, clonedLater, [], chartFields, chartSettings);
+			row.append(col);
+			
+			col = $('<div class="col-3"> <h3>&nbsp;<h3> </div>');
+			drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
+			row.append(col);
+			
+		target.append(row);
+		
+		
+		//==================================================================
+		// CPU & Memory Usage
+		//==================================================================
+			
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// CPU Usage
+			chartSettings = { height: "25vh", showlegend: false, multichart: false};
+			
+			col = $('<div class="col-3 pl-3 pt-4">');
+			drawChartsCPUUsage(col, chartSettings, earlier);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3 pt-4">');
+			drawChartsCPUUsage(col, chartSettings, later);
+			row.append(col);
+			
+			//------------------------------------
+			// Host Memory	
+			col = $('<div class="col-3 border-left pl-3 pt-4">');
+			drawChartsHostMemory(col, chartSettings, earlier);
+			row.append(col);
+			
+			col = $('<div class="col-3 pt-4">');
+			drawChartsHostMemory(col, chartSettings, later);
+			row.append(col);
+			
+		target.append(row);
+		
+		//==================================================================
+		// Process Memory Usage
+		//==================================================================
+			
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Process Memory Usage %
+			chartSettings = { height: "25vh", showlegend: false, multichart: false};
+			
+			col = $('<div class="col-3 pl-3 pt-4">');
+			drawChartsProcessMemoryPercent(col, chartSettings, earlier);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3 pt-4">');
+			drawChartsProcessMemoryPercent(col, chartSettings, later);
+			row.append(col);
+			
+			//------------------------------------
+			// Process Memory Usage MB
+			col = $('<div class="col-3 border-left pl-3 pt-4">');
+			drawChartsProcessMemoryMB(col, chartSettings, earlier);
+			row.append(col);
+			
+			col = $('<div class="col-3 pt-4">');
+			drawChartsProcessMemoryMB(col, chartSettings, later);
+			row.append(col);
+			
+		target.append(row);
 	}
 
 }

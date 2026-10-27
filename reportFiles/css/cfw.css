@@ -1292,10 +1292,15 @@ label {
 /*************************************************************************
  * Sticky
  *************************************************************************/
+.cfw-sticky {
+    position: sticky;
+    top: 38px;		/* TODO: because again of navbar getting in the way */
+    z-index: 49;
+}
 
 .cfw-sticky-th {
     position: sticky;
-    top: 45px;
+    top: 38px;
     z-index: 50;
     background: inherit;
 }
