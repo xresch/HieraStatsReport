@@ -860,7 +860,7 @@ function cfw_renderer_chart_createChartOptions(settings) {
 	var chartOptions = {
 	    	responsive: settings.responsive,
 	    	maintainAspectRatio: false,
-	    	resizeDelay: 300,
+	    	resizeDelay: 0,
 	    	indexAxis: settings.indexAxis, 
 			scales: {
 				x: {
