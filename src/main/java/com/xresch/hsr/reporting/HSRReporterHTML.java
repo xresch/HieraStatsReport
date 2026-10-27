@@ -133,7 +133,7 @@ public class HSRReporterHTML implements HSRReporter {
     	
 		//-----------------------------------
 		// Add to data.js
-		String javascript = "DATA = DATA.concat(\n" + HSR.JSON.toJSON(data) + "\n);";
+		String javascript = "main.DATA = main.DATA.concat(\n" + HSR.JSON.toJSON(data) + "\n);";
 		XR.Files.writeStringToFile(finalDirectoryPath, "data.js", javascript);
 		
 	}

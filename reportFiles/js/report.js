@@ -13,6 +13,7 @@
 // declare with var and do not initialize, will prevent errors when config.js 
 // is not loaded or does not define the variables.
 var LOAD_DATA_URL;
+var LOAD_DATA_COMPARE_URL;
 var FILELIST;
 
 //================================================
@@ -840,6 +841,77 @@ function loadData(context){
 		// Concatenate all data into var DATA
 		loadDataScript(0, context);
 		
+	}
+	
+	//------------------------------------------
+	// Adding full path CSS
+	// this is needed for print view to render properly
+	var url = CFW.http.getURLPath(); url = url.substring(0,url.lastIndexOf("/"));
+	
+	loadCSS(url+"/css/bootstrap-theme-bootstrap.css", "print");
+	loadCSS(url+"/css/cfw.css", "print");
+	loadCSS(url+"/css/font-awesome.css", "print");
+	loadCSS(url+"/css/report.css", "print");
+
+}
+
+/**************************************************************************************
+ * Loads data for comparison.
+ * 
+ *************************************************************************************/
+function loadDataCompare(){
+	
+	if(LOAD_DATA_COMPARE_URL != null){
+		
+		var params = {};
+		
+		CFW.http.getJSON(LOAD_DATA_URL, params, 
+			function(data) {
+				if(data.success){
+					compare = new DataContext();
+					compare.DATA = compare.DATA.concat(data.payload);
+					initialize(compare);
+				}else{
+					// do nothing
+				}
+		});
+
+	} else {
+		
+		let input = document.createElement("input");
+		input.type = "file";
+		input.accept = ".js";
+		
+		input.onchange = () => {
+			const file = input.files[0];
+			if (file) {
+				console.log(file.name);
+			}
+			
+
+			if (file) {
+				console.log("Selected file:", file.name);
+
+				// Read the file contents
+				const reader = new FileReader();
+				reader.onload = (event) => {
+					let jsCode = reader.result;
+					jsCode = jsCode.replaceAll("main.DATA", "compare.DATA");
+					
+					compare = new DataContext();
+					CFW.utils.executeCodeOrFunction(jsCode);
+					initialize(compare);
+					draw({view: 'compare'});
+				};
+				reader.readAsText(file);
+				
+			}
+			
+		};
+
+		input.click();
+
+
 	}
 	
 	//------------------------------------------
@@ -3395,6 +3467,66 @@ function drawSummaryPage(target, context){
 }
 
 /**************************************************************************************
+ * 
+ *************************************************************************************/
+function drawCompare(target){
+	
+	//----------------------------
+	// Data Button
+	target.append('<h2>Compare Results<h>');
+
+	target.append('<button class="btn btn-sm btn-primary" accept=".js" onclick="loadDataCompare()">Select File</button>');
+
+	
+	//----------------------------
+	// Print Comparison
+	if(compare.DATA != null && compare.DATA.length > 0){
+		
+		//--------------------------
+		// Stats 
+		let clonedMain = _.forEach(_.cloneDeep(main.RECORDS_ALL), function(r){
+			
+			r.count = r.ok_count + r.nok_count;
+			
+			if		(r.type == "MessageInfo"){ r.info = r.ok_count; }
+			else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
+			else if (r.type == "MessageError"){ r.error = r.ok_count; }
+		});
+		let clonedCompare = _.forEach(_.cloneDeep(compare.RECORDS_ALL), function(r){
+			
+			r.count = r.ok_count + r.nok_count;
+			
+			if		(r.type == "MessageInfo"){ r.info = r.ok_count; }
+			else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
+			else if (r.type == "MessageError"){ r.error = r.ok_count; }
+		});
+
+		let col = null;
+		let chartSettings = null;
+		//==================================================================
+		// FIRST ROW - Counts
+		//==================================================================
+		target.append('<h3>Counts OK vs NOK<h3>');
+		let row = $('<div class ="row">');
+			
+			//--------------------------
+			// Chart: Counts
+			chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["limegreen", "red"]};
+			
+			col = $('<div class="col-6">');
+			drawChartByFields(col, clonedMain, [], ["ok_count","nok_count"], chartSettings);
+			row.append(col);
+			
+			col = $('<div class="col-6">');
+			drawChartByFields(col, clonedCompare, [], ["ok_count","nok_count"], chartSettings);
+			row.append(col);
+			
+		target.append(row);
+		
+	}
+
+}
+/**************************************************************************************
  * Returns the lowest minimum and highest maximum of all records.
  * 
  * @param data
@@ -3880,6 +4012,7 @@ function draw(options, context){
 										
 			case "csv": 				drawCSV(); break;
 			case "json": 				drawJSON(); break;
+			case "compare": 			drawCompare(target); break;
 		}
 		
 		CFW.ui.toggleLoader(false);
