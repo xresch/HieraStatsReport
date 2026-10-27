@@ -3472,10 +3472,15 @@ function drawSummaryPage(target, context){
 function drawCompare(target){
 	
 	//----------------------------
-	// Data Button
-	target.append('<h2>Compare Results<h>');
+	// Report 
+	target.append('<h2 class="mt-0">Compare Results</h2>');
 
-	target.append('<button class="btn btn-sm btn-primary mb-5" accept=".js" onclick="loadDataCompare()">Select File</button>');
+	if(LOAD_DATA_COMPARE_URL == null){
+		target.append('<p>Select the data.js file of another report to create a comparison.<p>');
+	}else{
+		target.append('<p>Select another report to create a comparison.<p>');
+	}
+	target.append('<button class="btn btn-sm btn-primary mb-5" accept=".js" onclick="loadDataCompare()">Select</button>');
 
 	
 	//----------------------------
@@ -3491,6 +3496,7 @@ function drawCompare(target){
 			earlier = main;
 			later = compare;
 		}
+		
 		//--------------------------
 		// Stats 
 		let clonedEarlier = _.forEach(_.cloneDeep(earlier.RECORDS_ALL), function(r){
@@ -3517,10 +3523,14 @@ function drawCompare(target){
 		let filteredLater = null;
 		let filteredEarlier = null;
 		
+
 		//==================================================================
 		// Test Info
 		//==================================================================
-		let row = $('<div class ="row cfw-sticky bg-cfw-black">');
+		let chartsSection = $('<div>');
+		target.append(chartsSection);
+		
+		let row = $('<div class="row cfw-sticky bg-cfw-black">');
 			
 			col = $('<div class="col-3 pl-3 text-center">');
 			col.append(earlier.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(earlier.DATA[0].starttime))
@@ -3538,7 +3548,7 @@ function drawCompare(target){
 			col.append(later.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(later.DATA[0].starttime))
 			row.append(col);
 			
-		target.append(row);
+		chartsSection.append(row);
 		
 		//==================================================================
 		// Counts And SLA OK vs NOK
@@ -3551,10 +3561,12 @@ function drawCompare(target){
 			chartFields = ["ok_count","nok_count"];
 			chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["limegreen", "red"]};
 			col = $('<div class="col-3 pl-3"> <h3>Counts OK vs NOK<h3> </div>');
+			col.append( _.find(earlier.OVERALL_STATS_TOTAL, { name: "Counts OK vs NOK" }).value );
 			drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
 			row.append(col);
 			
 			col = $('<div class="col-3 pr-3"> <h3>&nbsp;<h3> </div>');
+			col.append( _.find(later.OVERALL_STATS_TOTAL, { name: "Counts OK vs NOK" }).value );
 			drawChartByFields(col, clonedLater, [], chartFields, chartSettings);
 			row.append(col);
 			
@@ -3563,16 +3575,18 @@ function drawCompare(target){
 			chartFields = ["ok_sla","nok_sla"];
 
 			col = $('<div class="col-3 border-left pl-3"> <h3>SLA OK vs NOK<h3> </div>');
+			col.append( _.find(earlier.OVERALL_STATS_TOTAL, { name: "SLA OK vs NOK" }).value );
 			filteredEarlier = _.filter(clonedEarlier, function(o){ return o.ok_sla != null; } )
 			drawChartByFields(col, filteredEarlier, [], chartFields, chartSettings);
 			row.append(col);
 			
 			col = $('<div class="col-3"> <h3>&nbsp;<h3> </div>');
+			col.append( _.find(later.OVERALL_STATS_TOTAL, { name: "SLA OK vs NOK" }).value );
 			filteredLater = _.filter(clonedLater, function(o){ return o.ok_sla != null; } )
 			drawChartByFields(col, filteredLater, [], chartFields, chartSettings);
 			row.append(col);			
 			
-		target.append(row);
+		chartsSection.append(row);
 		
 		//==================================================================
 		// Statuses & Messages
@@ -3608,7 +3622,7 @@ function drawCompare(target){
 			drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
 			row.append(col);
 			
-		target.append(row);
+		chartsSection.append(row);
 		
 		
 		//==================================================================
@@ -3639,7 +3653,7 @@ function drawCompare(target){
 			drawChartsHostMemory(col, chartSettings, later);
 			row.append(col);
 			
-		target.append(row);
+		chartsSection.append(row);
 		
 		//==================================================================
 		// Process Memory Usage
@@ -3669,9 +3683,69 @@ function drawCompare(target){
 			drawChartsProcessMemoryMB(col, chartSettings, later);
 			row.append(col);
 			
-		target.append(row);
+		chartsSection.append(row);
+		
+		//==================================================================
+		// Network I/O
+		//==================================================================
+			
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Sent
+			chartSettings = { height: "25vh", showlegend: false, multichart: false};
+			
+			col = $('<div class="col-3 pl-3 pt-4">');
+			drawChartsNetworkIOSent(col, chartSettings, earlier);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3 pt-4">');
+			drawChartsNetworkIOSent(col, chartSettings, later);
+			row.append(col);
+			
+			//------------------------------------
+			// Received
+			col = $('<div class="col-3 border-left pl-3 pt-4">');
+			drawChartsNetworkIORecv(col, chartSettings, earlier);
+			row.append(col);
+			
+			col = $('<div class="col-3 pt-4">');
+			drawChartsNetworkIORecv(col, chartSettings, later);
+			row.append(col);
+			
+		chartsSection.append(row);
+		
+		//==================================================================
+		// Disk I/O
+		//==================================================================
+			
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Reads
+			chartSettings = { height: "25vh", showlegend: false, multichart: false};
+			
+			col = $('<div class="col-3 pl-3 pt-4">');
+			drawChartsDiskIOReads(col, chartSettings, earlier);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3 pt-4">');
+			drawChartsDiskIOReads(col, chartSettings, later);
+			row.append(col);
+			
+			//------------------------------------
+			// Writes
+			col = $('<div class="col-3 border-left pl-3 pt-4">');
+			drawChartsDiskIOWrites(col, chartSettings, earlier);
+			row.append(col);
+			
+			col = $('<div class="col-3 pt-4">');
+			drawChartsDiskIOWrites(col, chartSettings, later);
+			row.append(col);
+			
+		chartsSection.append(row);
+		
 	}
-
 }
 /**************************************************************************************
  * Returns the lowest minimum and highest maximum of all records.
