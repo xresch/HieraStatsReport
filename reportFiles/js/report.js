@@ -3696,6 +3696,10 @@ function draw(options){
 			case "chartsNetworkIO": 	drawChartsNetworkIORecv(target, { height:"50vh" } ); 
 										drawChartsNetworkIOSent(target, { height:"50vh" } ); 
 										break;
+			case "chartsThroughput": 	drawChartThroughput(target, {height: "50vh"} ); break;
+			case "chartsRequestsOKvsNOK": 	drawChartRequestsOKvsNOK(target, {height: "50vh"} ); break;
+			case "chartsRequestsByCode": 	drawChartRequestsByCode(target, { height: "50vh"} ); break;
+			case "chartsOverallResponseTime": 	drawChartOverallResponseTime(target, {height: "50vh"} ); break;
 			
 			case "tableAll": 			target.append('<h2>Table: All Types</h2>');
 										drawTable(target, RECORDS_ALL, FIELDS_BASE_STATS); break;
