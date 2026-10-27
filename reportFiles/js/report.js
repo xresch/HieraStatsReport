@@ -2445,7 +2445,7 @@ function drawChartsHostMemory(target, chartOptions, context){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartThroughput(target, chartOptions, context){
+function drawChartsThroughput(target, chartOptions, context){
 	
 	target.append("<h5>Throughput [count/hour]<h5>");
 	
@@ -2493,7 +2493,7 @@ function drawChartThroughput(target, chartOptions, context){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartOverallResponseTime(target, chartOptions, context){
+function drawChartsOverallResponseTime(target, chartOptions, context){
 	
 	target.append("<h5>Overall Response Times<h5>");
 	
@@ -2546,7 +2546,7 @@ function drawChartOverallResponseTime(target, chartOptions, context){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartRequestsOKvsNOK(target, chartOptions, context){
+function drawChartsRequestsOKvsNOK(target, chartOptions, context){
 	
 	target.append("<h5>Requests By OK/NOK<h5>");
 	
@@ -2597,7 +2597,7 @@ function drawChartRequestsOKvsNOK(target, chartOptions, context){
 /**************************************************************************************
  * 
  *************************************************************************************/
-function drawChartRequestsByCode(target, chartOptions, context){
+function drawChartsRequestsByCode(target, chartOptions, context){
 	
 	target.append("<h5>Requests By Code<h5>");
 	
@@ -3236,25 +3236,25 @@ function drawSummaryPage(target, context){
 		//--------------------------
 		// Throughput
 		let throughput = $('<div class="col-3">');
-		drawChartThroughput(throughput, chartOptions);
+		drawChartsThroughput(throughput, chartOptions);
 		row.append(throughput);		
 
 		//--------------------------
 		// Overall Response Time
 		let overallResponseTime = $('<div class="col-3">');
-		drawChartOverallResponseTime(overallResponseTime, chartOptions);
+		drawChartsOverallResponseTime(overallResponseTime, chartOptions);
 		row.append(overallResponseTime);
 		
 		//--------------------------
 		// Requests OK/NOK
 		let requestsOKvsNOK = $('<div class="col-3">');
-		drawChartRequestsOKvsNOK(requestsOKvsNOK, chartOptions);
+		drawChartsRequestsOKvsNOK(requestsOKvsNOK, chartOptions);
 		row.append(requestsOKvsNOK);
 		
 		//--------------------------
 		// Requests By Code
 		let requestsByCode = $('<div class="col-3">');
-		drawChartRequestsByCode(requestsByCode, chartOptions,);
+		drawChartsRequestsByCode(requestsByCode, chartOptions,);
 		row.append(requestsByCode);
 		
 	resultDiv.append(row);
@@ -3624,6 +3624,65 @@ function drawCompare(target){
 			
 		chartsSection.append(row);
 		
+		//==================================================================
+		// Throughput & Response Time
+		//==================================================================
+			
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Throughput
+			chartSettings = { height: "25vh", showlegend: false, multichart: false};
+			
+			col = $('<div class="col-3 pl-3 pt-4">');
+			drawChartsThroughput(col, chartSettings, earlier);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3 pt-4">');
+			drawChartsThroughput(col, chartSettings, later);
+			row.append(col);
+			
+			//------------------------------------
+			// Response Time	
+			col = $('<div class="col-3 border-left pl-3 pt-4">');
+			drawChartsOverallResponseTime(col, chartSettings, earlier);
+			row.append(col);
+			
+			col = $('<div class="col-3 pt-4">');
+			drawChartsOverallResponseTime(col, chartSettings, later);
+			row.append(col);
+			
+		chartsSection.append(row);
+		
+		//==================================================================
+		// Request OKvsNOK & By Code
+		//==================================================================
+			
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Requests OK vs NOK
+			chartSettings = { height: "25vh", showlegend: false, multichart: false};
+			
+			col = $('<div class="col-3 pl-3 pt-4">');
+			drawChartsRequestsOKvsNOK(col, chartSettings, earlier);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3 pt-4">');
+			drawChartsRequestsOKvsNOK(col, chartSettings, later);
+			row.append(col);
+			
+			//------------------------------------
+			// Requests By Code
+			col = $('<div class="col-3 border-left pl-3 pt-4">');
+			drawChartsRequestsByCode(col, chartSettings, earlier);
+			row.append(col);
+			
+			col = $('<div class="col-3 pt-4">');
+			drawChartsRequestsByCode(col, chartSettings, later);
+			row.append(col);
+			
+		chartsSection.append(row);
 		
 		//==================================================================
 		// CPU & Memory Usage
@@ -3745,6 +3804,35 @@ function drawCompare(target){
 			
 		chartsSection.append(row);
 		
+		//==================================================================
+		// Disk Usage & Users
+		//==================================================================
+			
+		row = $('<div class ="row">');
+			
+			//------------------------------------
+			// Disk Usage
+			chartSettings = { height: "25vh", showlegend: false, multichart: false};
+			
+			col = $('<div class="col-3 pl-3 pt-4">');
+			drawChartsDiskusage(col, chartSettings, earlier);
+			row.append(col);	
+			
+			col = $('<div class="col-3 pr-3 pt-4">');
+			drawChartsDiskusage(col, chartSettings, later);
+			row.append(col);
+			
+			//------------------------------------
+			// Users Active
+			col = $('<div class="col-3 border-left pl-3 pt-4">');
+			drawChartsUsers(col, chartSettings, "Active", earlier);
+			row.append(col);
+			
+			col = $('<div class="col-3 pt-4">');
+			drawChartsUsers(col, chartSettings, "Active", later);
+			row.append(col);
+			
+		chartsSection.append(row);
 	}
 }
 /**************************************************************************************
@@ -4175,10 +4263,10 @@ function draw(options, context){
 			case "chartsNetworkIO": 	drawChartsNetworkIORecv(target, { height:"50vh" } ); 
 										drawChartsNetworkIOSent(target, { height:"50vh" } ); 
 										break;
-			case "chartsThroughput": 	drawChartThroughput(target, {height: "50vh"} ); break;
-			case "chartsRequestsOKvsNOK": 	drawChartRequestsOKvsNOK(target, {height: "50vh"} ); break;
-			case "chartsRequestsByCode": 	drawChartRequestsByCode(target, { height: "50vh"} ); break;
-			case "chartsOverallResponseTime": 	drawChartOverallResponseTime(target, {height: "50vh"} ); break;
+			case "chartsThroughput": 	drawChartsThroughput(target, {height: "50vh"} ); break;
+			case "chartsRequestsOKvsNOK": 	drawChartsRequestsOKvsNOK(target, {height: "50vh"} ); break;
+			case "chartsRequestsByCode": 	drawChartsRequestsByCode(target, { height: "50vh"} ); break;
+			case "chartsOverallResponseTime": 	drawChartsOverallResponseTime(target, {height: "50vh"} ); break;
 			
 			case "tableAll": 			target.append('<h2>Table: All Types</h2>');
 										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS); break;
