@@ -530,8 +530,10 @@ class CFWCompareObjectArrays {
         olderArray = Array.isArray(olderArray) ? olderArray : [];
         youngerArray = Array.isArray(youngerArray) ? youngerArray : [];
 
-        this.identifierFields ??= []; // set empty array if null or undefined
-
+		if(this.identifierFields == null || this.identifierFields == undefined){
+        	this.identifierFields = [];
+		}
+		
         // Find an identifier field if none was provided.
         this.addFirstMemberNameFromArray(
             this.identifierFields,
@@ -786,10 +788,10 @@ class CFWCompareObjectArrays {
 
             for (let i = 0; i < size; i++) {
 
-                const olderObject = comparableData.olderArray[i] ?? null;
-                const youngerObject = comparableData.youngerArray[i] ?? null;
+				const olderObject = ( comparableData.olderArray[i] != null ) ? comparableData.olderArray[i] : null;
+				const youngerObject = ( comparableData.youngerArray[i] != null ) ? comparableData.youngerArray[i] : null;
 
-                const iteratorObject = youngerObject ?? olderObject;
+				const iteratorObject = youngerObject != null ? youngerObject : olderObject;
 
                 const resultObject = {};
 
@@ -817,7 +819,7 @@ class CFWCompareObjectArrays {
 
                         // Add an index for duplicate identifiers.
                         if (i === 0 || !this._makeIdentifierUnique) {
-                            resultObject[fieldname] = finalValue ?? null;
+                            resultObject[fieldname] = (finalValue != null) ? finalValue : null;
                         } else {
                             const indexedValue = finalValue == null
                                 ? "null"
@@ -832,8 +834,8 @@ class CFWCompareObjectArrays {
 
                     //---------------------------------
                     // Add Original Values
-                    resultObject[fieldname + this._labelOld] = oldValue ?? null;
-                    resultObject[fieldname + this._labelYoung] = youngValue ?? null;
+					resultObject[fieldname + this._labelOld] = oldValue != null ? oldValue : null;
+					resultObject[fieldname + this._labelYoung] = youngValue != null ? youngValue : null;
 
                     //---------------------------------
                     // Ensure Column Order
