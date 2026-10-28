@@ -633,7 +633,6 @@ function customizerStatsNumber(record, value, rendererName, fieldname){
 		// Render 
 		let renderedChart = CFW.render.getRenderer('chart').render(dataToRender);	
 		
-		dataToRender
 		let renderedViewer = CFW.render.getRenderer('dataviewer').render(dataToRender);	
 		
 		// ----------------------------
@@ -1956,9 +1955,6 @@ function drawChartByFields(target, data, fieldsArray, metricsArray, chartOptions
 		}
 	};
 	
-	console.log("===== dataToRender ====");
-	console.log(dataToRender);
-	
 	//--------------------------
 	// Render 
 	var renderer = CFW.render.getRenderer('chart');
@@ -2529,8 +2525,6 @@ function drawChartsOverallResponseTime(target, chartOptions, context){
 	        "ok_p90": calculatePercentile(90, _.map(items, "ok_p90"))
 	    }))
 	    .value();
-	
-	console.log(groupedByTime);
 	
 	//---------------------
 	// Draw
@@ -3484,356 +3478,478 @@ function drawCompare(target){
 
 	
 	//----------------------------
-	// Print Comparison
-	if(compare.DATA != null && compare.DATA.length > 0){
-		
-		//--------------------------
-		// Find earlier
-		let earlier = compare;
-		let later = main;
-		
-		if(main.DATA[0].starttime < compare.DATA[0].starttime ){
-			earlier = main;
-			later = compare;
-		}
-		
-		//--------------------------
-		// Stats 
-		let clonedEarlier = _.forEach(_.cloneDeep(earlier.RECORDS_ALL), function(r){
-			
-			r.count = r.ok_count + r.nok_count;
-			
-			if		(r.type == "MessageInfo"){ r.info = r.ok_count; }
-			else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
-			else if (r.type == "MessageError"){ r.error = r.ok_count; }
-		});
-		
-		let clonedLater = _.forEach(_.cloneDeep(later.RECORDS_ALL), function(r){
-			
-			r.count = r.ok_count + r.nok_count;
-			
-			if		(r.type == "MessageInfo"){ r.info = r.ok_count; }
-			else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
-			else if (r.type == "MessageError"){ r.error = r.ok_count; }
-		});
-
-		let col = null;
-		let chartSettings = null;
-		let chartFields = null;
-		let filteredLater = null;
-		let filteredEarlier = null;
-		
-
-		//==================================================================
-		// Test Info
-		//==================================================================
-		let chartsSection = $('<div>');
-		target.append(chartsSection);
-		
-		let row = $('<div class="row cfw-sticky bg-cfw-black">');
-			
-			col = $('<div class="col-3 pl-3 text-center">');
-			col.append(earlier.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(earlier.DATA[0].starttime))
-			row.append(col);
-			
-			col = $('<div class="col-3 text-center">');
-			col.append(later.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(later.DATA[0].starttime))
-			row.append(col);
-			
-			col = $('<div class="col-3 pl-3 text-center">');
-			col.append(earlier.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(earlier.DATA[0].starttime))
-			row.append(col);
-			
-			col = $('<div class="col-3 text-center">');
-			col.append(later.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(later.DATA[0].starttime))
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Counts And SLA OK vs NOK
-		//==================================================================
-		
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Counts OK vs NOK
-			chartFields = ["ok_count","nok_count"];
-			chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["limegreen", "red"]};
-			col = $('<div class="col-3 pl-3"> <h3>Counts OK vs NOK<h3> </div>');
-			col.append( _.find(earlier.OVERALL_STATS_TOTAL, { name: "Counts OK vs NOK" }).value );
-			drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
-			row.append(col);
-			
-			col = $('<div class="col-3 pr-3"> <h3>&nbsp;<h3> </div>');
-			col.append( _.find(later.OVERALL_STATS_TOTAL, { name: "Counts OK vs NOK" }).value );
-			drawChartByFields(col, clonedLater, [], chartFields, chartSettings);
-			row.append(col);
-			
-			//------------------------------------
-			// SLA OK vs NOK
-			chartFields = ["ok_sla","nok_sla"];
-
-			col = $('<div class="col-3 border-left pl-3"> <h3>SLA OK vs NOK<h3> </div>');
-			col.append( _.find(earlier.OVERALL_STATS_TOTAL, { name: "SLA OK vs NOK" }).value );
-			filteredEarlier = _.filter(clonedEarlier, function(o){ return o.ok_sla != null; } )
-			drawChartByFields(col, filteredEarlier, [], chartFields, chartSettings);
-			row.append(col);
-			
-			col = $('<div class="col-3"> <h3>&nbsp;<h3> </div>');
-			col.append( _.find(later.OVERALL_STATS_TOTAL, { name: "SLA OK vs NOK" }).value );
-			filteredLater = _.filter(clonedLater, function(o){ return o.ok_sla != null; } )
-			drawChartByFields(col, filteredLater, [], chartFields, chartSettings);
-			row.append(col);			
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Statuses & Messages
-		//==================================================================
-					
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Statuses
-			chartFields = ["success","skipped", "aborted", "failed", "none"];
-			chartSettings = { charttype: 'doughnut', height: "20vh", colors: ["limegreen", "yellow", "orange", "red", "gray"] };
-			
-			col = $('<div class="col-3 pl-3"> <h3>Statuses<h3> </div>');
-			filteredLater = _.filter(clonedLater, function(o){ return o.success != null; } )
-			drawChartByFields(col, filteredLater, [], chartFields, chartSettings);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3"> <h3>&nbsp;<h3> </div>');
-			filteredEarlier = _.filter(clonedEarlier, function(o){ return o.success != null; } )
-			drawChartByFields(col, filteredEarlier, [], chartFields, chartSettings);
-			row.append(col);
-			
-			//------------------------------------
-			// Messages	
-			chartFields = ["info","warn", "error"];
-			chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["cfw-cyan", "orange", "red"]};
-			
-			col = $('<div class="col-3 border-left pl-3"> <h3>Messages<h3> </div>');
-			drawChartByFields(col, clonedLater, [], chartFields, chartSettings);
-			row.append(col);
-			
-			col = $('<div class="col-3"> <h3>&nbsp;<h3> </div>');
-			drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Throughput & Response Time
-		//==================================================================
-			
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Throughput
-			chartSettings = { height: "25vh", showlegend: false, multichart: false};
-			
-			col = $('<div class="col-3 pl-3 pt-4">');
-			drawChartsThroughput(col, chartSettings, earlier);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3 pt-4">');
-			drawChartsThroughput(col, chartSettings, later);
-			row.append(col);
-			
-			//------------------------------------
-			// Response Time	
-			col = $('<div class="col-3 border-left pl-3 pt-4">');
-			drawChartsOverallResponseTime(col, chartSettings, earlier);
-			row.append(col);
-			
-			col = $('<div class="col-3 pt-4">');
-			drawChartsOverallResponseTime(col, chartSettings, later);
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Request OKvsNOK & By Code
-		//==================================================================
-			
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Requests OK vs NOK
-			chartSettings = { height: "25vh", showlegend: false, multichart: false};
-			
-			col = $('<div class="col-3 pl-3 pt-4">');
-			drawChartsRequestsOKvsNOK(col, chartSettings, earlier);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3 pt-4">');
-			drawChartsRequestsOKvsNOK(col, chartSettings, later);
-			row.append(col);
-			
-			//------------------------------------
-			// Requests By Code
-			col = $('<div class="col-3 border-left pl-3 pt-4">');
-			drawChartsRequestsByCode(col, chartSettings, earlier);
-			row.append(col);
-			
-			col = $('<div class="col-3 pt-4">');
-			drawChartsRequestsByCode(col, chartSettings, later);
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// CPU & Memory Usage
-		//==================================================================
-			
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// CPU Usage
-			chartSettings = { height: "25vh", showlegend: false, multichart: false};
-			
-			col = $('<div class="col-3 pl-3 pt-4">');
-			drawChartsCPUUsage(col, chartSettings, earlier);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3 pt-4">');
-			drawChartsCPUUsage(col, chartSettings, later);
-			row.append(col);
-			
-			//------------------------------------
-			// Host Memory	
-			col = $('<div class="col-3 border-left pl-3 pt-4">');
-			drawChartsHostMemory(col, chartSettings, earlier);
-			row.append(col);
-			
-			col = $('<div class="col-3 pt-4">');
-			drawChartsHostMemory(col, chartSettings, later);
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Process Memory Usage
-		//==================================================================
-			
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Process Memory Usage %
-			chartSettings = { height: "25vh", showlegend: false, multichart: false};
-			
-			col = $('<div class="col-3 pl-3 pt-4">');
-			drawChartsProcessMemoryPercent(col, chartSettings, earlier);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3 pt-4">');
-			drawChartsProcessMemoryPercent(col, chartSettings, later);
-			row.append(col);
-			
-			//------------------------------------
-			// Process Memory Usage MB
-			col = $('<div class="col-3 border-left pl-3 pt-4">');
-			drawChartsProcessMemoryMB(col, chartSettings, earlier);
-			row.append(col);
-			
-			col = $('<div class="col-3 pt-4">');
-			drawChartsProcessMemoryMB(col, chartSettings, later);
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Network I/O
-		//==================================================================
-			
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Sent
-			chartSettings = { height: "25vh", showlegend: false, multichart: false};
-			
-			col = $('<div class="col-3 pl-3 pt-4">');
-			drawChartsNetworkIOSent(col, chartSettings, earlier);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3 pt-4">');
-			drawChartsNetworkIOSent(col, chartSettings, later);
-			row.append(col);
-			
-			//------------------------------------
-			// Received
-			col = $('<div class="col-3 border-left pl-3 pt-4">');
-			drawChartsNetworkIORecv(col, chartSettings, earlier);
-			row.append(col);
-			
-			col = $('<div class="col-3 pt-4">');
-			drawChartsNetworkIORecv(col, chartSettings, later);
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Disk I/O
-		//==================================================================
-			
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Reads
-			chartSettings = { height: "25vh", showlegend: false, multichart: false};
-			
-			col = $('<div class="col-3 pl-3 pt-4">');
-			drawChartsDiskIOReads(col, chartSettings, earlier);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3 pt-4">');
-			drawChartsDiskIOReads(col, chartSettings, later);
-			row.append(col);
-			
-			//------------------------------------
-			// Writes
-			col = $('<div class="col-3 border-left pl-3 pt-4">');
-			drawChartsDiskIOWrites(col, chartSettings, earlier);
-			row.append(col);
-			
-			col = $('<div class="col-3 pt-4">');
-			drawChartsDiskIOWrites(col, chartSettings, later);
-			row.append(col);
-			
-		chartsSection.append(row);
-		
-		//==================================================================
-		// Disk Usage & Users
-		//==================================================================
-			
-		row = $('<div class ="row">');
-			
-			//------------------------------------
-			// Disk Usage
-			chartSettings = { height: "25vh", showlegend: false, multichart: false};
-			
-			col = $('<div class="col-3 pl-3 pt-4">');
-			drawChartsDiskusage(col, chartSettings, earlier);
-			row.append(col);	
-			
-			col = $('<div class="col-3 pr-3 pt-4">');
-			drawChartsDiskusage(col, chartSettings, later);
-			row.append(col);
-			
-			//------------------------------------
-			// Users Active
-			col = $('<div class="col-3 border-left pl-3 pt-4">');
-			drawChartsUsers(col, chartSettings, "Active", earlier);
-			row.append(col);
-			
-			col = $('<div class="col-3 pt-4">');
-			drawChartsUsers(col, chartSettings, "Active", later);
-			row.append(col);
-			
-		chartsSection.append(row);
+	// Check nothing to compare
+	if(compare.DATA == null || compare.DATA.length == 0){
+		return;
 	}
+		
+	//--------------------------
+	// Find earlier
+	let earlier = compare;
+	let later = main;
+	
+	if(main.DATA[0].starttime < compare.DATA[0].starttime ){
+		earlier = main;
+		later = compare;
+	}
+	
+	//--------------------------
+	// Stats 
+	let clonedEarlier = _.forEach(_.cloneDeep(earlier.RECORDS_ALL), function(r){
+		
+		r.count = r.ok_count + r.nok_count;
+		
+		if		(r.type == "MessageInfo"){ r.info = r.ok_count; }
+		else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
+		else if (r.type == "MessageError"){ r.error = r.ok_count; }
+	});
+	
+	let clonedLater = _.forEach(_.cloneDeep(later.RECORDS_ALL), function(r){
+		
+		r.count = r.ok_count + r.nok_count;
+		
+		if		(r.type == "MessageInfo"){ r.info = r.ok_count; }
+		else if (r.type == "MessageWarn"){ r.warn = r.ok_count; }
+		else if (r.type == "MessageError"){ r.error = r.ok_count; }
+	});
+	
+	let col = null;
+	let chartSettings = null;
+	let chartFields = null;
+	let filteredLater = null;
+	let filteredEarlier = null;
+		
+	//==================================================================
+	// Test Info
+	//==================================================================
+	let chartsSection = $('<div>');
+	target.append(chartsSection);
+	
+	let row = $('<div class="row cfw-sticky bg-cfw-black">');
+		
+		col = $('<div class="col-3 pl-3 text-center">');
+		col.append(earlier.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(earlier.DATA[0].starttime))
+		row.append(col);
+		
+		col = $('<div class="col-3 text-center">');
+		col.append(later.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(later.DATA[0].starttime))
+		row.append(col);
+		
+		col = $('<div class="col-3 pl-3 text-center">');
+		col.append(earlier.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(earlier.DATA[0].starttime))
+		row.append(col);
+		
+		col = $('<div class="col-3 text-center">');
+		col.append(later.DATA[0].test + "<br>" + CFW.format.epochToTimestamp(later.DATA[0].starttime))
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Counts And SLA OK vs NOK
+	//==================================================================
+	
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Counts OK vs NOK
+		chartFields = ["ok_count","nok_count"];
+		chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["limegreen", "red"]};
+		col = $('<div class="col-3 pl-3"> <h3>Counts OK vs NOK<h3> </div>');
+		col.append( _.find(earlier.OVERALL_STATS_TOTAL, { name: "Counts OK vs NOK" }).value );
+		drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
+		row.append(col);
+		
+		col = $('<div class="col-3 pr-3"> <h3>&nbsp;<h3> </div>');
+		col.append( _.find(later.OVERALL_STATS_TOTAL, { name: "Counts OK vs NOK" }).value );
+		drawChartByFields(col, clonedLater, [], chartFields, chartSettings);
+		row.append(col);
+		
+		//------------------------------------
+		// SLA OK vs NOK
+		chartFields = ["ok_sla","nok_sla"];
+		
+		col = $('<div class="col-3 border-left pl-3"> <h3>SLA OK vs NOK<h3> </div>');
+		col.append( _.find(earlier.OVERALL_STATS_TOTAL, { name: "SLA OK vs NOK" }).value );
+		filteredEarlier = _.filter(clonedEarlier, function(o){ return o.ok_sla != null; } )
+		drawChartByFields(col, filteredEarlier, [], chartFields, chartSettings);
+		row.append(col);
+		
+		col = $('<div class="col-3"> <h3>&nbsp;<h3> </div>');
+		col.append( _.find(later.OVERALL_STATS_TOTAL, { name: "SLA OK vs NOK" }).value );
+		filteredLater = _.filter(clonedLater, function(o){ return o.ok_sla != null; } )
+		drawChartByFields(col, filteredLater, [], chartFields, chartSettings);
+		row.append(col);			
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Statuses & Messages
+	//==================================================================
+				
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Statuses
+		chartFields = ["success","skipped", "aborted", "failed", "none"];
+		chartSettings = { charttype: 'doughnut', height: "20vh", colors: ["limegreen", "yellow", "orange", "red", "gray"] };
+		
+		col = $('<div class="col-3 pr-3"> <h3>Statuses<h3> </div>');
+		filteredEarlier = _.filter(clonedEarlier, function(o){ return o.success != null; } )
+		drawChartByFields(col, filteredEarlier, [], chartFields, chartSettings);
+		row.append(col);
+		
+		col = $('<div class="col-3 pl-3"> <h3>&nbsp;<h3> </div>');
+		filteredLater = _.filter(clonedLater, function(o){ return o.success != null; } )
+		drawChartByFields(col, filteredLater, [], chartFields, chartSettings);
+		row.append(col);	
+		
+
+		
+		//------------------------------------
+		// Messages	
+		chartFields = ["info","warn", "error"];
+		chartSettings = { charttype: 'doughnut' , height: "20vh", colors: ["cfw-cyan", "orange", "red"]};
+		
+		col = $('<div class="col-3 border-left pl-3"> <h3>Messages<h3> </div>');
+		drawChartByFields(col, clonedEarlier, [], chartFields, chartSettings);
+		row.append(col);
+
+		col = $('<div class="col-3"> <h3>&nbsp;<h3> </div>');
+		drawChartByFields(col, clonedLater, [], chartFields, chartSettings);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Throughput & Response Time
+	//==================================================================
+		
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Throughput
+		chartSettings = { height: "25vh", showlegend: false, multichart: false};
+		
+		col = $('<div class="col-3 pl-3 pt-4">');
+		drawChartsThroughput(col, chartSettings, earlier);
+		row.append(col);	
+		
+		col = $('<div class="col-3 pr-3 pt-4">');
+		drawChartsThroughput(col, chartSettings, later);
+		row.append(col);
+		
+		//------------------------------------
+		// Response Time	
+		col = $('<div class="col-3 border-left pl-3 pt-4">');
+		drawChartsOverallResponseTime(col, chartSettings, earlier);
+		row.append(col);
+		
+		col = $('<div class="col-3 pt-4">');
+		drawChartsOverallResponseTime(col, chartSettings, later);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Request OKvsNOK & By Code
+	//==================================================================
+		
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Requests OK vs NOK
+		chartSettings = { height: "25vh", showlegend: false, multichart: false};
+		
+		col = $('<div class="col-3 pl-3 pt-4">');
+		drawChartsRequestsOKvsNOK(col, chartSettings, earlier);
+		row.append(col);	
+		
+		col = $('<div class="col-3 pr-3 pt-4">');
+		drawChartsRequestsOKvsNOK(col, chartSettings, later);
+		row.append(col);
+		
+		//------------------------------------
+		// Requests By Code
+		col = $('<div class="col-3 border-left pl-3 pt-4">');
+		drawChartsRequestsByCode(col, chartSettings, earlier);
+		row.append(col);
+		
+		col = $('<div class="col-3 pt-4">');
+		drawChartsRequestsByCode(col, chartSettings, later);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// CPU & Memory Usage
+	//==================================================================
+		
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// CPU Usage
+		chartSettings = { height: "25vh", showlegend: false, multichart: false};
+		
+		col = $('<div class="col-3 pl-3 pt-4">');
+		drawChartsCPUUsage(col, chartSettings, earlier);
+		row.append(col);	
+		
+		col = $('<div class="col-3 pr-3 pt-4">');
+		drawChartsCPUUsage(col, chartSettings, later);
+		row.append(col);
+		
+		//------------------------------------
+		// Host Memory	
+		col = $('<div class="col-3 border-left pl-3 pt-4">');
+		drawChartsHostMemory(col, chartSettings, earlier);
+		row.append(col);
+		
+		col = $('<div class="col-3 pt-4">');
+		drawChartsHostMemory(col, chartSettings, later);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Process Memory Usage
+	//==================================================================
+		
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Process Memory Usage %
+		chartSettings = { height: "25vh", showlegend: false, multichart: false};
+		
+		col = $('<div class="col-3 pl-3 pt-4">');
+		drawChartsProcessMemoryPercent(col, chartSettings, earlier);
+		row.append(col);	
+		
+		col = $('<div class="col-3 pr-3 pt-4">');
+		drawChartsProcessMemoryPercent(col, chartSettings, later);
+		row.append(col);
+		
+		//------------------------------------
+		// Process Memory Usage MB
+		col = $('<div class="col-3 border-left pl-3 pt-4">');
+		drawChartsProcessMemoryMB(col, chartSettings, earlier);
+		row.append(col);
+		
+		col = $('<div class="col-3 pt-4">');
+		drawChartsProcessMemoryMB(col, chartSettings, later);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Network I/O
+	//==================================================================
+		
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Sent
+		chartSettings = { height: "25vh", showlegend: false, multichart: false};
+		
+		col = $('<div class="col-3 pl-3 pt-4">');
+		drawChartsNetworkIOSent(col, chartSettings, earlier);
+		row.append(col);	
+		
+		col = $('<div class="col-3 pr-3 pt-4">');
+		drawChartsNetworkIOSent(col, chartSettings, later);
+		row.append(col);
+		
+		//------------------------------------
+		// Received
+		col = $('<div class="col-3 border-left pl-3 pt-4">');
+		drawChartsNetworkIORecv(col, chartSettings, earlier);
+		row.append(col);
+		
+		col = $('<div class="col-3 pt-4">');
+		drawChartsNetworkIORecv(col, chartSettings, later);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Disk I/O
+	//==================================================================
+		
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Reads
+		chartSettings = { height: "25vh", showlegend: false, multichart: false};
+		
+		col = $('<div class="col-3 pl-3 pt-4">');
+		drawChartsDiskIOReads(col, chartSettings, earlier);
+		row.append(col);	
+		
+		col = $('<div class="col-3 pr-3 pt-4">');
+		drawChartsDiskIOReads(col, chartSettings, later);
+		row.append(col);
+		
+		//------------------------------------
+		// Writes
+		col = $('<div class="col-3 border-left pl-3 pt-4">');
+		drawChartsDiskIOWrites(col, chartSettings, earlier);
+		row.append(col);
+		
+		col = $('<div class="col-3 pt-4">');
+		drawChartsDiskIOWrites(col, chartSettings, later);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Disk Usage & Users
+	//==================================================================
+		
+	row = $('<div class ="row">');
+		
+		//------------------------------------
+		// Disk Usage
+		chartSettings = { height: "25vh", showlegend: false, multichart: false};
+		
+		col = $('<div class="col-3 pl-3 pt-4">');
+		drawChartsDiskusage(col, chartSettings, earlier);
+		row.append(col);	
+		
+		col = $('<div class="col-3 pr-3 pt-4">');
+		drawChartsDiskusage(col, chartSettings, later);
+		row.append(col);
+		
+		//------------------------------------
+		// Users Active
+		col = $('<div class="col-3 border-left pl-3 pt-4">');
+		drawChartsUsers(col, chartSettings, "Active", earlier);
+		row.append(col);
+		
+		col = $('<div class="col-3 pt-4">');
+		drawChartsUsers(col, chartSettings, "Active", later);
+		row.append(col);
+		
+	chartsSection.append(row);
+	
+	//==================================================================
+	// Overall Statistics Table
+	//==================================================================
+	target.append("<h3>Compared Overall Statistics</h3>");
+		
+	let comparedStats = new CFWCompareObjectArrays()
+		.identifierFields(["name"])
+	    .labelOld("_A")
+	    .labelYoung("_B")
+	    .labelDiff("_Diff")
+	    .labelDiffPercent("_%")
+	    .doCompareNumbersAbsolute(true)
+	    .doCompareNumbersDiffPercent(true)
+	    .doCompareBooleans(true)
+	    .doCompareStrings(true)
+	    .doCompareArrays(true)
+	    .doCompareObjects(true)
+	    .compare(earlier.OVERALL_STATS_TOTAL, later.OVERALL_STATS_TOTAL);
+	
+	//-----------------------------------
+	// Render Data
+	let rendererSettings = {
+			data: comparedStats.data,
+			customizers: comparedStats.customizers,
+			rendererSettings:{
+				table: {filterable: false, narrow: true, stickyheader: true},
+				dataviewer:{ 
+					  download: true, print: true
+					, sortable: false
+					, defaultsize: 25
+					, renderers: CFW.render.createDataviewerDefaults()
+				}
+			}
+		};
+			
+	let renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);		
+	target.append(renderResult);
+	
+	//==================================================================
+	// Overall Statistics Table
+	//==================================================================
+	target.append("<h3>Compared Record Statistics</h3>");
+	
+	let deleteFunc =  function(r){
+				delete r.time;
+				delete r.type;
+				delete r.test;
+				delete r.usecase;
+				delete r.path;
+				delete r.pathrecord;
+				delete r.granularity;
+				delete r.sla;
+				
+				delete r.success;
+				delete r.failed;
+				delete r.skipped;
+				delete r.aborted;
+				delete r.none;
+				
+				delete r.series;
+				delete r.warn;
+				delete r.info;
+				delete r.error;
+				delete r.statsid;
+				delete r.total_count;
+				
+				// Remove all NOK
+				Object.keys(r).forEach(key => {
+				    if (key.startsWith("nok_")) {
+				        delete r[key];
+				    }
+				});
+				
+				// Rename all OK
+				Object.keys(r).forEach(key => {
+				    if (key.startsWith("ok_")) {
+						let newName = key.replace("ok_", "");
+				        r[newName] = r[key];
+						delete r[key];
+				    }
+				});
+				
+				// move failrate to end of list
+				const value = r.failrate;
+				delete r.failrate;
+				r.failrate = value;
+				
+			}
+	filteredEarlier = _.filter(clonedEarlier, function(o){ return o.type != "User" && o.type != "System" ; } );
+	filteredEarlier = _.forEach(_.cloneDeep(filteredEarlier), deleteFunc);
+		
+	filteredLater = _.filter(clonedLater, function(o){ return o.type != "User" && o.type != "System" ; } );
+	filteredLater = _.forEach(_.cloneDeep(filteredLater), deleteFunc);
+
+	comparedStats = new CFWCompareObjectArrays()
+		.identifierFields(["name", "code"])
+	    .labelOld("_A")
+	    .labelYoung("_B")
+	    .labelDiff("_Diff")
+	    .labelDiffPercent("_%")
+		.thresholdPercentGreen(-15)
+		.thresholdPercentRed(15)
+		.precision(0)
+	    .doCompareNumbersAbsolute(false)
+	    .doCompareNumbersDiffPercent(true)
+	    .doCompareBooleans(true)
+	    .doCompareStrings(true)
+	    .doCompareArrays(true)
+	    .doCompareObjects(true)
+	    .compare(filteredEarlier, filteredLater);
+
+	//-----------------------------------
+	// Render Data
+	rendererSettings.data = comparedStats.data;		
+	rendererSettings.labels = comparedStats.labels;		
+	rendererSettings.customizers = comparedStats.customizers;		
+	renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);		
+	target.append(renderResult);
+	
 }
 /**************************************************************************************
  * Returns the lowest minimum and highest maximum of all records.
