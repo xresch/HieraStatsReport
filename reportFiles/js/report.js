@@ -964,8 +964,24 @@ function exportData(renderer, isStats) {
 	
 	let exportThis;
 	let filename;
+	
+	//----------------------------------
+	// data.js
+	if(renderer == "data.js"){
+		let dataJS = "main.DATA = main.DATA.concat(" + JSON.stringify(main.DATA) + ");";
+
+		let time = CFW.format.epochToTimestamp( main.DATA[0].starttime )
+							.replaceAll(":","")
+							.replaceAll(" ", "_")
+							;
+		let filename = "data_"+time+ "_" + main.DATA[0].test + ".js";
+		CFW.utils.downloadText(filename, dataJS); 
+		return;
+	}
+	
+	//----------------------------------
+	// Export Stats
 	if(isStats){
-		
 		
 		exportThis = _.cloneDeep(main.RECORDS_ALL);
 		
@@ -976,6 +992,8 @@ function exportData(renderer, isStats) {
 		}
 		
 		filename = "export-statistics." + renderer;
+	//----------------------------------
+	// Export Datapoints
 	}else{
 		exportThis = _.cloneDeep(main.RECORDS_ALL_DATAPOINTS);
 		filename = "export-datapoints." + renderer;
@@ -4437,8 +4455,6 @@ function draw(options, context){
 			case "tableWait": 			target.append('<h2>Table: Wait</h2>');
 										drawTable(target, context.RECORDS_ALL, FIELDS_BASE_STATS, ["Wait"]); break;
 										
-			case "csv": 				drawCSV(); break;
-			case "json": 				drawJSON(); break;
 			case "compare": 			drawCompare(target); break;
 		}
 		
