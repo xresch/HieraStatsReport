@@ -134,10 +134,6 @@ function metricStatsAvg(metricName, values, targetArray){
 	targetArray.push( { name: metricName+"[avg]", value: calculateAvg(values, 0, true) });
 }
 
-function metricStatsAvgPrecise(metricName, values, targetArray){
-	targetArray.push( { name: metricName+"[avg]", value: calculateAvg(values, 3, true) });
-}
-
 function metricStatsSum(metricName, values, targetArray){
 	targetArray.push( { name: metricName+"[sum]", value: calculateSum(values, 0, true) });
 }
@@ -1733,28 +1729,31 @@ function record_calc_IQR(record){
 
 /**************************************************************************************
  * 
+ * @param suffix suffix for metric names, used when creating boxplots based on compared data
  *************************************************************************************/
-function record_format_boxplot(record, minMin, maxMax){
+function record_format_boxplot(record, minMin, maxMax, suffix){
 	
 	//-------------------------------
 	// Check input
+	if(suffix == null){ suffix = ""; }
+	
 	if( RECORDTYPE[record.type].isCount == true
-	|| record.ok_min == null  
-	|| record.ok_max == null ){
+	|| record["ok_min"+suffix] == null  
+	|| record["ok_max"+suffix] == null ){
 		return "";
 	}
 	
-
+	
 	
 	//-------------------------------
 	// Values
 	let values = {
 		  //"start":
-		 "min": record.ok_min
-		, "low": record.ok_p25
-		, "median": record.ok_p50
-		, "high": record.ok_p75
-		, "max":  record.ok_max
+		 "min": record["ok_min"+suffix]
+		, "low": record["ok_p25"+suffix]
+		, "median": record["ok_p50"+suffix]
+		, "high": record["ok_p75"+suffix]
+		, "max":  record["ok_max"+suffix]
 		//, "end":  record.ok_p25
 	}
 	
@@ -1768,7 +1767,7 @@ function record_format_boxplot(record, minMin, maxMax){
 	//-------------------------------
 	// Color
 	
-	let medianOffsetPerc = (record.ok_p50 - record.ok_p25) / (record.ok_p75 - record.ok_p25) * 100 
+	let medianOffsetPerc = (values.median - values.low) / (values.high - values.low) * 100 
 	
 	let color = "green";
 	
@@ -3500,6 +3499,7 @@ function drawSummaryPage(target, context){
 	// Add to Target
 	target.append(resultDiv);
 	
+	
 }
 
 /**************************************************************************************
@@ -3510,9 +3510,10 @@ function drawCompare(target){
 	//----------------------------
 	// Report Header Section
 	target.append('<h2 class="mt-0">Compare Results</h2>');
-	target.append('<p>Select a data.js file of another report to create a comparison.<p>');
+	target.append('<p>To compare two results, select a data.js file of another report from its folder,'
+				 +' or one you have exported using Menu Bar &gt;&gt; Export &gt;&gt; data.js.<p>');
 	if(LOAD_COMPARE_LIST_URL != null){
-		target.append('<p>Or Select another result for comparison  .<p>');
+		target.append('<p>Or select another result.<p>');
 	}
 	
 	target.append('<button class="btn btn-sm btn-primary mb-5" accept=".js" onclick="loadDataCompareDataJS()">Load data.js</button>');
@@ -3898,6 +3899,7 @@ function drawCompare(target){
 	let rendererSettings = {
 			data: comparedStats.data,
 			customizers: comparedStats.customizers,
+			labels: {},
 			rendererSettings:{
 				table: {filterable: false, narrow: true, stickyheader: true},
 				dataviewer:{ 
@@ -3919,7 +3921,6 @@ function drawCompare(target){
 	
 	let deleteFunc =  function(r){
 				delete r.time;
-				delete r.type;
 				delete r.test;
 				delete r.usecase;
 				delete r.path;
@@ -3969,7 +3970,7 @@ function drawCompare(target){
 	filteredLater = _.forEach(_.cloneDeep(filteredLater), deleteFunc);
 
 	comparedStats = new CFWCompareObjectArrays()
-		.identifierFields(["name", "code"])
+		.identifierFields(["type", "name", "code"])
 	    .labelOld("_A")
 	    .labelYoung("_B")
 	    .labelDiff("_Diff")
@@ -3992,6 +3993,66 @@ function drawCompare(target){
 	rendererSettings.customizers = comparedStats.customizers;		
 	renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);		
 	target.append(renderResult);
+	
+	//==================================================================
+	// Compared Boxplots
+	//==================================================================
+	target.append("<h3>Compared Boxplots</h3>");
+	
+	//-----------------------------------
+	// Prepare Data
+	filteredEarlier = _.filter(clonedEarlier, function(o){ return o.ok_p25 != null && o.type != "User" && o.type != "System" ; } );
+	filteredLater = _.filter(clonedLater, function(o){ return o.ok_p25 != null && o.type != "User" && o.type != "System" ; } );
+
+	let minMaxes = getMinsAndMax(filteredEarlier);
+	let minMinEarlier = minMaxes.min;
+	let maxMaxEarlier = minMaxes.max;	
+
+	minMaxes2 = getMinsAndMax(filteredLater);
+	let minMinLater = minMaxes.min;
+	let maxMaxLater = minMaxes.max;	
+	
+	//-----------------------------------
+	// Compare
+	comparedStats = new CFWCompareObjectArrays()
+		.identifierFields(["type", "name", "code"])
+	    .labelOld("_A")
+	    .labelYoung("_B")
+	    .labelDiff("_Diff")
+	    .labelDiffPercent("_%")
+		.thresholdPercentGreen(-15)
+		.thresholdPercentRed(15)
+		.precision(0)
+	    .doCompareNumbersAbsolute(false)
+	    .doCompareNumbersDiffPercent(true)
+	    .doCompareBooleans(true)
+	    .doCompareStrings(true)
+	    .doCompareArrays(true)
+	    .doCompareObjects(true)
+	    .compare(filteredEarlier, filteredLater);
+
+	//-----------------------------------
+	// Render Data
+	rendererSettings.data = comparedStats.data;		
+	rendererSettings.visiblefields = ["type","name","code","count_A", "count_B", "count_%", 	"cph_A", "cph_B"];	
+	rendererSettings.labels["cph_A"] = "Boxplot_A";
+	rendererSettings.labels["cph_B"] = "Boxplot_B";
+	//rendererSettings.customizers["Range"] = function(record, value){ return record_calc_range(record); };	
+	//rendererSettings.customizers["IQR"] = function(record, value){ return record_calc_IQR(record); };
+
+	rendererSettings.customizers["cph_A"] = function(record, value){
+					console.log("==== boxplot ====")
+					console.log(record)
+					console.log(record_format_boxplot(record, minMinEarlier, maxMaxEarlier, "_A"))
+					return $('<div class="vw-25">').append( record_format_boxplot(record, minMinEarlier, maxMaxEarlier, "_A") );
+			};
+	rendererSettings.customizers["cph_B"] = function(record, value){
+					return $('<div class="vw-25">').append( record_format_boxplot(record, minMinLater, maxMaxLater, "_B") );
+			};
+
+	renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);		
+	target.append(renderResult);
+
 	
 }
 /**************************************************************************************
