@@ -626,7 +626,7 @@ public class HSR {
 	
 		while(!openItems().isEmpty()){
 			
-			String message = "'"
+			String message = "Item '"
 					+openItems().peek().name()
 					+ "' was ended forcfully with status "+status+"."
 					+" Check that you use HSR.end() everywhere where you start.";
