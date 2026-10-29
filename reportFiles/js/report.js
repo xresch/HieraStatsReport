@@ -2500,7 +2500,8 @@ function drawChartsThroughput(target, chartOptions, context){
 	//---------------------
 	// Filter
 	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
-		return record.ok_cph != null && record.ok_avg != null; 
+		return record.ok_cph != null && record.ok_avg != null
+			&& record.ok_cph != 0; 
 	});
 	
 	//---------------------
@@ -2548,7 +2549,8 @@ function drawChartsOverallResponseTime(target, chartOptions, context){
 	//---------------------
 	// Filter
 	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
-		return record.ok_cph != null && record.ok_avg != null; 
+		return record.ok_cph != null && record.ok_avg != null
+			&& record.ok_cph != 0; 
 	});
 	
 	//---------------------
@@ -2601,7 +2603,8 @@ function drawChartsRequestsOKvsNOK(target, chartOptions, context){
 	//---------------------
 	// Filter
 	let datapoints = _.filter(context.RECORDS_ALL_DATAPOINTS, function(record) { 
-		return record.ok_cph != null && record.ok_avg != null; 
+		return record.ok_cph != null && record.ok_avg != null
+			&& record.ok_cph != 0; 
 	});
 	
 	//---------------------

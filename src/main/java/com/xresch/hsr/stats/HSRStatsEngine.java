@@ -1020,177 +1020,178 @@ public class HSRStatsEngine {
 	 ***************************************************************************/
 	public static SummarizedStats summarizeGroupedStats(TreeMap<String, List<HSRRecordStats>> groupedStats, boolean doSumUsers) {
 		//----------------------------------------
-				// Prepare Arrays
-				ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
-				JsonArray finalRecordsJson = new JsonArray();
+		// Prepare Arrays
+		ArrayList<HSRRecordStats> finalRecords = new ArrayList<>();
+		JsonArray finalRecordsJson = new JsonArray();
 
-				//----------------------------------------
-				// Iterate Grouped Stats
-				long reportTime = System.currentTimeMillis();
+		//----------------------------------------
+		// Iterate Grouped Stats
+		long reportTime = System.currentTimeMillis();
+		
+		for(Entry<String, List<HSRRecordStats>> entry : groupedStats.entrySet()) {
+			
+			//---------------------------
+			// Make stats group
+			List<HSRRecordStats> currentGroupedStats = entry.getValue();
+			
+			if(currentGroupedStats.isEmpty()) { continue; }
+			//---------------------------
+			// Make a Matrix of all values by state and metric
+			Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTable = HashBasedTable.create();
+			// Make a copy of the table to keep the original sorting.
+			// Below HSR.Math.* calls will sort the arrays
+			Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTableKeepOrder = HashBasedTable.create(valuesTable);
+			
+			ArrayList<BigDecimal> timeArray = new ArrayList<>();
+			for(HSRRecordStats stats : currentGroupedStats) {
 				
-				for(Entry<String, List<HSRRecordStats>> entry : groupedStats.entrySet()) {
-					
-					//---------------------------
-					// Make stats group
-					List<HSRRecordStats> currentGroupedStats = entry.getValue();
-					
-					if(currentGroupedStats.isEmpty()) { continue; }
-					//---------------------------
-					// Make a Matrix of all values by state and metric
-					Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTable = HashBasedTable.create();
-					// Make a copy of the table to keep the original sorting.
-					// Below HSR.Math.* calls will sort the arrays
-					Table<HSRRecordState, String, ArrayList<BigDecimal> > valuesTableKeepOrder = HashBasedTable.create(valuesTable);
-					
-					ArrayList<BigDecimal> timeArray = new ArrayList<>();
-					for(HSRRecordStats stats : currentGroupedStats) {
-						
-						timeArray.add( new BigDecimal(stats.time()) );
-						
-						for(HSRRecordState state : HSRRecordState.values()) {
-												
-							//--------------------------------
-							// Add Array for Each Metric
-							for(HSRMetric recordMetric : HSRMetric.values()) { 
-								
-								String metric = recordMetric.toString();
-								if( ! valuesTable.contains(state, metric) ) {
-									valuesTable.put(state, metric, new ArrayList<>());
-									valuesTableKeepOrder.put(state, metric, new ArrayList<>());
-								}
-								
-								BigDecimal value = stats.getValue(state, recordMetric);
-								
-								if(value != null) {
-									valuesTable.get(state, metric).add(value);
-									valuesTableKeepOrder.get(state, metric).add(value);
-								}else {
-									// use zero instead of null to reduce file size
-									// plus nulls would be removed by stats calculation, we don't want that
-									valuesTable.get(state, metric).add(BigDecimal.ZERO);
-									valuesTableKeepOrder.get(state, metric).add(BigDecimal.ZERO);
-								}
-							}
-						}
-					}
-					
-					//---------------------------
-					// Use first as base, Override
-					// all metrics.
-					HSRRecordStats summaryStats = currentGroupedStats.get(0).clone();
-					summaryStats.time(reportTime);
-					summaryStats.clearValues();
-					
-					HSRRecordType type = summaryStats.type();
-					for(HSRRecordState state : HSRRecordState.values()) {
-						
-						//--------------------------------
-						// Add Value for Each OK-NOK Metric
-						for(HSRMetric recordMetric : HSRMetric.values()) { 
-							
-							if( ! recordMetric.isOkNok()) { continue; }
-							
-							String metric = recordMetric.toString();
-							if(  valuesTable.contains(state, metric) ) {
-								ArrayList<BigDecimal> metricValues = valuesTable.get(state, metric);
-														
-								if(metricValues == null || metricValues.isEmpty()) {
-									summaryStats.setValue(state, recordMetric, BigDecimal.ZERO);
-								}else {
-									
-									BigDecimal value = null;
-									switch(recordMetric) {
-										case avg	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
-										case count	->	{	
-															if( ! type.isGauge() ) 								{ value = HSR.Math.bigSum(metricValues, 0, true); }
-															else if( type == HSRRecordType.User && doSumUsers ) { value = HSR.Math.bigSum(metricValues, 0, true); }
-															else				   								{ value = HSR.Math.bigAvg(metricValues, 0, true); }
-														}
-										case cph	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
-										case max	->		value = HSR.Math.bigMax(metricValues);				
-										case min	->		value = HSR.Math.bigMin(metricValues);				
-										case p25	->		value = HSR.Math.bigPercentile(25, metricValues);	
-										case p50	->		value = HSR.Math.bigPercentile(50, metricValues);	
-										case p75	->		value = HSR.Math.bigPercentile(75, metricValues);	
-										case p90	->		value = HSR.Math.bigPercentile(90, metricValues);	
-										case p95	->		value = HSR.Math.bigPercentile(95, metricValues);	
-										case p99	->		value = HSR.Math.bigPercentile(99, metricValues);	
-										case stdev	->		value = HSR.Math.bigStdev(metricValues, false, 2);
-										case sla	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
-										default -> { /*do nothing */ }
-									};
-									
-									summaryStats.setValue(state, recordMetric, value);
-
-								}
-							}
-						}
-					}
-					
+				timeArray.add( new BigDecimal(stats.time()) );
+				
+				for(HSRRecordState state : HSRRecordState.values()) {
+										
 					//--------------------------------
-					// Add Value for Each NON okNok-Metric
+					// Add Array for Each Metric
 					for(HSRMetric recordMetric : HSRMetric.values()) { 
 						
-						if( recordMetric.isOkNok()) { continue; }
-						
 						String metric = recordMetric.toString();
-						ArrayList<BigDecimal> metricValues = valuesTable.get(HSRRecordState.ok, metric);
-
-						if(metricValues == null || metricValues.isEmpty()) {
-							summaryStats.setValue(HSRRecordState.ok, recordMetric, BigDecimal.ZERO);
-						}else {
-							BigDecimal value = HSR.Math.bigSum(metricValues, 0, true);
-							summaryStats.setValue(HSRRecordState.ok, recordMetric, value);
+						if( ! valuesTable.contains(state, metric) ) {
+							valuesTable.put(state, metric, new ArrayList<>());
+							valuesTableKeepOrder.put(state, metric, new ArrayList<>());
 						}
 						
+						BigDecimal value = stats.getValue(state, recordMetric);
+						
+						if(value != null) {
+							valuesTable.get(state, metric).add(value);
+							valuesTableKeepOrder.get(state, metric).add(value);
+						}else {
+							// use zero instead of null to reduce file size
+							// plus nulls would be removed by stats calculation, we don't want that
+							valuesTable.get(state, metric).add(BigDecimal.ZERO);
+							valuesTableKeepOrder.get(state, metric).add(BigDecimal.ZERO);
+						}
 					}
+				}
+			}
+			
+			//---------------------------
+			// Use first as base, Override
+			// all metrics.
+			HSRRecordStats summaryStats = currentGroupedStats.get(0).clone();
+			summaryStats.time(reportTime);
+			summaryStats.clearValues();
+			
+			HSRRecordType type = summaryStats.type();
+			for(HSRRecordState state : HSRRecordState.values()) {
+				
+				//--------------------------------
+				// Add Value for Each OK-NOK Metric
+				for(HSRMetric recordMetric : HSRMetric.values()) { 
 					
-					//---------------------------
-					// Calculate Failure Rate
-					calculateFailrate(summaryStats
-							  , summaryStats.getValue(HSRRecordState.ok, HSRMetric.count)
-							  , summaryStats.getValue(HSRRecordState.nok, HSRMetric.count)
-							  , summaryStats.getValue(HSRRecordState.ok, HSRMetric.failed)
-						);
+					if( ! recordMetric.isOkNok()) { continue; }
 					
-					//---------------------------
-					// Calculate SLA
-					HSRSLA sla = summaryStats.sla();
-					if(sla != null) {
-						calculateSLA(summaryStats, sla);
-					}
-					
-					//---------------------------
-					// Keep Empty
-					finalRecords.add(summaryStats);
-					JsonObject recordObject = summaryStats.toJson();
-
-					// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
-					JsonObject series = HSR.JSON.toJSONElement(valuesTableKeepOrder)
-												.getAsJsonObject()
-												.get("backingMap")
-												.getAsJsonObject()
-												;
-					
-					series.add("time", HSR.JSON.toJSONElement(timeArray));
-					recordObject.add("series", series);
-					finalRecordsJson.add(recordObject);
-					
+					String metric = recordMetric.toString();
+					if(  valuesTable.contains(state, metric) ) {
+						ArrayList<BigDecimal> metricValues = valuesTable.get(state, metric);
+												
+						if(metricValues == null || metricValues.isEmpty()) {
+							summaryStats.setValue(state, recordMetric, BigDecimal.ZERO);
+						}else {
 							
+							BigDecimal value = null;
+							switch(recordMetric) {
+								case avg	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
+								case count	->	{	
+													if( ! type.isGauge() ) 								{ value = HSR.Math.bigSum(metricValues, 0, true); }
+													else if( type == HSRRecordType.User && doSumUsers ) { value = HSR.Math.bigSum(metricValues, 0, true); }
+													else				   								{ value = HSR.Math.bigAvg(metricValues, 0, true); }
+												}
+								case cph	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
+								case max	->		value = HSR.Math.bigMax(metricValues);				
+								case min	->		value = HSR.Math.bigMin(metricValues);				
+								case p25	->		value = HSR.Math.bigPercentile(25, metricValues);	
+								case p50	->		value = HSR.Math.bigPercentile(50, metricValues);	
+								case p75	->		value = HSR.Math.bigPercentile(75, metricValues);	
+								case p90	->		value = HSR.Math.bigPercentile(90, metricValues);	
+								case p95	->		value = HSR.Math.bigPercentile(95, metricValues);	
+								case p99	->		value = HSR.Math.bigPercentile(99, metricValues);	
+								case stdev	->		value = HSR.Math.bigStdev(metricValues, false, 2);
+								case sla	-> 		value = HSR.Math.bigAvg(metricValues, 0, true); 
+								default -> { /*do nothing */ }
+							};
+							
+							summaryStats.setValue(state, recordMetric, value);
+
+						}
+					}
+				}
+			}
+			
+			//--------------------------------
+			// Add Value for Each NON okNok-Metric
+			for(HSRMetric recordMetric : HSRMetric.values()) { 
+				
+				if( recordMetric.isOkNok()) { continue; }
+				
+				String metric = recordMetric.toString();
+				ArrayList<BigDecimal> metricValues = valuesTable.get(HSRRecordState.ok, metric);
+
+				if(metricValues == null || metricValues.isEmpty()) {
+					summaryStats.setValue(HSRRecordState.ok, recordMetric, BigDecimal.ZERO);
+				}else {
+					BigDecimal value = HSR.Math.bigSum(metricValues, 0, true);
+					summaryStats.setValue(HSRRecordState.ok, recordMetric, value);
 				}
 				
-				//-------------------------------
-				// Add Endtime to Properties
-				long endtime = System.currentTimeMillis();
-				HSRConfig.addProperty("[HSR] timeEndMillis", "" + endtime);
-				HSRConfig.addProperty("[HSR] timeEndTimestamp", "" + HSR.Time.formatMillisAsTimestamp(endtime) );
-				
-				//-------------------------------
-				// Sort
-				finalRecords.sort(null);
-				
-				return new SummarizedStats(finalRecords, finalRecordsJson);
+			}
+			
+			//---------------------------
+			// Calculate Failure Rate
+			calculateFailrate(summaryStats
+					  , summaryStats.getValue(HSRRecordState.ok, HSRMetric.count)
+					  , summaryStats.getValue(HSRRecordState.nok, HSRMetric.count)
+					  , summaryStats.getValue(HSRRecordState.ok, HSRMetric.failed)
+				);
+			
+			//---------------------------
+			// Calculate SLA
+			HSRSLA sla = summaryStats.sla();
+			if(sla != null) {
+				calculateSLA(summaryStats, sla);
+			}
+			
+			//---------------------------
+			// Keep Empty
+			finalRecords.add(summaryStats);
+			JsonObject recordObject = summaryStats.toJson();
+
+			// {"backingMap":{"ok":{"time":[1756984424567,1756984429570,1756984444577],"count":[13,7,9],"min":[1,1,1],"avg": ...
+			JsonObject series = HSR.JSON.toJSONElement(valuesTableKeepOrder)
+										.getAsJsonObject()
+										.get("backingMap")
+										.getAsJsonObject()
+										;
+			
+			series.add("time", HSR.JSON.toJSONElement(timeArray));
+			recordObject.add("series", series);
+			finalRecordsJson.add(recordObject);
+			
+					
+		}
+		
+		//-------------------------------
+		// Add Endtime to Properties
+		long endtime = System.currentTimeMillis();
+		HSRConfig.addProperty("[HSR] timeEndMillis", "" + endtime);
+		HSRConfig.addProperty("[HSR] timeEndTimestamp", "" + HSR.Time.formatMillisAsTimestamp(endtime) );
+		
+		//-------------------------------
+		// Sort
+		finalRecords.sort(null);
+		
+		return new SummarizedStats(finalRecords, finalRecordsJson);
 	}
+	
 	/***************************************************************************
 	 * Aggregates the collected and grouped statistics and makes one final report.
 	 * 
