@@ -871,7 +871,6 @@ function loadDataCompareDataJS(){
 		}
 		
 		if (file) {
-			console.log("Selected file:", file.name);
 
 			// Read the file contents
 			const reader = new FileReader();
@@ -912,7 +911,7 @@ function loadDataCompareDataFromURL(){
 			let options = data.payload;
 
 			for(let i in options){
-				selectBox += `<option value="${options[i].key}">${options[i].label}</option>`;
+				selectBox += `<option value="${options[i].value}">${options[i].label}</option>`;
 			}
 			
 			selectBox += '</select>';
@@ -930,6 +929,8 @@ function loadDataCompareDataFromURL(){
 							compare = new DataContext();
 							compare.DATA = compare.DATA.concat(data.payload);
 							initialize(compare);
+							
+							draw({view: 'compare'});
 						}else{
 							// do nothing
 						}

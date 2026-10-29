@@ -120,11 +120,11 @@
 LOAD_DATA_URL = null;
 
 /****************************************************************************************************************
- * The URL to load a list of key/labels for a select to choose test data for comparison.
+ * The URL to load a list of value/label options for a select to choose test data for comparison.
  * The specified URL needs to return an array in the payload field with the following structure:
 [
-	  { key: "./comparedata.js?id=123", label: "1970-01-01 10:10 MyTestName" }
-	, { key: "./comparedata.js?id=456", label: "1977-07-07 07:07 MyOtherTestName" }
+	  { value: "./comparedata.js?id=123", label: "1970-01-01 10:10 MyTestName" }
+	, { value: "./comparedata.js?id=456", label: "1977-07-07 07:07 MyOtherTestName" }
 	, ...
 ]
  * 
