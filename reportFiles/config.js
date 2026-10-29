@@ -120,6 +120,20 @@
 LOAD_DATA_URL = null;
 
 /****************************************************************************************************************
+ * The URL to load a list of key/labels for a select to choose test data for comparison.
+ * The specified URL needs to return an array in the payload field with the following structure:
+[
+	  { key: "./comparedata.js?id=123", label: "1970-01-01 10:10 MyTestName" }
+	, { key: "./comparedata.js?id=456", label: "1977-07-07 07:07 MyOtherTestName" }
+	, ...
+]
+ * 
+ * The value of "key" will then be used like the "LOAD_DATA_URL" to load the data for comparison.
+ * 
+ ****************************************************************************************************************/
+LOAD_COMPARE_LIST_URL = null;
+
+/****************************************************************************************************************
  * The list of files that should be loaded in case LOAD_DATA_URL is not specified.
  ****************************************************************************************************************/
 // Example: FILELIST = ["data.js", "data2.js", "dataN.js", "custom.js"];

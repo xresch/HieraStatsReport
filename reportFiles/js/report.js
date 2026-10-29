@@ -13,7 +13,7 @@
 // declare with var and do not initialize, will prevent errors when config.js 
 // is not loaded or does not define the variables.
 var LOAD_DATA_URL;
-var LOAD_DATA_COMPARE_URL;
+var LOAD_COMPARE_LIST_URL;
 var FILELIST;
 
 //================================================
@@ -806,9 +806,9 @@ function customizerSparkchartStats(record, value, rendererName, fieldname, metri
  * The first method called, it starts to load the data from the data files into the main
  * data context.
  *************************************************************************************/
-loadData(main);
+loadDataMain();
 
-function loadData(context){
+function loadDataMain(){
 	
 	if(LOAD_DATA_URL != null){
 		
@@ -817,8 +817,8 @@ function loadData(context){
 		CFW.http.getJSON(LOAD_DATA_URL, params, 
 			function(data) {
 				if(data.success){
-					context.DATA = context.DATA.concat(data.payload);
-					initialize(context);
+					main.DATA = main.DATA.concat(data.payload);
+					initialize(main);
 				}else{
 					// do nothing
 				}
@@ -838,7 +838,7 @@ function loadData(context){
 	
 		//------------------------------------------
 		// Concatenate all data into var DATA
-		loadDataScript(0, context);
+		loadDataScript(0, main);
 		
 	}
 	
@@ -855,76 +855,93 @@ function loadData(context){
 }
 
 /**************************************************************************************
- * Loads data for comparison.
+ * Loads data.js file for comparison.
  * 
- *************************************************************************************/
-function loadDataCompare(){
-	
-	if(LOAD_DATA_COMPARE_URL != null){
-		
-		var params = {};
-		
-		CFW.http.getJSON(LOAD_DATA_URL, params, 
-			function(data) {
-				if(data.success){
-					compare = new DataContext();
-					compare.DATA = compare.DATA.concat(data.payload);
-					initialize(compare);
-				}else{
-					// do nothing
-				}
-		});
-
-	} else {
-		
-		let input = document.createElement("input");
-		input.type = "file";
-		input.accept = ".js";
-		
-		input.onchange = () => {
-			const file = input.files[0];
-			if (file) {
-				console.log(file.name);
-			}
+ **************************************************************************************/
+function loadDataCompareDataJS(){
 			
+	let input = document.createElement("input");
+	input.type = "file";
+	input.accept = ".js";
+	
+	input.onchange = () => {
+		const file = input.files[0];
+		if (file) {
+			console.log(file.name);
+		}
+		
+		if (file) {
+			console.log("Selected file:", file.name);
 
-			if (file) {
-				console.log("Selected file:", file.name);
-
-				// Read the file contents
-				const reader = new FileReader();
-				reader.onload = (event) => {
-					let jsCode = reader.result;
-					jsCode = jsCode.replaceAll("main.DATA", "compare.DATA");
-					
-					compare = new DataContext();
-					CFW.utils.executeCodeOrFunction(jsCode);
-					initialize(compare);
-					draw({view: 'compare'});
-				};
-				reader.readAsText(file);
+			// Read the file contents
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				let jsCode = reader.result;
+				jsCode = jsCode.replaceAll("main.DATA", "compare.DATA");
 				
-			}
+				compare = new DataContext();
+				CFW.utils.executeCodeOrFunction(jsCode);
+				initialize(compare);
+				draw({view: 'compare'});
+			};
+			reader.readAsText(file);
 			
-		};
+		}
+		
+	};
 
-		input.click();
-
-
-	}
-	
-	//------------------------------------------
-	// Adding full path CSS
-	// this is needed for print view to render properly
-	var url = CFW.http.getURLPath(); url = url.substring(0,url.lastIndexOf("/"));
-	
-	loadCSS(url+"/css/bootstrap-theme-bootstrap.css", "print");
-	loadCSS(url+"/css/cfw.css", "print");
-	loadCSS(url+"/css/font-awesome.css", "print");
-	loadCSS(url+"/css/report.css", "print");
+	input.click();
 
 }
 
+/**************************************************************************************
+ * Loads data for comparison.
+ * 
+ *************************************************************************************/
+function loadDataCompareDataFromURL(){
+	
+	let params = {};
+	
+	CFW.http.postJSON(LOAD_COMPARE_LIST_URL, params, function(data){
+		
+		if(data.success){	
+			//-----------------------------
+			// Create Select Box
+			let selectBox = '<select id="compare-data-select" class="w-100" type="password" autocomplete="off">';
+			
+			let options = data.payload;
+
+			for(let i in options){
+				selectBox += `<option value="${options[i].key}">${options[i].label}</option>`;
+			}
+			
+			selectBox += '</select>';
+			
+			//-----------------------------
+			// Show Modal
+			CFW.ui.showModalSmall("Select Report for Compare", selectBox, function(){
+
+				let selectedURL = $('#compare-data-select').val();
+				
+				let params = {};
+				$.ajaxSetup({async: false});
+					CFW.http.postJSON(selectedURL, params, function(data){
+						if(data.success){				
+							compare = new DataContext();
+							compare.DATA = compare.DATA.concat(data.payload);
+							initialize(compare);
+						}else{
+							// do nothing
+						}
+					});
+				$.ajaxSetup({async: true});
+			});
+		}
+	});
+	
+			
+
+}
 
 /**************************************************************************************
  * Load CSS file.
@@ -992,9 +1009,10 @@ function exportData(renderer, isStats) {
 		}
 		
 		filename = "export-statistics." + renderer;
+	}
 	//----------------------------------
 	// Export Datapoints
-	}else{
+	else{
 		exportThis = _.cloneDeep(main.RECORDS_ALL_DATAPOINTS);
 		filename = "export-datapoints." + renderer;
 	}
@@ -3486,16 +3504,17 @@ function drawSummaryPage(target, context){
 function drawCompare(target){
 	
 	//----------------------------
-	// Report 
+	// Report Header Section
 	target.append('<h2 class="mt-0">Compare Results</h2>');
-
-	if(LOAD_DATA_COMPARE_URL == null){
-		target.append('<p>Select the data.js file of another report to create a comparison.<p>');
-	}else{
-		target.append('<p>Select another report to create a comparison.<p>');
+	target.append('<p>Select a data.js file of another report to create a comparison.<p>');
+	if(LOAD_COMPARE_LIST_URL != null){
+		target.append('<p>Or Select another result for comparison  .<p>');
 	}
-	target.append('<button class="btn btn-sm btn-primary mb-5" accept=".js" onclick="loadDataCompare()">Select</button>');
-
+	
+	target.append('<button class="btn btn-sm btn-primary mb-5" accept=".js" onclick="loadDataCompareDataJS()">Load data.js</button>');
+	if(LOAD_COMPARE_LIST_URL != null){
+		target.append('<button class="btn btn-sm btn-primary mb-5 ml-2" accept=".js" onclick="loadDataCompareDataFromURL()">Select Report</button>');
+	}
 	
 	//----------------------------
 	// Check nothing to compare
