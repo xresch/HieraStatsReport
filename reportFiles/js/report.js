@@ -174,7 +174,7 @@ const RECORDMETRIC =  {
 	, "p90": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
 	, "p95": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
 	, "p99": 		{ isOkNok: true, statsFunc: metricStatsPercentile }
-	, "sla": 		{ isOkNok: true, statsFunc: metricStatsAvgPrecise }
+	, "sla": 		{ isOkNok: true, statsFunc: metricStatsSum }
 	, "success": 	{ isOkNok: false, statsFunc: metricStatsSum }
 	, "failed": 	{ isOkNok: false, statsFunc: metricStatsSum }
 	, "skipped": 	{ isOkNok: false, statsFunc: metricStatsSum }
@@ -1231,8 +1231,10 @@ function initializeCalculateOverallStats(context){
 
 	//--------------------------------
 	// SLA OK vs NOK
-	let tot_ok_sla = _.find(overallStats, { name: "ok_sla[avg]" }).value;
-	let percentSlaOK =  tot_ok_sla * 100
+	let tot_ok_sla = _.find(overallStats, { name: "ok_sla[sum]" }).value;
+	let tot_nok_sla = _.find(overallStats, { name: "nok_sla[sum]" }).value;
+	let tot_sla = tot_ok_sla + tot_nok_sla;
+	let percentSlaOK =  tot_ok_sla / tot_sla * 100;
 	let percentSlaNOK = 100 - percentSlaOK;
 	let SlaOkVsNokCount = "SLA: " + percentSlaOK.toFixed(1) + "% OK / " + percentSlaNOK.toFixed(1) + "% NOK";
 
