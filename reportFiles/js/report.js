@@ -3882,7 +3882,6 @@ function drawCompare(target){
 	    ...item.settings
 	}));
 	
-
 	let testsettingsLater = later.DATA[0].testsettings.map(item => ({
 	    usecase: item.usecase,
 	    ...item.settings
