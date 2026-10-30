@@ -236,6 +236,14 @@ function cfw_render_createDataviewerDefaults(){
 		{	label: 'JSON',
 			name: 'json',
 			renderdef: {}
+		},
+		{	label: 'Text Table',
+			name: 'texttable',
+			renderdef: {
+				rendererSettings: {
+					texttable: { maxwidth: 90 },
+				}
+			}
 		}
 	];
 }

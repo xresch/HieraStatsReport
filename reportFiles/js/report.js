@@ -862,9 +862,6 @@ function loadDataCompareDataJS(){
 	
 	input.onchange = () => {
 		const file = input.files[0];
-		if (file) {
-			console.log(file.name);
-		}
 		
 		if (file) {
 
@@ -3876,11 +3873,61 @@ function drawCompare(target){
 	chartsSection.append(row);
 	
 	//==================================================================
+	// Compared Test Settings
+	//==================================================================
+	target.append("<h3>Compared Test Settings</h3>");
+	
+	let testsettingsEarlier = earlier.DATA[0].testsettings.map(item => ({
+	    usecase: item.usecase,
+	    ...item.settings
+	}));
+	
+
+	let testsettingsLater = later.DATA[0].testsettings.map(item => ({
+	    usecase: item.usecase,
+	    ...item.settings
+	}));
+		
+	let comparedStats = new CFWCompareObjectArrays()
+		.identifierFields(["usecase", "executor"])
+	    .labelOld("_A")
+	    .labelYoung("_B")
+	    .labelDiff("_Diff")
+	    .labelDiffPercent("_%")
+	    .doCompareNumbersAbsolute(true)
+	    .doCompareNumbersDiffPercent(true)
+	    .doCompareBooleans(true)
+	    .doCompareStrings(true)
+	    .doCompareArrays(true)
+	    .doCompareObjects(true)
+	    .compare(testsettingsEarlier, testsettingsLater);
+	
+	//-----------------------------------
+	// Render Data
+	let rendererSettings = {
+			data: comparedStats.data,
+			labels: comparedStats.labels,
+			customizers: comparedStats.customizers,
+			rendererSettings:{
+				table: {filterable: false, narrow: true, stickyheader: true},
+				dataviewer:{ 
+					  download: true, print: true
+					, sortable: false
+					, defaultsize: 25
+					, renderers: CFW.render.createDataviewerDefaults()
+				}
+			}
+		};
+		
+	let renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);		
+	target.append(renderResult);
+	
+	//==================================================================
 	// Overall Statistics Table
 	//==================================================================
 	target.append("<h3>Compared Overall Statistics</h3>");
 		
-	let comparedStats = new CFWCompareObjectArrays()
+	comparedStats = new CFWCompareObjectArrays()
 		.identifierFields(["name"])
 	    .labelOld("_A")
 	    .labelYoung("_B")
@@ -3896,22 +3943,12 @@ function drawCompare(target){
 	
 	//-----------------------------------
 	// Render Data
-	let rendererSettings = {
-			data: comparedStats.data,
-			customizers: comparedStats.customizers,
-			labels: {},
-			rendererSettings:{
-				table: {filterable: false, narrow: true, stickyheader: true},
-				dataviewer:{ 
-					  download: true, print: true
-					, sortable: false
-					, defaultsize: 25
-					, renderers: CFW.render.createDataviewerDefaults()
-				}
-			}
-		};
+	rendererSettings = _.cloneDeep(rendererSettings);
+	rendererSettings.data = comparedStats.data;		
+	rendererSettings.labels = comparedStats.labels;	
+	rendererSettings.customizers = comparedStats.customizers;
 			
-	let renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);		
+	renderResult = CFW.render.getRenderer('dataviewer').render(rendererSettings);		
 	target.append(renderResult);
 	
 	//==================================================================
@@ -3988,6 +4025,7 @@ function drawCompare(target){
 
 	//-----------------------------------
 	// Render Data
+	rendererSettings = _.cloneDeep(rendererSettings);
 	rendererSettings.data = comparedStats.data;		
 	rendererSettings.labels = comparedStats.labels;		
 	rendererSettings.customizers = comparedStats.customizers;		
@@ -4033,6 +4071,7 @@ function drawCompare(target){
 
 	//-----------------------------------
 	// Render Data
+	rendererSettings = _.cloneDeep(rendererSettings);
 	rendererSettings.data = comparedStats.data;		
 	rendererSettings.visiblefields = ["type","name","code","count_A", "count_B", "count_%", 	"cph_A", "cph_B"];	
 	rendererSettings.labels["cph_A"] = "Boxplot_A";
@@ -4041,9 +4080,6 @@ function drawCompare(target){
 	//rendererSettings.customizers["IQR"] = function(record, value){ return record_calc_IQR(record); };
 
 	rendererSettings.customizers["cph_A"] = function(record, value){
-					console.log("==== boxplot ====")
-					console.log(record)
-					console.log(record_format_boxplot(record, minMinEarlier, maxMaxEarlier, "_A"))
 					return $('<div class="vw-25">').append( record_format_boxplot(record, minMinEarlier, maxMaxEarlier, "_A") );
 			};
 	rendererSettings.customizers["cph_B"] = function(record, value){
