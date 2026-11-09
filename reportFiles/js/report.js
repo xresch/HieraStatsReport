@@ -3310,7 +3310,7 @@ function drawSummaryPage(target, context){
 				if(value == null){ return "null"; }
 				if( ! isNaN(value) ){
 					
-					let formatted = CFW.customizer.number(record, value.toFixed(2), rendererName, fieldname);
+					let formatted = CFW.customizer.number(record, Number(value).toFixed(2), rendererName, fieldname);
 					
 					if(fieldname == 'failrate'){
 						formatted = $(formatted).append(" %");
